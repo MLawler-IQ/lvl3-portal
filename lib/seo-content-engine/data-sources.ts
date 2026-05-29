@@ -17,6 +17,7 @@ import {
 } from '@/lib/connectors/keywords-everywhere'
 import {
   fetchSemrushDomainOrganic,
+  fetchSemrushPhraseOrganic,
   type SemrushKeywordRow,
 } from '@/lib/connectors/semrush-portal'
 import { fetchAndParse, type ParsedPage } from '@/lib/connectors/crawler'
@@ -158,10 +159,20 @@ export class DataSources {
     return null
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getPage1Rankings(_keyword: string): Promise<Record<string, unknown> | null> {
-    // TODO: Add Semrush page-1 rankings API or MCP integration
-    return null
+  async getPage1Rankings(keyword: string): Promise<Record<string, unknown> | null> {
+    const results = await this.tracked('semrush', () =>
+      fetchSemrushPhraseOrganic(keyword, this.semrushApiKey),
+    )
+    if (!results || results.length === 0) return null
+
+    return {
+      keyword,
+      results: results.map((r) => ({
+        position: r.position,
+        domain: r.domain,
+        url: r.url,
+      })),
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

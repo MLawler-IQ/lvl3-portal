@@ -22,6 +22,12 @@ export interface SemrushKeywordRow {
   serp_features: number
 }
 
+export interface SemrushOrganicResult {
+  position: number
+  domain: string
+  url: string
+}
+
 async function semrushFetch(params: Record<string, string>): Promise<string> {
   const url = `https://api.semrush.com/?${new URLSearchParams(params).toString()}`
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
@@ -134,4 +140,36 @@ export async function fetchSemrushDomainOrganic(
       serp_features: parseInt(row['SERP Features'] ?? row['Sf'] ?? '0', 10) || 0,
     }))
     .filter((r) => r.keyword)
+}
+
+/**
+ * Organic SERP results for a keyword (the domains/URLs ranking for the phrase).
+ * Uses Semrush's `phrase_organic` report. Results are returned in ranking order,
+ * so the first `limit` rows approximate page-1 rankings.
+ */
+export async function fetchSemrushPhraseOrganic(
+  phrase: string,
+  apiKey: string,
+  database = 'us',
+  limit = 10,
+): Promise<SemrushOrganicResult[]> {
+  const text = await semrushFetch({
+    type: 'phrase_organic',
+    key: apiKey,
+    phrase,
+    database,
+    display_limit: String(limit),
+    export_columns: 'Dn,Ur',
+  })
+
+  if (!text.trim()) return []
+
+  const rows = parseCSV(text)
+  return rows
+    .map((row, i) => ({
+      position: i + 1,
+      domain: row['Domain'] ?? row['Dn'] ?? '',
+      url: row['Url'] ?? row['Ur'] ?? '',
+    }))
+    .filter((r) => r.domain)
 }
