@@ -199,17 +199,28 @@ Returns an array of accounts with their resource name, display name, and type.`,
   },
   {
     name: 'get_gbp_locations',
-    description: `Fetch all Google Business Profile locations for a given GBP account, with an automatic audit (completeness score 0-100 and a list of issues per location).
+    description: `Fetch Google Business Profile locations for a given GBP account, with an automatic audit (completeness score 0-100 and a list of issues per location).
 Use this when the user asks about a client's GBP locations, business listings, NAP (name/address/phone) consistency, missing hours, missing categories, listing audits, or local SEO health.
-Returns each location with: title, address, phone, website, category, description, hours, open status, Maps URI, audit score, and specific issues found.
 
-Workflow: call list_gbp_accounts first to get an accountName, then pass it here.`,
+IMPORTANT: Some agency-level GBP accounts contain thousands of locations across many brands. Always pass a titleFilter (case-insensitive substring of the business name) when you can — for example titleFilter="True Food Kitchen". Without a filter, results are capped at 'limit' (default 50) and you'll see truncated:true.
+
+Returns each location with: resource name, title, address, phone, website, primary category, description, hours present (boolean), open status, Maps URI, audit score, and specific issues found. Detailed hoursPeriods are omitted to keep responses compact — ask the user if they need them.
+
+Workflow: call list_gbp_accounts first to get an accountName, then pass it here. After this call, use the returned 'name' fields (e.g. "locations/123") with get_gbp_insights for performance data.`,
     input_schema: {
       type: 'object' as const,
       properties: {
         accountName: {
           type: 'string',
           description: 'GBP account resource name from list_gbp_accounts, e.g. "accounts/123456789"',
+        },
+        titleFilter: {
+          type: 'string',
+          description: 'Case-insensitive substring to match against location title. Strongly recommended for agency accounts.',
+        },
+        limit: {
+          type: 'number',
+          description: 'Max locations to return after filtering (default 50, max 500).',
         },
       },
       required: ['accountName'],
@@ -472,11 +483,54 @@ async function executeTool(
       if (!gbpAuth) return 'Error: Google Business Profile is not connected. Connect it from the admin settings.'
       const accountName = input.accountName as string
       if (!accountName) return 'Error: accountName is required (e.g. "accounts/123456789"). Call list_gbp_accounts first.'
-      const locations = await listGBPLocations(accountName, gbpAuth)
-      if (locations.length === 0) return 'No locations found in this account.'
-      const audited = locations.map(auditLocation)
-      const avgScore = Math.round(audited.reduce((s, l) => s + l.score, 0) / audited.length)
-      return JSON.stringify({ totalLocations: audited.length, avgScore, locations: audited })
+      const titleFilter = ((input.titleFilter as string) ?? '').trim().toLowerCase()
+      const limit = Math.min(Math.max((input.limit as number) ?? 50, 1), 500)
+
+      const all = await listGBPLocations(accountName, gbpAuth)
+      if (all.length === 0) return 'No locations found in this account.'
+
+      const filtered = titleFilter
+        ? all.filter((l) => (l.title ?? '').toLowerCase().includes(titleFilter))
+        : all
+
+      const truncated = filtered.length > limit
+      const window = filtered.slice(0, limit)
+      const auditedWindow = window.map(auditLocation)
+      const avgScoreWindow = auditedWindow.length
+        ? Math.round(auditedWindow.reduce((s, l) => s + l.score, 0) / auditedWindow.length)
+        : 0
+
+      // Slim payload: drop verbose hoursPeriods, keep boolean
+      const slim = auditedWindow.map((l) => ({
+        name: l.name,
+        title: l.title,
+        primaryPhone: l.primaryPhone,
+        websiteUri: l.websiteUri,
+        addressFormatted: l.addressFormatted,
+        primaryCategory: l.primaryCategory,
+        description: l.description,
+        openStatus: l.openStatus,
+        hasRegularHours: l.hasRegularHours,
+        mapsUri: l.mapsUri,
+        newReviewUri: l.newReviewUri,
+        score: l.score,
+        issues: l.issues,
+      }))
+
+      return JSON.stringify({
+        accountTotal: all.length,
+        matched: filtered.length,
+        returned: slim.length,
+        truncated,
+        titleFilter: titleFilter || null,
+        avgScore: avgScoreWindow,
+        locations: slim,
+        ...(truncated
+          ? {
+              hint: `Showed first ${limit} of ${filtered.length} matches. Narrow titleFilter or raise limit (max 500). For broad analyses, export to spreadsheet via create_spreadsheet.`,
+            }
+          : {}),
+      })
     }
 
     if (name === 'get_gbp_insights') {
@@ -495,6 +549,12 @@ async function executeTool(
       ) as GBPPerfMetric[]
       if (metrics.length === 0) return 'Error: No valid metrics requested. See tool description for the allowed list.'
       const includeDaily = (input.includeDaily as boolean) ?? false
+      if (locationNames.length > 50) {
+        return `Error: get_gbp_insights accepts up to 50 locations per call (got ${locationNames.length}). Filter via get_gbp_locations titleFilter first, or batch.`
+      }
+      if (includeDaily && locationNames.length > 10) {
+        return `Error: includeDaily=true is limited to 10 locations per call (got ${locationNames.length}) to stay within context limits.`
+      }
 
       const results = await Promise.all(
         locationNames.map(async (loc) => {
