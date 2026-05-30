@@ -85,6 +85,8 @@ export async function listGBPAccounts(auth: OAuth2Client): Promise<GBPAccount[]>
   }))
 }
 
+// NOTE: Business Information API v1 nests primary/additional categories under `categories`.
+// Top-level `primaryCategory` is not a valid readMask field — using it returns INVALID_ARGUMENT.
 const LOCATION_READ_MASK = [
   'name',
   'title',
@@ -92,7 +94,7 @@ const LOCATION_READ_MASK = [
   'storefrontAddress',
   'websiteUri',
   'regularHours',
-  'primaryCategory',
+  'categories',
   'profile',
   'openInfo',
   'metadata',
@@ -155,7 +157,7 @@ function parseLocation(loc: any): GBPLocation {
           regionCode: addr.regionCode ?? '',
         }
       : null,
-    primaryCategory: loc.primaryCategory?.displayName ?? null,
+    primaryCategory: loc.categories?.primaryCategory?.displayName ?? loc.primaryCategory?.displayName ?? null,
     description: loc.profile?.description ?? null,
     openStatus,
     hasRegularHours: hours.length > 0,
