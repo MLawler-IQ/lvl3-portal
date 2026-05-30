@@ -1,7 +1,6 @@
 import { google } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
 
-const GBP_BIZ_BASE = 'https://mybusinessbusinessinformation.googleapis.com/v1'
 const GBP_PERF_BASE = 'https://businessprofileperformance.googleapis.com/v1'
 
 export const GBP_PERF_METRICS = [
