@@ -1,6 +1,32 @@
 import { google } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
 
+const GBP_BIZ_BASE = 'https://mybusinessbusinessinformation.googleapis.com/v1'
+const GBP_PERF_BASE = 'https://businessprofileperformance.googleapis.com/v1'
+
+export const GBP_PERF_METRICS = [
+  'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+  'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+  'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+  'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+  'BUSINESS_CONVERSATIONS',
+  'BUSINESS_DIRECTION_REQUESTS',
+  'CALL_CLICKS',
+  'WEBSITE_CLICKS',
+  'BUSINESS_BOOKINGS',
+  'BUSINESS_FOOD_ORDERS',
+  'BUSINESS_FOOD_MENU_CLICKS',
+] as const
+
+export type GBPPerfMetric = (typeof GBP_PERF_METRICS)[number]
+
+export interface GBPInsightsRow {
+  locationName: string  // "locations/123"
+  locationTitle?: string
+  metrics: Record<string, number>  // metric -> total over the window
+  daily?: Array<{ date: string; metrics: Record<string, number> }>
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface GBPAccount {
@@ -138,6 +164,92 @@ function parseLocation(loc: any): GBPLocation {
     mapsUri: loc.metadata?.mapsUri ?? null,
     newReviewUri: loc.metadata?.newReviewUri ?? null,
   }
+}
+
+// ── Performance / Insights ────────────────────────────────────────────────────
+
+function ymdToParts(ymd: string): { year: number; month: number; day: number } {
+  const [y, m, d] = ymd.split('-').map((n) => parseInt(n, 10))
+  return { year: y, month: m, day: d }
+}
+
+function partsToYmd(p: { year?: number | null; month?: number | null; day?: number | null }): string {
+  const y = String(p.year ?? 0).padStart(4, '0')
+  const m = String(p.month ?? 0).padStart(2, '0')
+  const d = String(p.day ?? 0).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+/**
+ * Fetch daily-metric time series for a single GBP location across multiple metrics.
+ * locationName: "locations/123" (no "accounts/..." prefix)
+ * startDate / endDate: YYYY-MM-DD
+ */
+export async function fetchGBPLocationInsights(
+  locationName: string,
+  metrics: GBPPerfMetric[],
+  startDate: string,
+  endDate: string,
+  auth: OAuth2Client,
+  opts: { includeDaily?: boolean } = {},
+): Promise<GBPInsightsRow> {
+  const { token } = await auth.getAccessToken()
+  if (!token) throw new Error('Failed to obtain GBP access token')
+
+  const start = ymdToParts(startDate)
+  const end = ymdToParts(endDate)
+
+  const params = new URLSearchParams()
+  for (const m of metrics) params.append('dailyMetrics', m)
+  params.append('dailyRange.start_date.year', String(start.year))
+  params.append('dailyRange.start_date.month', String(start.month))
+  params.append('dailyRange.start_date.day', String(start.day))
+  params.append('dailyRange.end_date.year', String(end.year))
+  params.append('dailyRange.end_date.month', String(end.month))
+  params.append('dailyRange.end_date.day', String(end.day))
+
+  const url = `${GBP_PERF_BASE}/${locationName}:fetchMultiDailyMetricsTimeSeries?${params.toString()}`
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`GBP Performance API ${res.status}: ${body}`)
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const json: any = await res.json()
+
+  const totals: Record<string, number> = {}
+  const dailyMap = new Map<string, Record<string, number>>()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const series: any[] = json.multiDailyMetricTimeSeries ?? []
+  for (const block of series) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inner: any[] = block.dailyMetricTimeSeries ?? []
+    for (const dm of inner) {
+      const metric: string = dm.dailyMetric ?? 'UNKNOWN'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const datedValues: any[] = dm.timeSeries?.datedValues ?? []
+      let total = 0
+      for (const dv of datedValues) {
+        const value = parseInt(dv.value ?? '0', 10) || 0
+        total += value
+        if (opts.includeDaily) {
+          const ymd = partsToYmd(dv.date ?? {})
+          if (!dailyMap.has(ymd)) dailyMap.set(ymd, {})
+          dailyMap.get(ymd)![metric] = value
+        }
+      }
+      totals[metric] = (totals[metric] ?? 0) + total
+    }
+  }
+
+  const daily = opts.includeDaily
+    ? Array.from(dailyMap.entries())
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([date, m]) => ({ date, metrics: m }))
+    : undefined
+
+  return { locationName, metrics: totals, daily }
 }
 
 // ── Audit ──────────────────────────────────────────────────────────────────────

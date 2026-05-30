@@ -2,7 +2,7 @@
 
 Internal client portal for LVL3 digital marketing agency. Admins manage clients, view analytics, deliver work, and run SEO tools. Clients log in to view deliverables, a project tracker, and their dashboard.
 
-Deployed at: **https://lvl3-portal.vercel.app** | Repo: **https://github.com/mattlawler12-cmd/lvl3-portal**
+Deployed at: **https://lvl3-portal.vercel.app** | Repo: **https://github.com/MLawler-IQ/lvl3-portal**
 
 ## Stack
 

@@ -2,12 +2,15 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminOAuthClient } from '@/lib/google-auth'
+import { getAdminGBPOAuthClient } from '@/lib/gbp-auth'
 import { google } from 'googleapis'
 import Anthropic from '@anthropic-ai/sdk'
 import { fetchKEKeywordData, fetchKERelatedKeywords } from '@/lib/connectors/keywords-everywhere'
 import { fetchPageSpeedInsights } from '@/lib/connectors/pagespeed'
 import { fetchAndParse } from '@/lib/connectors/crawler'
 import { fetchSemrushDomainOrganic, fetchSemrushDomainRanks, fetchSemrushBacklinksOverview } from '@/lib/connectors/semrush-portal'
+import { listGBPAccounts, listGBPLocations, auditLocation, fetchGBPLocationInsights, GBP_PERF_METRICS, type GBPPerfMetric } from '@/lib/connectors/gbp'
+import type { OAuth2Client } from 'google-auth-library'
 import * as XLSX from 'xlsx'
 import type { ChatMessage, ChatArtifact } from '@/app/actions/ask-lvl3'
 
@@ -184,6 +187,77 @@ Defaults to the current client's domain if no domain is specified.`,
     },
   },
   {
+    name: 'list_gbp_accounts',
+    description: `List all Google Business Profile accounts accessible to the agency.
+Use this first when the user asks about Google Business Profile, GBP, Google My Business, GMB, business listings, or local SEO — you need an account resource name (e.g. "accounts/123456") before you can fetch locations.
+Returns an array of accounts with their resource name, display name, and type.`,
+    input_schema: {
+      type: 'object' as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'get_gbp_locations',
+    description: `Fetch all Google Business Profile locations for a given GBP account, with an automatic audit (completeness score 0-100 and a list of issues per location).
+Use this when the user asks about a client's GBP locations, business listings, NAP (name/address/phone) consistency, missing hours, missing categories, listing audits, or local SEO health.
+Returns each location with: title, address, phone, website, category, description, hours, open status, Maps URI, audit score, and specific issues found.
+
+Workflow: call list_gbp_accounts first to get an accountName, then pass it here.`,
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        accountName: {
+          type: 'string',
+          description: 'GBP account resource name from list_gbp_accounts, e.g. "accounts/123456789"',
+        },
+      },
+      required: ['accountName'],
+    },
+  },
+  {
+    name: 'get_gbp_insights',
+    description: `Pull Google Business Profile performance insights (impressions, calls, website clicks, direction requests, bookings, etc.) for one or more locations over a date range.
+Use this for questions about GBP / GMB / Google Business Profile performance — calls from listing, website clicks from listing, direction requests, map vs. search impressions, mobile vs. desktop, period-over-period changes, or local visibility trends.
+
+Workflow:
+  1. Call list_gbp_accounts to get an accountName.
+  2. Call get_gbp_locations to get location resource names (e.g. "locations/123").
+  3. Call this tool with one or more location names.
+
+Available metrics (pass any subset; defaults to the most commonly used ones):
+  BUSINESS_IMPRESSIONS_DESKTOP_MAPS, BUSINESS_IMPRESSIONS_DESKTOP_SEARCH,
+  BUSINESS_IMPRESSIONS_MOBILE_MAPS, BUSINESS_IMPRESSIONS_MOBILE_SEARCH,
+  CALL_CLICKS, WEBSITE_CLICKS, BUSINESS_DIRECTION_REQUESTS,
+  BUSINESS_CONVERSATIONS, BUSINESS_BOOKINGS, BUSINESS_FOOD_ORDERS, BUSINESS_FOOD_MENU_CLICKS
+
+Date format: YYYY-MM-DD. The GBP API only returns data through ~3 days ago — avoid using today's date as endDate.
+By default returns totals per location. Set includeDaily=true for a daily breakdown (use sparingly — large output).
+For period comparison, call twice with different date ranges.`,
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        locationNames: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Location resource names from get_gbp_locations, e.g. ["locations/123","locations/456"]',
+        },
+        metrics: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'GBP performance metric names. Defaults to all common metrics if omitted.',
+        },
+        startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
+        endDate: { type: 'string', description: 'End date YYYY-MM-DD (must be at least 3 days ago)' },
+        includeDaily: {
+          type: 'boolean',
+          description: 'Return daily breakdown per location. Default false (totals only).',
+        },
+      },
+      required: ['locationNames', 'startDate', 'endDate'],
+    },
+  },
+  {
     name: 'create_spreadsheet',
     description: `Generate a downloadable .xlsx spreadsheet file for the user.
 Use this when the user asks to export data, create a spreadsheet, download results, or says "give me a spreadsheet/CSV/Excel file".
@@ -245,6 +319,7 @@ async function executeTool(
   input: Record<string, unknown>,
   client: { gsc_site_url: string | null; ga4_property_id: string | null },
   auth: OAuthClient,
+  gbpAuth: OAuth2Client | null,
   context?: { service: Awaited<ReturnType<typeof createServiceClient>>; clientId: string; conversationId: string }
 ): Promise<string> {
   try {
@@ -386,6 +461,53 @@ async function executeTool(
       return JSON.stringify(overview)
     }
 
+    if (name === 'list_gbp_accounts') {
+      if (!gbpAuth) return 'Error: Google Business Profile is not connected. Connect it from the admin settings.'
+      const accounts = await listGBPAccounts(gbpAuth)
+      if (accounts.length === 0) return 'No Google Business Profile accounts found.'
+      return JSON.stringify(accounts)
+    }
+
+    if (name === 'get_gbp_locations') {
+      if (!gbpAuth) return 'Error: Google Business Profile is not connected. Connect it from the admin settings.'
+      const accountName = input.accountName as string
+      if (!accountName) return 'Error: accountName is required (e.g. "accounts/123456789"). Call list_gbp_accounts first.'
+      const locations = await listGBPLocations(accountName, gbpAuth)
+      if (locations.length === 0) return 'No locations found in this account.'
+      const audited = locations.map(auditLocation)
+      const avgScore = Math.round(audited.reduce((s, l) => s + l.score, 0) / audited.length)
+      return JSON.stringify({ totalLocations: audited.length, avgScore, locations: audited })
+    }
+
+    if (name === 'get_gbp_insights') {
+      if (!gbpAuth) return 'Error: Google Business Profile is not connected. Connect it from the admin settings.'
+      const locationNames = (input.locationNames as string[]) ?? []
+      if (!locationNames.length) return 'Error: locationNames is required. Call get_gbp_locations first.'
+      const startDate = input.startDate as string
+      const endDate = input.endDate as string
+      if (!startDate || !endDate) return 'Error: startDate and endDate are required (YYYY-MM-DD).'
+      const requested = (input.metrics as string[] | undefined) ?? []
+      const allowed = new Set<string>(GBP_PERF_METRICS)
+      const metrics: GBPPerfMetric[] = (
+        requested.length > 0
+          ? requested.filter((m) => allowed.has(m))
+          : ['BUSINESS_IMPRESSIONS_DESKTOP_MAPS','BUSINESS_IMPRESSIONS_DESKTOP_SEARCH','BUSINESS_IMPRESSIONS_MOBILE_MAPS','BUSINESS_IMPRESSIONS_MOBILE_SEARCH','CALL_CLICKS','WEBSITE_CLICKS','BUSINESS_DIRECTION_REQUESTS']
+      ) as GBPPerfMetric[]
+      if (metrics.length === 0) return 'Error: No valid metrics requested. See tool description for the allowed list.'
+      const includeDaily = (input.includeDaily as boolean) ?? false
+
+      const results = await Promise.all(
+        locationNames.map(async (loc) => {
+          try {
+            return await fetchGBPLocationInsights(loc, metrics, startDate, endDate, gbpAuth, { includeDaily })
+          } catch (e) {
+            return { locationName: loc, error: e instanceof Error ? e.message : String(e), metrics: {} as Record<string, number> }
+          }
+        })
+      )
+      return JSON.stringify({ startDate, endDate, metrics, locations: results })
+    }
+
     if (name === 'create_spreadsheet') {
       if (!context) return 'Error: Missing storage context for spreadsheet generation.'
       const filename = (input.filename as string) || 'export'
@@ -479,6 +601,15 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  // GBP uses a separate OAuth token. Pre-fetch so cookies() isn't called inside the stream.
+  // If GBP isn't connected, GBP tools will return a friendly error; everything else still works.
+  let gbpOAuthClient: OAuth2Client | null = null
+  try {
+    gbpOAuthClient = await getAdminGBPOAuthClient()
+  } catch {
+    gbpOAuthClient = null
+  }
+
   // 3. Parse body
   const body = await req.json()
   const {
@@ -541,7 +672,7 @@ ${contextParts.join('\n\n')}
 
 Client domain: ${clientDomain || 'not configured'}
 
-You have 10 tools available to fetch live data:
+You have 13 tools available to fetch live data:
 - get_gsc_data: Query Google Search Console (keywords, pages, clicks, impressions, rankings)
 - get_ga4_data: Query Google Analytics 4 (sessions, users, traffic, revenue, landing pages)
 - get_keyword_data: Look up search volume, CPC, competition, and trends for specific keywords
@@ -551,6 +682,9 @@ You have 10 tools available to fetch live data:
 - crawl_page_seo: On-page SEO audit of a URL (title, meta, headings, images, structured data)
 - get_core_web_vitals: PageSpeed Insights + Core Web Vitals for a URL
 - get_backlink_overview: Semrush backlink profile (total backlinks, referring domains, authority score)
+- list_gbp_accounts: List Google Business Profile accounts the agency has access to (call first for any GBP question)
+- get_gbp_locations: Fetch and audit all GBP locations under an account (NAP, hours, categories, completeness score)
+- get_gbp_insights: Pull GBP performance metrics (impressions, calls, website clicks, direction requests, bookings) for one or more locations over a date range
 - create_spreadsheet: Generate a downloadable .xlsx file from structured data. Use AFTER fetching data with other tools when the user wants to export, download, or get a spreadsheet/CSV/Excel file.
 
 When a question requires data, use the tools to fetch it rather than saying you don't have it.
@@ -671,6 +805,9 @@ Be specific and direct. Skip preamble. Lead with the actual answer, then support
               crawl_page_seo: 'Crawling page for SEO audit\u2026',
               get_core_web_vitals: 'Running PageSpeed analysis\u2026',
               get_backlink_overview: 'Fetching backlink profile\u2026',
+              list_gbp_accounts: 'Listing Google Business Profile accounts\u2026',
+              get_gbp_locations: 'Auditing Google Business Profile locations\u2026',
+              get_gbp_insights: 'Pulling Google Business Profile insights\u2026',
               create_spreadsheet: 'Generating spreadsheet\u2026',
             }
             for (const block of toolBlocks) {
@@ -689,6 +826,7 @@ Be specific and direct. Skip preamble. Lead with the actual answer, then support
                   block.input as Record<string, unknown>,
                   { gsc_site_url: client.gsc_site_url, ga4_property_id: client.ga4_property_id },
                   oauthClient,
+                  gbpOAuthClient,
                   { service, clientId, conversationId }
                 )
 
