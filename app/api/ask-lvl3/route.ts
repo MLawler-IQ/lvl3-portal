@@ -243,7 +243,7 @@ Available metrics (pass any subset; defaults to the most commonly used ones):
   BUSINESS_CONVERSATIONS, BUSINESS_BOOKINGS, BUSINESS_FOOD_ORDERS, BUSINESS_FOOD_MENU_CLICKS
 
 Date format: YYYY-MM-DD. The GBP API only returns data through ~3 days ago — avoid using today's date as endDate.
-By default returns totals per location. Set includeDaily=true for a daily breakdown (use sparingly — large output).
+By default returns totals per location over the window. Set granularity="monthly" for a month-by-month breakdown (recommended for trend analysis over multi-month / multi-year ranges) or "daily" for day-by-day (small windows only).
 For period comparison, call twice with different date ranges.`,
     input_schema: {
       type: 'object' as const,
@@ -260,9 +260,10 @@ For period comparison, call twice with different date ranges.`,
         },
         startDate: { type: 'string', description: 'Start date YYYY-MM-DD' },
         endDate: { type: 'string', description: 'End date YYYY-MM-DD (must be at least 3 days ago)' },
-        includeDaily: {
-          type: 'boolean',
-          description: 'Return daily breakdown per location. Default false (totals only).',
+        granularity: {
+          type: 'string',
+          enum: ['total', 'monthly', 'daily'],
+          description: 'Aggregation level. "total" (default) = single total per metric per location. "monthly" = YYYY-MM bucket. "daily" = per-day (only for short windows).',
         },
       },
       required: ['locationNames', 'startDate', 'endDate'],
@@ -548,24 +549,24 @@ async function executeTool(
           : ['BUSINESS_IMPRESSIONS_DESKTOP_MAPS','BUSINESS_IMPRESSIONS_DESKTOP_SEARCH','BUSINESS_IMPRESSIONS_MOBILE_MAPS','BUSINESS_IMPRESSIONS_MOBILE_SEARCH','CALL_CLICKS','WEBSITE_CLICKS','BUSINESS_DIRECTION_REQUESTS']
       ) as GBPPerfMetric[]
       if (metrics.length === 0) return 'Error: No valid metrics requested. See tool description for the allowed list.'
-      const includeDaily = (input.includeDaily as boolean) ?? false
+      const granularity = ((input.granularity as 'total' | 'monthly' | 'daily') ?? 'total')
       if (locationNames.length > 50) {
         return `Error: get_gbp_insights accepts up to 50 locations per call (got ${locationNames.length}). Filter via get_gbp_locations titleFilter first, or batch.`
       }
-      if (includeDaily && locationNames.length > 10) {
-        return `Error: includeDaily=true is limited to 10 locations per call (got ${locationNames.length}) to stay within context limits.`
+      if (granularity === 'daily' && locationNames.length > 10) {
+        return `Error: granularity="daily" is limited to 10 locations per call (got ${locationNames.length}). Use granularity="monthly" for multi-location trends.`
       }
 
       const results = await Promise.all(
         locationNames.map(async (loc) => {
           try {
-            return await fetchGBPLocationInsights(loc, metrics, startDate, endDate, gbpAuth, { includeDaily })
+            return await fetchGBPLocationInsights(loc, metrics, startDate, endDate, gbpAuth, { granularity })
           } catch (e) {
             return { locationName: loc, error: e instanceof Error ? e.message : String(e), metrics: {} as Record<string, number> }
           }
         })
       )
-      return JSON.stringify({ startDate, endDate, metrics, locations: results })
+      return JSON.stringify({ startDate, endDate, granularity, metrics, locations: results })
     }
 
     if (name === 'create_spreadsheet') {

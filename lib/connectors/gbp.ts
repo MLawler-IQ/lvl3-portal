@@ -19,10 +19,13 @@ export const GBP_PERF_METRICS = [
 
 export type GBPPerfMetric = (typeof GBP_PERF_METRICS)[number]
 
+export type GBPInsightsGranularity = 'total' | 'monthly' | 'daily'
+
 export interface GBPInsightsRow {
   locationName: string  // "locations/123"
   locationTitle?: string
   metrics: Record<string, number>  // metric -> total over the window
+  monthly?: Array<{ month: string; metrics: Record<string, number> }>  // YYYY-MM
   daily?: Array<{ date: string; metrics: Record<string, number> }>
 }
 
@@ -192,8 +195,9 @@ export async function fetchGBPLocationInsights(
   startDate: string,
   endDate: string,
   auth: OAuth2Client,
-  opts: { includeDaily?: boolean } = {},
+  opts: { granularity?: GBPInsightsGranularity } = {},
 ): Promise<GBPInsightsRow> {
+  const granularity: GBPInsightsGranularity = opts.granularity ?? 'total'
   const { token } = await auth.getAccessToken()
   if (!token) throw new Error('Failed to obtain GBP access token')
 
@@ -220,6 +224,7 @@ export async function fetchGBPLocationInsights(
 
   const totals: Record<string, number> = {}
   const dailyMap = new Map<string, Record<string, number>>()
+  const monthlyMap = new Map<string, Record<string, number>>()
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const series: any[] = json.multiDailyMetricTimeSeries ?? []
@@ -234,23 +239,35 @@ export async function fetchGBPLocationInsights(
       for (const dv of datedValues) {
         const value = parseInt(dv.value ?? '0', 10) || 0
         total += value
-        if (opts.includeDaily) {
-          const ymd = partsToYmd(dv.date ?? {})
+        const ymd = partsToYmd(dv.date ?? {})
+        if (granularity === 'daily') {
           if (!dailyMap.has(ymd)) dailyMap.set(ymd, {})
-          dailyMap.get(ymd)![metric] = value
+          dailyMap.get(ymd)![metric] = (dailyMap.get(ymd)![metric] ?? 0) + value
+        } else if (granularity === 'monthly') {
+          const ym = ymd.slice(0, 7) // YYYY-MM
+          if (!monthlyMap.has(ym)) monthlyMap.set(ym, {})
+          monthlyMap.get(ym)![metric] = (monthlyMap.get(ym)![metric] ?? 0) + value
         }
       }
       totals[metric] = (totals[metric] ?? 0) + total
     }
   }
 
-  const daily = opts.includeDaily
-    ? Array.from(dailyMap.entries())
-        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-        .map(([date, m]) => ({ date, metrics: m }))
-    : undefined
+  const daily =
+    granularity === 'daily'
+      ? Array.from(dailyMap.entries())
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([date, m]) => ({ date, metrics: m }))
+      : undefined
 
-  return { locationName, metrics: totals, daily }
+  const monthly =
+    granularity === 'monthly'
+      ? Array.from(monthlyMap.entries())
+          .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+          .map(([month, m]) => ({ month, metrics: m }))
+      : undefined
+
+  return { locationName, metrics: totals, monthly, daily }
 }
 
 // ── Audit ──────────────────────────────────────────────────────────────────────
