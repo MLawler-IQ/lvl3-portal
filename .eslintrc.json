@@ -1,3 +1,39 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"]
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn"
+  },
+  "overrides": [
+    {
+      // Architecture rule: client-side code must never import the Supabase
+      // server/service client (it uses next/headers cookies and the service
+      // role key). Scoped to file globs that are client-side by convention.
+      //
+      // Limitation: components/ mixes server and client files (e.g.
+      // components/dashboard/* and components/nav/* are server components),
+      // so only the subdirectories that are entirely 'use client' are listed
+      // here. New all-client directories should be added to this list.
+      "files": [
+        "hooks/**/*.{ts,tsx}",
+        "components/admin/**/*.{ts,tsx}",
+        "components/clients/**/*.{ts,tsx}",
+        "components/tools/**/*.{ts,tsx}",
+        "app/**/*Client.tsx",
+        "app/(dashboard)/tools/seo-content-engine/components/**/*.{ts,tsx}"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/lib/supabase/server", "**/lib/supabase/server"],
+                "message": "Do not import the Supabase server/service client from client components. Use '@/lib/supabase/client' or move the data access into a server action / server component."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

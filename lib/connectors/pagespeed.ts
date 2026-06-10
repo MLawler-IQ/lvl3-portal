@@ -41,6 +41,8 @@ export async function fetchPageSpeedInsights(
   if (apiKey) params.set('key', apiKey)
 
   const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`
+  // Lighthouse/CrUX response is a large, loosely-specified third-party JSON
+  // blob accessed via optional chaining below — typing it fully isn't worth it.
   let json: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
   try {
     const res = await fetch(endpoint)

@@ -176,7 +176,11 @@ export default function ToolsHubClient({ tools, selectedClientId }: Props) {
 
   // ── Filtering ─────────────────────────────────────────────────────────────
 
-  const filtered = tools.filter(t => {
+  // Coming-soon stubs are hidden until built — they occupied prime grid slots
+  // as permanently-disabled cards.
+  const available = tools.filter(t => t.status !== 'coming-soon')
+
+  const filtered = available.filter(t => {
     const q = query.toLowerCase()
     const matchesQuery =
       !q ||

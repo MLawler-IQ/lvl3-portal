@@ -79,8 +79,7 @@ export interface LocationAudit extends GBPLocation {
 export async function listGBPAccounts(auth: OAuth2Client): Promise<GBPAccount[]> {
   const api = google.mybusinessaccountmanagement({ version: 'v1', auth })
   const res = await api.accounts.list()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const accounts: any[] = res.data.accounts ?? []
+  const accounts = res.data.accounts ?? []
   return accounts.map((a) => ({
     name: a.name ?? '',
     accountName: a.accountName ?? a.name ?? '',
@@ -112,6 +111,8 @@ export async function listGBPLocations(
   let pageToken: string | undefined
 
   do {
+    // The googleapis typings for accounts.locations.list don't accept the
+    // readMask/pagination params this endpoint requires — keep `any` here.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const res: any = await (api.accounts.locations.list as any)({
       parent: accountName,
@@ -131,8 +132,32 @@ export async function listGBPLocations(
   return locations
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function parseLocation(loc: any): GBPLocation {
+// Structural shape of the raw location payload from the Business Information API
+// (only the fields we read — all optional/nullable since the API may omit any).
+interface RawGBPLocation {
+  name?: string | null
+  title?: string | null
+  phoneNumbers?: {
+    primaryPhone?: string | null
+    additionalPhones?: string[] | null
+  } | null
+  storefrontAddress?: {
+    addressLines?: string[] | null
+    locality?: string | null
+    administrativeArea?: string | null
+    postalCode?: string | null
+    regionCode?: string | null
+  } | null
+  websiteUri?: string | null
+  regularHours?: { periods?: GBPHoursPeriod[] | null } | null
+  categories?: { primaryCategory?: { displayName?: string | null } | null } | null
+  primaryCategory?: { displayName?: string | null } | null
+  profile?: { description?: string | null } | null
+  openInfo?: { status?: string | null } | null
+  metadata?: { mapsUri?: string | null; newReviewUri?: string | null } | null
+}
+
+function parseLocation(loc: RawGBPLocation): GBPLocation {
   const addr = loc.storefrontAddress ?? null
   const phones = loc.phoneNumbers ?? {}
   const hours = loc.regularHours?.periods ?? []
@@ -171,6 +196,24 @@ function parseLocation(loc: any): GBPLocation {
 }
 
 // ── Performance / Insights ────────────────────────────────────────────────────
+
+// Structural shape of the GBP Performance API fetchMultiDailyMetricsTimeSeries
+// response (only the fields we read).
+interface GBPDatedValue {
+  value?: string | null
+  date?: { year?: number | null; month?: number | null; day?: number | null } | null
+}
+
+interface GBPDailyMetricTimeSeries {
+  dailyMetric?: string | null
+  timeSeries?: { datedValues?: GBPDatedValue[] | null } | null
+}
+
+interface GBPPerfResponse {
+  multiDailyMetricTimeSeries?: Array<{
+    dailyMetricTimeSeries?: GBPDailyMetricTimeSeries[] | null
+  }> | null
+}
 
 function ymdToParts(ymd: string): { year: number; month: number; day: number } {
   const [y, m, d] = ymd.split('-').map((n) => parseInt(n, 10))
@@ -219,22 +262,18 @@ export async function fetchGBPLocationInsights(
     const body = await res.text()
     throw new Error(`GBP Performance API ${res.status}: ${body}`)
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const json: any = await res.json()
+  const json = (await res.json()) as GBPPerfResponse
 
   const totals: Record<string, number> = {}
   const dailyMap = new Map<string, Record<string, number>>()
   const monthlyMap = new Map<string, Record<string, number>>()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const series: any[] = json.multiDailyMetricTimeSeries ?? []
+  const series = json.multiDailyMetricTimeSeries ?? []
   for (const block of series) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inner: any[] = block.dailyMetricTimeSeries ?? []
+    const inner = block.dailyMetricTimeSeries ?? []
     for (const dm of inner) {
       const metric: string = dm.dailyMetric ?? 'UNKNOWN'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const datedValues: any[] = dm.timeSeries?.datedValues ?? []
+      const datedValues = dm.timeSeries?.datedValues ?? []
       let total = 0
       for (const dv of datedValues) {
         const value = parseInt(dv.value ?? '0', 10) || 0

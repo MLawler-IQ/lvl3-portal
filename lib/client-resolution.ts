@@ -79,9 +79,8 @@ export async function getClientListForUser(
     .select('client_id, clients(id, name)')
     .eq('user_id', userId)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const clientList = (accessRows ?? []).flatMap((row: any) => {
-    const c = row.clients as { id: string; name: string } | null
+  const clientList = (accessRows ?? []).flatMap((row) => {
+    const c = row.clients as unknown as { id: string; name: string } | null
     return c ? [c] : []
   }).sort((a, b) => a.name.localeCompare(b.name))
 
