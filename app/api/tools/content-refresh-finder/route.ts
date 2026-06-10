@@ -1,5 +1,5 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { userCanAccessClient } from '@/lib/auth'
+import { createServiceClient } from '@/lib/supabase/server'
+import { guardRoute, jsonError } from '@/lib/api/route-guard'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { fetchGSCPageRows } from '@/lib/tools-gsc'
 import Anthropic from '@anthropic-ai/sdk'
@@ -33,35 +33,16 @@ type Event =
 
 export async function POST(request: Request) {
   // Auth (before ReadableStream — needs sync context)
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, client_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !['admin', 'member'].includes(profile.role as string)) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
-
-  const body = await request.json() as { clientId: string }
+  const body = await request.json().catch(() => ({})) as { clientId?: string }
   const { clientId } = body
 
   if (!clientId) {
-    return new Response(JSON.stringify({ error: 'Missing clientId' }), { status: 400 })
+    return jsonError('Missing clientId', 400)
   }
 
-  if (!(await userCanAccessClient(
-    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
-    clientId,
-  ))) {
-    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
-  }
+  const guard = await guardRoute({ roles: ['admin', 'member'], clientId })
+  if (!guard.ok) return guard.response
+  const { user } = guard
 
   const rl = await checkRateLimit(user.id, { maxPerHour: 30, toolSlug: 'content-refresh-finder' })
   if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)

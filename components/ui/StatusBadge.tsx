@@ -37,12 +37,7 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   if (variant === "running") {
     return (
       <span
-        className={`${BASE} border ${className}`}
-        style={{
-          backgroundColor: "rgba(167,139,250,0.15)",
-          color: "#a78bfa",
-          borderColor: "rgba(167,139,250,0.2)",
-        }}
+        className={`${BASE} border bg-brand-400/15 text-brand-400 border-brand-400/20 ${className}`}
       >
         <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-brand-400 mr-1" />
         Running

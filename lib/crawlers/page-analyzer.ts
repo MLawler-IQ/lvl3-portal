@@ -124,14 +124,15 @@ export async function analyzePage(url: string): Promise<PageAnalysis> {
     const ctaCount = $('a[class*="btn"],a[class*="button"],button[type="submit"],.cta,[class*="cta"]').length
     const formCount = $('form').length
 
-    // Trust signals (look for common patterns)
+    // Trust signals — word-boundary matches so e.g. "dribbble" doesn't read
+    // as BBB accreditation or "driver's license" links as contractor licensing
     const trustSignals: string[] = []
-    if (fullHtml.includes('bbb') || fullHtml.includes('better business bureau')) trustSignals.push('BBB')
-    if (fullHtml.includes('google') && (fullHtml.includes('rating') || fullHtml.includes('review'))) trustSignals.push('Google Reviews')
-    if (fullHtml.includes('license') || fullHtml.includes('licensed')) trustSignals.push('Licensed')
-    if (fullHtml.includes('insured')) trustSignals.push('Insured')
-    if (fullHtml.includes('years') && (fullHtml.includes('experience') || fullHtml.includes('business'))) trustSignals.push('Years of Experience')
-    if (fullHtml.includes('guarantee') || fullHtml.includes('warranty')) trustSignals.push('Guarantee/Warranty')
+    if (/\bbbb\b/.test(fullHtml) || /\bbetter business bureau\b/.test(fullHtml)) trustSignals.push('BBB')
+    if (/\bgoogle\b/.test(fullHtml) && /\b(?:ratings?|rated|reviews?)\b/.test(fullHtml)) trustSignals.push('Google Reviews')
+    if (/\b(?:licensed|fully licensed|license(?:d)? (?:and|&) insured|contractor'?s? license|license #|license no)\b/.test(fullHtml)) trustSignals.push('Licensed')
+    if (/\binsured\b/.test(fullHtml)) trustSignals.push('Insured')
+    if (/\b\d+\+?\s*years\b/.test(fullHtml) && /\b(?:experience|business|industry)\b/.test(fullHtml)) trustSignals.push('Years of Experience')
+    if (/\b(?:guaranteed?|guarantees|warrant(?:y|ies))\b/.test(fullHtml)) trustSignals.push('Guarantee/Warranty')
 
     return {
       url, title, metaDescription, h1, headings, wordCount,

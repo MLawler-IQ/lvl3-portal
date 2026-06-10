@@ -3,11 +3,9 @@
 import { useRef, useState } from 'react'
 import { Upload, Download, CheckCircle2, Loader2, Circle, AlertCircle, X } from 'lucide-react'
 import JSZip from 'jszip'
+import { parsePromptRows, type ParsedPromptRow } from '@/lib/parse-csv'
 
-interface Row {
-  filename: string
-  prompt: string
-}
+type Row = ParsedPromptRow
 
 type ImageStatus = 'pending' | 'generating' | 'done' | 'error'
 
@@ -16,60 +14,6 @@ interface ImageState {
   status: ImageStatus
   error?: string
   data?: string // base64 WebP
-}
-
-function parseCsvTsvClient(text: string): Row[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim())
-  if (lines.length === 0) return []
-
-  const delimiter = lines[0].includes('\t') ? '\t' : ','
-
-  const splitLine = (line: string): string[] => {
-    if (delimiter === ',') {
-      const cols: string[] = []
-      let inQuote = false
-      let cur = ''
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i]
-        if (ch === '"') { inQuote = !inQuote }
-        else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = '' }
-        else { cur += ch }
-      }
-      cols.push(cur.trim())
-      return cols
-    }
-    return line.split('\t').map((c) => c.trim())
-  }
-
-  let titleColIdx = 0
-  let promptColIdx = 1
-  let startRow = 0
-
-  const firstRow = splitLine(lines[0]).map((h) => h.toLowerCase().replace(/[^a-z ]/g, ''))
-  const titleHeaders = ['title', 'post title', 'filename', 'name']
-  const promptHeaders = ['prompt', 'description', 'image prompt']
-
-  const foundTitle = firstRow.findIndex((h) => titleHeaders.some((t) => h.includes(t)))
-  const foundPrompt = firstRow.findIndex((h) => promptHeaders.some((t) => h.includes(t)))
-
-  if (foundTitle !== -1 || foundPrompt !== -1) {
-    if (foundTitle !== -1) titleColIdx = foundTitle
-    if (foundPrompt !== -1) promptColIdx = foundPrompt
-    startRow = 1
-  }
-
-  const slugify = (s: string) =>
-    s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-
-  const rows: Row[] = []
-  for (let i = startRow; i < lines.length; i++) {
-    const cols = splitLine(lines[i])
-    const title = cols[titleColIdx]?.replace(/^["']|["']$/g, '') ?? ''
-    const prompt = cols[promptColIdx]?.replace(/^["']|["']$/g, '') ?? ''
-    if (!title || !prompt) continue
-    rows.push({ filename: slugify(title) || `image-${i}`, prompt })
-  }
-  return rows
 }
 
 const DEFAULT_STYLE_RULES = `Style rules: photorealistic lifestyle interior, warm neutral palette, natural light, minimal clutter, clean lines, TV screen dark/blank, no text overlays, no logos.
@@ -106,7 +50,7 @@ export default function BlogImageGeneratorClient() {
     reader.onload = (e) => {
       const text = (e.target?.result as string) ?? ''
       setFileText(text)
-      setPreviewRows(parseCsvTsvClient(text))
+      setPreviewRows(parsePromptRows(text))
     }
     reader.readAsText(file)
   }
@@ -422,7 +366,7 @@ export default function BlogImageGeneratorClient() {
             {images.map((img) => (
               <li key={img.filename} className="flex items-start gap-2.5 text-sm">
                 {img.status === 'done' && (
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-400" />
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-success" />
                 )}
                 {img.status === 'generating' && (
                   <Loader2 className="w-4 h-4 mt-0.5 shrink-0 animate-spin text-surface-400" />

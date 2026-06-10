@@ -122,6 +122,8 @@ export default function LoginPage() {
                     id="email-pw"
                     type="email"
                     required
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? 'login-error-pw' : undefined}
                     autoComplete="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -145,6 +147,8 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     required
+                    aria-invalid={error ? true : undefined}
+                    aria-describedby={error ? 'login-error-pw' : undefined}
                     autoComplete="current-password"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
@@ -162,7 +166,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
+                <p id="login-error-pw" role="alert" className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
               )}
 
               {/* Primary button — ink bg + cream text per design spec */}
@@ -205,6 +209,8 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   required
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'login-error' : undefined}
                   autoComplete="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
@@ -221,7 +227,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
+                <p id="login-error" role="alert" className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
               )}
 
               {/* Accent button — marigold bg + ink text */}

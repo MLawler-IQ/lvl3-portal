@@ -1,23 +1,29 @@
 'use client'
 
 import type { DraftReview } from '@/lib/seo-content-engine/types'
+import { statusColor, statusTint, type StatusLevel } from '@/lib/status-color'
 
-const GEO_COLORS: Record<string, string> = {
-  strong: 'bg-emerald-500/10 text-emerald-400',
-  moderate: 'bg-yellow-500/10 text-yellow-400',
-  weak: 'bg-red-500/10 text-red-400',
+const GEO_LEVELS: Record<string, StatusLevel> = {
+  strong: 'success',
+  moderate: 'warning',
+  weak: 'error',
 }
 
-const RECOMMENDATION_COLORS: Record<string, string> = {
-  publish: 'bg-emerald-500/10 text-emerald-400',
-  revise: 'bg-yellow-500/10 text-yellow-400',
-  rewrite: 'bg-red-500/10 text-red-400',
+const RECOMMENDATION_LEVELS: Record<string, StatusLevel> = {
+  publish: 'success',
+  revise: 'warning',
+  rewrite: 'error',
 }
 
-const SEVERITY_COLORS: Record<string, string> = {
-  critical: 'text-red-400',
-  moderate: 'text-yellow-400',
-  minor: 'text-surface-400',
+const SEVERITY_LEVELS: Record<string, StatusLevel> = {
+  critical: 'error',
+  moderate: 'warning',
+  minor: 'neutral',
+}
+
+function pillStyle(level: StatusLevel | undefined): React.CSSProperties | undefined {
+  if (!level) return undefined
+  return { color: statusColor(level), backgroundColor: statusTint(level, 10) }
 }
 
 export default function ReviewSummary({ review }: { review: DraftReview }) {
@@ -35,9 +41,8 @@ export default function ReviewSummary({ review }: { review: DraftReview }) {
         <div className="flex flex-wrap items-center gap-3">
           {/* Pass / Fail */}
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              review.passed ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
-            }`}
+            className="px-3 py-1 rounded-full text-xs font-semibold"
+            style={pillStyle(review.passed ? 'success' : 'error')}
           >
             {review.passed ? 'PASS' : 'FAIL'}
           </span>
@@ -48,15 +53,17 @@ export default function ReviewSummary({ review }: { review: DraftReview }) {
           </span>
 
           {/* GEO Score */}
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${GEO_COLORS[geoScore] ?? 'bg-surface-800 text-surface-400'}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${GEO_LEVELS[geoScore] ? '' : 'bg-surface-800 text-surface-400'}`}
+            style={pillStyle(GEO_LEVELS[geoScore])}
+          >
             GEO: {geoScore}
           </span>
 
           {/* Recommendation */}
           <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              RECOMMENDATION_COLORS[recommendation] ?? 'bg-surface-800 text-surface-400'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${RECOMMENDATION_LEVELS[recommendation] ? '' : 'bg-surface-800 text-surface-400'}`}
+            style={pillStyle(RECOMMENDATION_LEVELS[recommendation])}
           >
             {recommendation.charAt(0).toUpperCase() + recommendation.slice(1)}
           </span>
@@ -85,7 +92,10 @@ export default function ReviewSummary({ review }: { review: DraftReview }) {
                   <td className="px-4 py-2.5 text-surface-300 font-medium">{issue.type}</td>
                   <td className="px-4 py-2.5 text-surface-400">{issue.detail}</td>
                   <td className="px-4 py-2.5">
-                    <span className={`text-xs font-semibold capitalize ${SEVERITY_COLORS[issue.severity] ?? 'text-surface-400'}`}>
+                    <span
+                      className="text-xs font-semibold capitalize"
+                      style={{ color: statusColor(SEVERITY_LEVELS[issue.severity] ?? 'neutral') }}
+                    >
                       {issue.severity}
                     </span>
                   </td>
@@ -106,7 +116,12 @@ export default function ReviewSummary({ review }: { review: DraftReview }) {
             {missingKeywords.map((kw, i) => (
               <span
                 key={i}
-                className="px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-400 border border-red-500/20"
+                className="px-2 py-0.5 rounded-full text-xs border"
+                style={{
+                  color: statusColor('error'),
+                  backgroundColor: statusTint('error', 10),
+                  borderColor: statusTint('error', 20),
+                }}
               >
                 {kw}
               </span>

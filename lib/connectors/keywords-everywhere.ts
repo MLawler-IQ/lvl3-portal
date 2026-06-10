@@ -1,3 +1,5 @@
+import { connectorErr, connectorOk, type ConnectorResult } from './types'
+
 const KE_BASE = 'https://api.keywordseverywhere.com/v1'
 
 export interface KEKeywordRow {
@@ -64,15 +66,19 @@ export async function fetchKEKeywordData(
   apiKey: string,
   country = 'us',
   dataSource = 'gkp',
-): Promise<KEKeywordRow[]> {
-  const result = (await kePost('get_keyword_data', apiKey, {
-    kw: keywords,
-    country,
-    currency: 'USD',
-    dataSource,
-  })) as { data?: unknown[] }
+): Promise<ConnectorResult<KEKeywordRow[]>> {
+  try {
+    const result = (await kePost('get_keyword_data', apiKey, {
+      kw: keywords,
+      country,
+      currency: 'USD',
+      dataSource,
+    })) as { data?: unknown[] }
 
-  return parseKeywordRows(result.data ?? [])
+    return connectorOk(parseKeywordRows(result.data ?? []))
+  } catch (err) {
+    return connectorErr(err)
+  }
 }
 
 export async function fetchKERelatedKeywords(
@@ -80,12 +86,16 @@ export async function fetchKERelatedKeywords(
   apiKey: string,
   country = 'us',
   limit = 50,
-): Promise<KEKeywordRow[]> {
-  const result = (await kePost('get_related_keywords', apiKey, {
-    keyword,
-    country,
-    num: Math.min(limit, 1000),
-  })) as { data?: unknown[] }
+): Promise<ConnectorResult<KEKeywordRow[]>> {
+  try {
+    const result = (await kePost('get_related_keywords', apiKey, {
+      keyword,
+      country,
+      num: Math.min(limit, 1000),
+    })) as { data?: unknown[] }
 
-  return parseKeywordRows(result.data ?? [])
+    return connectorOk(parseKeywordRows(result.data ?? []))
+  } catch (err) {
+    return connectorErr(err)
+  }
 }

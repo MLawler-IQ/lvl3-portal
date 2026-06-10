@@ -113,6 +113,7 @@ export default function LayoutShell({
         />
       )}
       <main
+        id="main-content"
         className={`pt-14 pb-16 md:pb-0 min-h-screen transition-all duration-200 ${
           sidebarCollapsed ? "md:pl-14" : "md:pl-56"
         }`}

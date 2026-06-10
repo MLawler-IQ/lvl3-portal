@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { guardRoute } from '@/lib/api/route-guard'
 import { parse } from '@/lib/tfk/parser'
 import { enrichOne } from '@/lib/tfk/enricher'
 import { generateContent, COPY_KEYS } from '@/lib/tfk/generator'
@@ -11,21 +11,8 @@ import type { TfkLocation } from '@/lib/tfk/types'
 export const maxDuration = 300
 
 export async function POST(req: NextRequest) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
-
-  const service = await createServiceClient()
-  const { data: profile } = await service
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-  if (!profile || profile.role !== 'admin') {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
+  const guard = await guardRoute({ roles: ['admin'] })
+  if (!guard.ok) return guard.response
 
   const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY ?? ''
 

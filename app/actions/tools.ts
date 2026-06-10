@@ -555,7 +555,7 @@ export async function fetchContentGaps(clientId: string): Promise<{
           recommendation:
             'High visibility but no engagement — title/meta likely mismatched to intent. Rewrite the title tag to directly address what searchers want.',
         })
-      } else if (position >= 11 && position <= 20 && v.impressions >= 150) {
+      } else if (position > 10.5 && position <= 20 && v.impressions >= 150) {
         gaps.push({
           query,
           impressions: v.impressions,
@@ -566,7 +566,7 @@ export async function fetchContentGaps(clientId: string): Promise<{
           recommendation:
             'Just off page one — strengthen on-page signals (header tags, internal links, content depth) to push into top 10.',
         })
-      } else if (position <= 10 && v.impressions >= 100) {
+      } else if (position <= 10.5 && v.impressions >= 100) {
         const expectedCtr = position <= 3 ? 0.08 : position <= 5 ? 0.04 : 0.02
         if (ctr < expectedCtr) {
           gaps.push({

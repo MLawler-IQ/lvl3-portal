@@ -2,25 +2,54 @@
 
 import { useState } from 'react'
 import type { QuickWin } from '@/app/actions/tools'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
 
-export default function QuickWinsTable({ wins }: { wins: QuickWin[] }) {
+interface Props {
+  wins: QuickWin[]
+  clientId?: string | null
+  runs?: ToolRun[]
+}
+
+export default function QuickWinsTable({ wins, clientId, runs = [] }: Props) {
   const [search, setSearch] = useState('')
+  const [rows, setRows] = useState<QuickWin[]>(wins)
 
-  const filtered = wins.filter((w) =>
+  const filtered = rows.filter((w) =>
     w.query.toLowerCase().includes(search.toLowerCase())
   )
 
+  function handleLoadRun(run: ToolRun) {
+    const output = run.output as { wins?: QuickWin[] } | null
+    if (output?.wins) setRows(output.wins)
+  }
+
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <input
-          type="text"
-          placeholder="Filter keywords..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-64 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500"
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Filter keywords..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-64 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500"
+          />
+          <p className="text-xs text-surface-500">{filtered.length} keywords</p>
+        </div>
+        <ExportTool
+          toolSlug="keyword-quick-wins"
+          clientId={clientId}
+          input={{ clientId }}
+          output={{ wins: rows }}
+          filename={`keyword-quick-wins-${new Date().toISOString().slice(0, 10)}`}
+          title="Keyword Quick Wins"
+          data={{
+            headers: ['Query', 'Position', 'Impressions', 'Clicks', 'CTR (%)', 'Est. Clicks @#3', 'Opportunity Score'],
+            rows: rows.map((w) => [w.query, w.position, w.impressions, w.clicks, w.ctr, w.estimatedClicksAt3, w.opportunityScore]),
+          }}
+          formats={['csv', 'xlsx']}
         />
-        <p className="text-xs text-surface-500">{filtered.length} keywords</p>
       </div>
 
       <div className="border border-surface-700 rounded-xl overflow-hidden">
@@ -72,6 +101,13 @@ export default function QuickWinsTable({ wins }: { wins: QuickWin[] }) {
         Opportunity Score = estimated click gain x position weight. Higher = bigger win for less effort.
         Est. Clicks @#3 uses a 10.3% CTR benchmark.
       </p>
+
+      {runs.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+          <RunHistory runs={runs} onLoad={handleLoadRun} />
+        </div>
+      )}
     </div>
   )
 }

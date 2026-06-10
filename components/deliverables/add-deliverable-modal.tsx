@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { X, Upload } from 'lucide-react'
 import { createDeliverable } from '@/app/actions/deliverables'
+import { useToast } from '@/components/ui/ToastProvider'
 
 type FileType = 'pdf' | 'slides' | 'sheets' | 'link'
 
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export default function AddDeliverableModal({ clients, onClose }: Props) {
+  const { toast } = useToast()
   const [clientId, setClientId] = useState(clients[0]?.id ?? '')
   const [title, setTitle] = useState('')
   const [fileType, setFileType] = useState<FileType>('pdf')
@@ -51,9 +53,12 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
         formData.append('url', url.trim())
       }
       await createDeliverable(formData)
+      toast(`Deliverable "${title.trim()}" added.`, 'success')
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      const message = err instanceof Error ? err.message : 'Something went wrong.'
+      setError(message)
+      toast('Failed to add deliverable.', 'error')
       setLoading(false)
     }
   }

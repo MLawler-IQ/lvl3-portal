@@ -43,7 +43,7 @@ export default async function ClientDetailPage({ params }: Props) {
         {client.logo_url ? (
           <img
             src={client.logo_url}
-            alt={client.name}
+            alt={`${client.name} logo`}
             className="w-14 h-14 rounded-xl object-contain bg-surface-800 flex-shrink-0"
           />
         ) : (

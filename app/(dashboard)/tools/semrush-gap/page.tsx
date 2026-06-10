@@ -1,17 +1,8 @@
 import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
+import { normalizeDomain } from '@/lib/normalize-domain'
 import { GitCompare } from 'lucide-react'
 import SemrushGapClient from './SemrushGapClient'
-
-function extractDomain(gscUrl: string): string {
-  return gscUrl
-    .replace(/^sc-domain:/, '')
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/.*$/, '')
-    .toLowerCase()
-    .trim()
-}
 
 export default async function SemrushGapPage() {
   const { user } = await requireAdmin()
@@ -30,7 +21,7 @@ export default async function SemrushGapPage() {
     'id, name, gsc_site_url'
   )
 
-  const defaultClientDomain = client?.gsc_site_url ? extractDomain(client.gsc_site_url) : ''
+  const defaultClientDomain = client?.gsc_site_url ? normalizeDomain(client.gsc_site_url) : ''
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">

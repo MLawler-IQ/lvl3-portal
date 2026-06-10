@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio'
 import { assertPublicHttpUrl } from '@/lib/url-guard'
+import { connectorErr, connectorOk, type ConnectorResult } from './types'
 
 export interface HeadingInfo {
   level: number
@@ -58,22 +59,28 @@ function getHostname(url: string): string {
   }
 }
 
-export async function fetchAndParse(url: string): Promise<ParsedPage> {
-  assertPublicHttpUrl(url)
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'LVL3-Portal-Crawler/1.0',
-      Accept: 'text/html,application/xhtml+xml',
-    },
-    redirect: 'follow',
-    signal: AbortSignal.timeout(15000),
-  })
+export async function fetchAndParse(url: string): Promise<ConnectorResult<ParsedPage>> {
+  let res: Response
+  let html: string
+  try {
+    assertPublicHttpUrl(url)
+    res = await fetch(url, {
+      headers: {
+        'User-Agent': 'LVL3-Portal-Crawler/1.0',
+        Accept: 'text/html,application/xhtml+xml',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(15000),
+    })
 
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText || 'Failed to fetch page'}`)
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText || 'Failed to fetch page'}`)
+    }
+
+    html = await res.text()
+  } catch (err) {
+    return connectorErr(err)
   }
-
-  const html = await res.text()
   const $ = cheerio.load(html)
   const baseHost = getHostname(url)
 
@@ -140,7 +147,7 @@ export async function fetchAndParse(url: string): Promise<ParsedPage> {
     })
   })
 
-  return {
+  return connectorOk({
     url,
     statusCode: res.status,
     title,
@@ -156,5 +163,5 @@ export async function fetchAndParse(url: string): Promise<ParsedPage> {
     contentToHtmlRatio,
     ogTags,
     hreflang,
-  }
+  })
 }

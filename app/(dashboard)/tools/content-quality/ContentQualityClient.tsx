@@ -1,14 +1,23 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { fetchContentQuality } from '@/app/actions/tools-extended'
 import type { ContentQualityResult } from '@/app/actions/tools-extended'
+import { statusColor } from '@/lib/status-color'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
+import { listToolRuns } from '@/app/actions/tool-runs'
 
 export default function ContentQualityClient() {
   const [url, setUrl] = useState('')
   const [result, setResult] = useState<ContentQualityResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [runs, setRuns] = useState<ToolRun[]>([])
+
+  useEffect(() => {
+    listToolRuns('content-quality').then(setRuns)
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,8 +31,19 @@ export default function ContentQualityClient() {
     })
   }
 
-  const scoreColor =
-    result && result.score >= 80 ? 'text-green-400' : result && result.score >= 50 ? 'text-yellow-400' : 'text-red-400'
+  function handleLoadRun(run: ToolRun) {
+    const output = run.output as { result?: ContentQualityResult } | null
+    if (output?.result) {
+      setResult(output.result)
+      setError(null)
+      const loadedInput = run.input as { url?: string }
+      if (loadedInput.url) setUrl(loadedInput.url)
+    }
+  }
+
+  const scoreColor = statusColor(
+    result && result.score >= 80 ? 'success' : result && result.score >= 50 ? 'warning' : 'error',
+  )
 
   return (
     <div className="space-y-4">
@@ -56,11 +76,34 @@ export default function ContentQualityClient() {
 
       {result && (
         <div className="space-y-4">
+          <ExportTool
+            toolSlug="content-quality"
+            input={{ url: result.url }}
+            output={{ result }}
+            filename={`content-quality-${new Date().toISOString().slice(0, 10)}`}
+            title="Content Quality"
+            data={{
+              headers: ['Field', 'Value'],
+              rows: [
+                ['URL', result.url],
+                ['Score', result.score],
+                ['Word Count', result.wordCount],
+                ['Reading Level', result.readingLevel],
+                ['Content/HTML Ratio (%)', result.contentToHtmlRatio],
+                ['Image Alt Coverage (%)', result.imageAltCoverage.percent],
+                ['Internal Links', result.internalLinks],
+                ['External Links', result.externalLinks],
+                ...result.issues.map((issue, i) => [`Issue ${i + 1}`, issue]),
+              ],
+            }}
+            formats={['csv', 'xlsx', 'docx']}
+            onSaved={() => listToolRuns('content-quality').then(setRuns)}
+          />
           {/* Score + Issues */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Content Score</h2>
-              <span className={`text-2xl font-bold ${scoreColor}`}>{result.score}/100</span>
+              <span className="text-2xl font-bold" style={{ color: scoreColor }}>{result.score}/100</span>
             </div>
             {result.issues.length > 0 && (
               <ul className="space-y-1">
@@ -72,7 +115,7 @@ export default function ContentQualityClient() {
                 ))}
               </ul>
             )}
-            {result.issues.length === 0 && <p className="text-sm text-green-400">No issues found.</p>}
+            {result.issues.length === 0 && <p className="text-sm text-success">No issues found.</p>}
           </div>
 
           {/* Metrics */}
@@ -139,6 +182,13 @@ export default function ContentQualityClient() {
               <p className="text-sm text-surface-400">No headings found.</p>
             )}
           </div>
+        </div>
+      )}
+
+      {runs.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+          <RunHistory runs={runs} onLoad={handleLoadRun} />
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { listRuns, type RunMeta } from '@/app/actions/seo-content-engine'
+import { statusColor, statusTint, type StatusLevel } from '@/lib/status-color'
 
 interface RunHistoryProps {
   clientId: string
@@ -33,41 +34,38 @@ function modeLabel(mode: string): string {
   }
 }
 
-function StatusBadge({ status }: { status: string }) {
-  let bg: string
-  let text: string
-  let dot: string
+const STATUS_LEVEL: Record<string, StatusLevel> = {
+  complete: 'success',
+  partial: 'warning',
+  failed: 'error',
+}
 
-  switch (status) {
-    case 'complete':
-      bg = 'bg-green-500/10'
-      text = 'text-green-400'
-      dot = 'bg-green-400'
-      break
-    case 'partial':
-      bg = 'bg-yellow-500/10'
-      text = 'text-yellow-400'
-      dot = 'bg-yellow-400'
-      break
-    case 'failed':
-      bg = 'bg-red-500/10'
-      text = 'text-red-400'
-      dot = 'bg-red-400'
-      break
-    case 'running':
-      bg = 'bg-blue-500/10'
-      text = 'text-blue-400'
-      dot = 'bg-blue-400'
-      break
-    default:
-      bg = 'bg-surface-700/50'
-      text = 'text-surface-400'
-      dot = 'bg-surface-400'
+function StatusBadge({ status }: { status: string }) {
+  if (status === 'running') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+        Running
+      </span>
+    )
+  }
+
+  const level = STATUS_LEVEL[status]
+  if (!level) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-surface-700/50 text-surface-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-surface-400" />
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    )
   }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${bg} ${text}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium"
+      style={{ color: statusColor(level), backgroundColor: statusTint(level, 10) }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: statusColor(level) }} />
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   )

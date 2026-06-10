@@ -3,16 +3,10 @@
 import { useState, useTransition, useMemo, useEffect, useCallback } from 'react'
 import { Loader2, Plus, X, Search, ArrowUpDown, Download, History, Trash2 } from 'lucide-react'
 import { runSemrushAnalysis, type MatrixKeyword, type PreFilters, type SemrushReportMeta } from '@/app/actions/tools'
-
-function normalizeDomain(raw: string): string {
-  return raw
-    .replace(/^sc-domain:/, '')
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(/\/.*$/, '')
-    .toLowerCase()
-    .trim()
-}
+import { normalizeDomain } from '@/lib/normalize-domain'
+import { buildCsv, downloadCsv } from '@/lib/csv-builder'
+import { statusColor, statusTint } from '@/lib/status-color'
+import { useSemrushSort, type SortDir } from '@/hooks/useSemrushSort'
 import { listSemrushReports, loadSemrushReport, deleteSemrushReport } from '@/app/actions/semrush-reports'
 
 const PAGE_SECTIONS = [
@@ -30,8 +24,6 @@ const DATABASES = [
   { value: 'au', label: 'AU' },
 ]
 
-type SortKey = 'keyword' | 'volume' | 'competition' | 'clientPosition' | 'relevance' | string
-type SortDir = 'asc' | 'desc'
 
 const RELEVANCE_OPTIONS = [
   { value: 0, label: 'All' },
@@ -59,8 +51,7 @@ export default function SemrushGapClient({
   const [clientKeywordCount, setClientKeywordCount] = useState(0)
   const [search, setSearch] = useState('')
   const [minRelevance, setMinRelevance] = useState(3)
-  const [sortKey, setSortKey] = useState<SortKey>('relevance')
-  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const { sortKey, sortDir, toggleSort, setSort } = useSemrushSort('relevance')
 
   // New state
   const [matrix, setMatrix] = useState<MatrixKeyword[]>([])
@@ -258,15 +249,6 @@ export default function SemrushGapClient({
     })
   }, [urlCoverage, search, sortKey, sortDir])
 
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortKey(key)
-      setSortDir(key === 'keyword' ? 'asc' : 'desc')
-    }
-  }
-
   function handleSubmit() {
     const filtered = competitors.map((c) => c.trim()).filter(Boolean)
     if (!filtered.length) {
@@ -305,8 +287,7 @@ export default function SemrushGapClient({
         setHasRun(true)
         setSearch('')
         setMinRelevance(3)
-        setSortKey('relevance')
-        setSortDir('desc')
+        setSort('relevance')
         await fetchReports()
       }
     })
@@ -334,8 +315,7 @@ export default function SemrushGapClient({
     setError(null)
     setSearch('')
     setMinRelevance(3)
-    setSortKey('relevance')
-    setSortDir('desc')
+    setSort('relevance')
     setShowHistory(false)
   }
 
@@ -348,41 +328,30 @@ export default function SemrushGapClient({
   }
 
   function downloadCSV() {
+    const dateStr = new Date().toISOString().slice(0, 10)
+
     if (activeTab === 'urls') {
       const headers = ['URL', 'Domain', 'Keywords', 'Top 10', `${clientName || resolvedClientDomain} Overlap`]
       for (const d of competitorDomains) headers.push(`${d} Overlap`)
       headers.push('Gap Score')
 
-      const csvRows = [headers.join(',')]
-      for (const row of filteredUrls) {
-        const cells = [
-          `"${row.url.replace(/"/g, '""')}"`,
-          row.domain,
-          String(row.totalKeywords),
-          String(row.top10Keywords),
-          String(row.clientOverlap),
-        ]
-        for (const d of competitorDomains) {
-          cells.push(String(row.domainOverlap[d] ?? 0))
-        }
-        cells.push(String(row.gapScore))
-        csvRows.push(cells.join(','))
-      }
+      const rows = filteredUrls.map((row) => [
+        row.url,
+        row.domain,
+        row.totalKeywords,
+        row.top10Keywords,
+        row.clientOverlap,
+        ...competitorDomains.map((d) => row.domainOverlap[d] ?? 0),
+        row.gapScore,
+      ])
 
-      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      const dateStr = new Date().toISOString().slice(0, 10)
-      a.href = url
-      a.download = `${resolvedClientDomain}-url-coverage-${dateStr}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
+      downloadCsv(`${resolvedClientDomain}-url-coverage-${dateStr}.csv`, buildCsv(headers, rows))
       return
     }
 
     const isGaps = activeTab === 'gaps'
     const domains = isGaps ? [resolvedClientDomain, ...competitorDomains] : allDomains
-    const rows = isGaps ? filteredGaps : filteredMatrix
+    const dataRows = isGaps ? filteredGaps : filteredMatrix
 
     const headers = ['Keyword', 'Volume', 'Competition']
     if (isGaps) headers.push('Relevance')
@@ -390,32 +359,20 @@ export default function SemrushGapClient({
       headers.push(`${d} Pos`, `${d} URL`)
     }
 
-    const csvRows = [headers.join(',')]
-    for (const row of rows) {
-      const cells = [
-        `"${row.keyword.replace(/"/g, '""')}"`,
-        String(row.volume),
-        row.competition.toFixed(2),
-      ]
+    const rows = dataRows.map((row) => {
+      const cells: unknown[] = [row.keyword, row.volume, row.competition.toFixed(2)]
       if (isGaps) {
-        cells.push(String((row as typeof filteredGaps[0]).relevance))
+        cells.push((row as typeof filteredGaps[0]).relevance)
       }
       for (const d of domains) {
         const pos = ('positions' in row ? row.positions : (row as typeof filteredGaps[0]).positions)[d]
-        cells.push(pos ? String(pos.position) : '')
-        cells.push(pos?.url ? `"${pos.url.replace(/"/g, '""')}"` : '')
+        cells.push(pos ? pos.position : '')
+        cells.push(pos?.url ?? '')
       }
-      csvRows.push(cells.join(','))
-    }
+      return cells
+    })
 
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    const dateStr = new Date().toISOString().slice(0, 10)
-    a.href = url
-    a.download = `${resolvedClientDomain}-${activeTab}-${dateStr}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadCsv(`${resolvedClientDomain}-${activeTab}-${dateStr}.csv`, buildCsv(headers, rows))
   }
 
   const inputClass =
@@ -645,7 +602,7 @@ export default function SemrushGapClient({
             <div className="flex items-center gap-1 bg-surface-800 rounded-lg p-1">
               <button
                 type="button"
-                onClick={() => { setActiveTab('matrix'); setSortKey('volume'); setSortDir('desc'); setSearch('') }}
+                onClick={() => { setActiveTab('matrix'); setSort('volume'); setSearch('') }}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'matrix'
                     ? 'bg-surface-700 text-surface-100'
@@ -656,7 +613,7 @@ export default function SemrushGapClient({
               </button>
               <button
                 type="button"
-                onClick={() => { setActiveTab('gaps'); setSortKey('relevance'); setSortDir('desc'); setSearch('') }}
+                onClick={() => { setActiveTab('gaps'); setSort('relevance'); setSearch('') }}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'gaps'
                     ? 'bg-surface-700 text-surface-100'
@@ -667,7 +624,7 @@ export default function SemrushGapClient({
               </button>
               <button
                 type="button"
-                onClick={() => { setActiveTab('urls'); setSortKey('gapScore'); setSortDir('desc'); setSearch('') }}
+                onClick={() => { setActiveTab('urls'); setSort('gapScore'); setSearch('') }}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   activeTab === 'urls'
                     ? 'bg-surface-700 text-surface-100'
@@ -766,9 +723,9 @@ export default function SemrushGapClient({
                                 <span className={`tabular-nums ${
                                   isClient
                                     ? pos.position <= 10
-                                      ? 'text-emerald-400'
+                                      ? 'text-success'
                                       : pos.position <= 20
-                                        ? 'text-yellow-400'
+                                        ? 'text-warning'
                                         : 'text-surface-500'
                                     : 'text-surface-300'
                                 }`}>
@@ -882,7 +839,7 @@ export default function SemrushGapClient({
                 <tbody>
                   {filteredUrls.map((row) => {
                     const pct = row.totalKeywords > 0 ? row.clientOverlap / row.totalKeywords : 0
-                    const pctColor = pct >= 0.5 ? 'text-emerald-400' : pct >= 0.25 ? 'text-yellow-400' : 'text-red-400'
+                    const pctColor = pct >= 0.5 ? 'text-success' : pct >= 0.25 ? 'text-warning' : 'text-error'
                     return (
                       <tr key={row.url} className="border-b border-surface-800 hover:bg-surface-850">
                         <td className="py-2 pr-4 max-w-[300px]">
@@ -947,14 +904,16 @@ function UrlLink({ url }: { url: string }) {
 
 function RelevanceBadge({ score }: { score: number }) {
   if (score === 0) return <span className="text-surface-600 text-xs">&ndash;</span>
-  const colors =
-    score >= 4
-      ? 'bg-emerald-900/50 text-emerald-400 border-emerald-700'
-      : score === 3
-        ? 'bg-yellow-900/50 text-yellow-400 border-yellow-700'
-        : 'bg-red-900/50 text-red-400 border-red-700'
+  const level = score >= 4 ? 'success' : score === 3 ? 'warning' : 'error'
   return (
-    <span className={`inline-block text-xs font-medium tabular-nums px-1.5 py-0.5 rounded border ${colors}`}>
+    <span
+      className="inline-block text-xs font-medium tabular-nums px-1.5 py-0.5 rounded border"
+      style={{
+        color: statusColor(level),
+        backgroundColor: statusTint(level, 14),
+        borderColor: statusTint(level, 40),
+      }}
+    >
       {score}
     </span>
   )

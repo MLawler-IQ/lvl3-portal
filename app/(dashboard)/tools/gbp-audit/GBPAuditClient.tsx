@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
 import { MapPin, CheckCircle, AlertCircle, XCircle, ExternalLink, Download } from 'lucide-react'
+import { statusColor, statusTint, scoreLevel } from '@/lib/status-color'
 import type { GBPAccount, LocationAudit } from '@/lib/connectors/gbp'
 
 interface Props {
@@ -16,21 +17,25 @@ interface Props {
 type JobStatus = 'idle' | 'running' | 'complete' | 'error'
 
 function ScoreBadge({ score }: { score: number }) {
-  const color =
-    score >= 80 ? 'text-green-400 bg-green-400/10 border-green-400/20' :
-    score >= 60 ? 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' :
-                  'text-red-400 bg-red-400/10 border-red-400/20'
+  const level = scoreLevel(score)
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border ${color}`}>
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border"
+      style={{
+        color: statusColor(level),
+        backgroundColor: statusTint(level, 10),
+        borderColor: statusTint(level, 20),
+      }}
+    >
       {score}
     </span>
   )
 }
 
 function StatusIcon({ status }: { status: LocationAudit['openStatus'] }) {
-  if (status === 'OPEN') return <CheckCircle className="w-3.5 h-3.5 text-green-400" />
-  if (status === 'CLOSED_PERMANENTLY') return <XCircle className="w-3.5 h-3.5 text-red-400" />
-  if (status === 'CLOSED_TEMPORARILY') return <AlertCircle className="w-3.5 h-3.5 text-yellow-400" />
+  if (status === 'OPEN') return <CheckCircle className="w-3.5 h-3.5 text-success" />
+  if (status === 'CLOSED_PERMANENTLY') return <XCircle className="w-3.5 h-3.5 text-error" />
+  if (status === 'CLOSED_TEMPORARILY') return <AlertCircle className="w-3.5 h-3.5 text-warning" />
   return <AlertCircle className="w-3.5 h-3.5 text-surface-500" />
 }
 
@@ -292,6 +297,7 @@ export default function GBPAuditClient({
               </div>
 
               <div className="bg-surface-900 border border-surface-700 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-surface-700">
@@ -350,13 +356,13 @@ export default function GBPAuditClient({
                           <tr key={`${loc.name}-expanded`}>
                             <td colSpan={5} className="px-4 pb-4 bg-surface-850">
                               {loc.issues.length === 0 ? (
-                                <p className="text-xs text-green-400 flex items-center gap-1.5 pt-2">
+                                <p className="text-xs text-success flex items-center gap-1.5 pt-2">
                                   <CheckCircle className="w-3.5 h-3.5" /> No issues found — this listing looks complete.
                                 </p>
                               ) : (
                                 <ul className="pt-2 space-y-1">
                                   {loc.issues.map((issue, i) => (
-                                    <li key={i} className="text-xs text-yellow-400 flex items-center gap-1.5">
+                                    <li key={i} className="text-xs text-warning flex items-center gap-1.5">
                                       <AlertCircle className="w-3 h-3 shrink-0" />
                                       {issue}
                                     </li>
@@ -380,6 +386,7 @@ export default function GBPAuditClient({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}

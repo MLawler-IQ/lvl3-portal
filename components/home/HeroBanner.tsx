@@ -25,7 +25,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={clientLogoUrl}
-                  alt={clientName ?? ''}
+                  alt={clientName ? `${clientName} logo` : ''}
                   className="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5 shrink-0"
                 />
               )}
@@ -57,7 +57,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={clientLogoUrl}
-                  alt={clientName ?? ''}
+                  alt={clientName ? `${clientName} logo` : ''}
                   className="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5 shrink-0"
                 />
               )}

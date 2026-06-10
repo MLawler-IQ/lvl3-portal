@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { fetchKeywordResearch } from '@/app/actions/tools-extended'
 import type { KEKeywordRow } from '@/lib/connectors/keywords-everywhere'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
+import { listToolRuns } from '@/app/actions/tool-runs'
 
 export default function KeywordResearchClient() {
   const [input, setInput] = useState('')
@@ -10,6 +13,11 @@ export default function KeywordResearchClient() {
   const [rows, setRows] = useState<KEKeywordRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [runs, setRuns] = useState<ToolRun[]>([])
+
+  useEffect(() => {
+    listToolRuns('keyword-research').then(setRuns)
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,6 +33,17 @@ export default function KeywordResearchClient() {
       if (res.error) setError(res.error)
       else if (res.data) setRows(res.data)
     })
+  }
+
+  function handleLoadRun(run: ToolRun) {
+    const output = run.output as { rows?: KEKeywordRow[] } | null
+    if (output?.rows) {
+      setRows(output.rows)
+      setError(null)
+      const loadedInput = run.input as { keywords?: string[]; country?: string }
+      if (loadedInput.keywords) setInput(loadedInput.keywords.join('\n'))
+      if (loadedInput.country) setCountry(loadedInput.country)
+    }
   }
 
   return (
@@ -80,6 +99,22 @@ export default function KeywordResearchClient() {
       )}
 
       {rows && rows.length > 0 && (
+        <ExportTool
+          toolSlug="keyword-research"
+          input={{ keywords: input.split('\n').map((k) => k.trim()).filter(Boolean), country }}
+          output={{ rows }}
+          filename={`keyword-research-${new Date().toISOString().slice(0, 10)}`}
+          title="Keyword Research"
+          data={{
+            headers: ['Keyword', 'Volume', 'CPC', 'Competition'],
+            rows: rows.map((r) => [r.keyword, r.vol, r.cpc.toFixed(2), r.competition.toFixed(2)]),
+          }}
+          formats={['csv', 'xlsx']}
+          onSaved={() => listToolRuns('keyword-research').then(setRuns)}
+        />
+      )}
+
+      {rows && rows.length > 0 && (
         <div className="border border-surface-700 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -129,6 +164,13 @@ export default function KeywordResearchClient() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {runs.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+          <RunHistory runs={runs} onLoad={handleLoadRun} />
         </div>
       )}
     </div>

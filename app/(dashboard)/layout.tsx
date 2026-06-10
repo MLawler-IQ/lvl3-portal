@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import LayoutShell from "@/components/nav/LayoutShell";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 import {
   getClientListForUser,
   getSelectedClientId,
@@ -126,7 +127,7 @@ export default async function DashboardLayout({
       unviewedDeliverables={unviewedDeliverables}
       openThreadDeliverables={openThreadDeliverables}
     >
-      {children}
+      <ToastProvider>{children}</ToastProvider>
     </LayoutShell>
   );
 }

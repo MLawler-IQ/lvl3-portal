@@ -3,8 +3,9 @@
  * Runs the full keyword + content pipeline with real-time progress events.
  * Topics execute in parallel with a configurable concurrency limit.
  */
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { userCanAccessClient } from '@/lib/auth'
+import { z } from 'zod'
+import { createServiceClient } from '@/lib/supabase/server'
+import { guardRoute, jsonError } from '@/lib/api/route-guard'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { SeoAnthropicClient } from '@/lib/seo-content-engine/anthropic-client'
 import { DataSources } from '@/lib/seo-content-engine/data-sources'
@@ -22,61 +23,46 @@ import type {
 
 export const maxDuration = 800
 
+const requestSchema = z.object({
+  clientId: z.string().min(1, 'clientId is required'),
+  mode: z.enum(['keywords_only', 'brief', 'full']),
+  brandContext: z.string(),
+  topics: z
+    .array(z.object({ title: z.string().min(1, 'topic title is required') }).catchall(z.unknown()))
+    .min(1, 'No topics provided'),
+})
+
 export async function POST(request: Request) {
-  // ── Auth (before ReadableStream — cookies need sync context) ──
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
-
-  // Check role
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, client_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !['admin', 'member'].includes(profile.role)) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
-
-  const service = await createServiceClient()
-
-  // ── Parse request ────────────────────────────────────────────
+  // ── Parse + validate request ─────────────────────────────────
   const formData = await request.formData()
-  const clientId = formData.get('clientId') as string
-  const mode = (formData.get('mode') as RunMode) ?? 'full'
-  const brandContext = (formData.get('brandContext') as string) ?? ''
-  const topicsJson = formData.get('topics') as string
-
-  if (!clientId || !topicsJson) {
-    return new Response(JSON.stringify({ error: 'Missing clientId or topics' }), { status: 400 })
+  let parsedTopics: unknown
+  try {
+    parsedTopics = JSON.parse((formData.get('topics') as string | null) ?? 'null')
+  } catch {
+    return jsonError('Invalid topics JSON', 400)
   }
-
-  // Enforce client scope: members may only run against assigned clients
-  if (!(await userCanAccessClient(
-    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
-    clientId,
-  ))) {
-    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
+  const parsed = requestSchema.safeParse({
+    clientId: formData.get('clientId') ?? '',
+    mode: (formData.get('mode') as string | null) || 'full',
+    brandContext: (formData.get('brandContext') as string | null) ?? '',
+    topics: parsedTopics,
+  })
+  if (!parsed.success) {
+    return jsonError(`Invalid request: ${parsed.error.issues[0]?.message ?? 'malformed body'}`, 400)
   }
+  const { clientId, brandContext } = parsed.data
+  const mode = parsed.data.mode as RunMode
+  const topics = parsed.data.topics as unknown as TopicInput[]
+
+  // ── Auth (before ReadableStream — cookies need sync context) ──
+  const guard = await guardRoute({ roles: ['admin', 'member'], clientId })
+  if (!guard.ok) return guard.response
+  const { user } = guard
 
   const rl = await checkRateLimit(user.id, { maxPerHour: 10, toolSlug: 'seo-content-engine' })
   if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)
 
-  let topics: TopicInput[]
-  try {
-    topics = JSON.parse(topicsJson) as TopicInput[]
-  } catch {
-    return new Response(JSON.stringify({ error: 'Invalid topics JSON' }), { status: 400 })
-  }
-
-  if (!topics.length) {
-    return new Response(JSON.stringify({ error: 'No topics provided' }), { status: 400 })
-  }
+  const service = await createServiceClient()
 
   // Fetch client GSC site URL + brand context
   const { data: client } = await service
@@ -149,15 +135,17 @@ export async function POST(request: Request) {
           (async () => {
             if (!keApiKey) throw new Error('API key not configured')
             const { fetchKEKeywordData } = await import('@/lib/connectors/keywords-everywhere')
-            const rows = await fetchKEKeywordData(['seo'], keApiKey)
-            return `Connected (${rows.length} result${rows.length !== 1 ? 's' : ''})`
+            const result = await fetchKEKeywordData(['seo'], keApiKey)
+            if (!result.ok) throw new Error(result.error)
+            return `Connected (${result.data.length} result${result.data.length !== 1 ? 's' : ''})`
           })(),
           // Semrush
           (async () => {
             if (!semrushApiKey) throw new Error('API key not configured')
             const { fetchSemrushDomainOrganic } = await import('@/lib/connectors/semrush-portal')
-            const rows = await fetchSemrushDomainOrganic('example.com', semrushApiKey)
-            return `Connected (${rows.length} keywords)`
+            const result = await fetchSemrushDomainOrganic('example.com', semrushApiKey)
+            if (!result.ok) throw new Error(result.error)
+            return `Connected (${result.data.length} keywords)`
           })(),
           // GSC
           (async () => {

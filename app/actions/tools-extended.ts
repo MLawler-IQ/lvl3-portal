@@ -25,7 +25,8 @@ export async function fetchCoreWebVitals(
     await requireAdmin()
     const apiKey = process.env.PAGESPEED_API_KEY
     const result = await fetchPageSpeedInsights(url, strategy, apiKey)
-    return { data: result }
+    if (!result.ok) return { error: result.error }
+    return { data: result.data }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to fetch Core Web Vitals' }
   }
@@ -42,7 +43,9 @@ export async function fetchPageSeoAudit(
 ): Promise<{ data?: PageSeoResult; error?: string }> {
   try {
     await requireAdmin()
-    const page = await fetchAndParse(url)
+    const result = await fetchAndParse(url)
+    if (!result.ok) return { error: result.error }
+    const page = result.data
 
     const issues: string[] = []
     if (!page.title) issues.push('Missing title tag')
@@ -76,7 +79,8 @@ export async function fetchKeywordResearch(
     const apiKey = process.env.KEYWORDS_EVERYWHERE_API_KEY
     if (!apiKey) return { error: 'KEYWORDS_EVERYWHERE_API_KEY is not configured.' }
     const rows = await fetchKEKeywordData(keywords, apiKey, country)
-    return { data: rows }
+    if (!rows.ok) return { error: rows.error }
+    return { data: rows.data }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to fetch keyword data' }
   }
@@ -115,7 +119,12 @@ export async function fetchBacklinkOverview(
       fetchSemrushBacklinksOverview(domain, apiKey),
     ])
 
-    return { data: { domain, ranks, backlinks } }
+    // API failure ≠ "no data": surface the connector error so a broken key
+    // doesn't render as an empty result.
+    if (!ranks.ok) return { error: ranks.error }
+    if (!backlinks.ok) return { error: backlinks.error }
+
+    return { data: { domain, ranks: ranks.data, backlinks: backlinks.data } }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to fetch backlink overview' }
   }
@@ -160,7 +169,9 @@ export async function fetchContentQuality(
 ): Promise<{ data?: ContentQualityResult; error?: string }> {
   try {
     await requireAdmin()
-    const page = await fetchAndParse(url)
+    const result = await fetchAndParse(url)
+    if (!result.ok) return { error: result.error }
+    const page = result.data
 
     const grade = fleschKincaidGrade(page.bodyText || page.headings.map((h) => h.text).join('. '))
 

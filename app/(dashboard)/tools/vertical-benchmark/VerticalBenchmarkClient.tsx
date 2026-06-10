@@ -199,7 +199,7 @@ export default function VerticalBenchmarkClient({
             <ul className="space-y-1.5">
               {report.tableStakes.map((s, i) => (
                 <li key={i} className="text-xs text-surface-400 flex gap-2">
-                  <span style={{ color: '#34D399' }}>✓</span>
+                  <span style={{ color: 'var(--color-success)' }}>✓</span>
                   {s}
                 </li>
               ))}
@@ -282,21 +282,21 @@ export default function VerticalBenchmarkClient({
                   </td>
                   <td className="py-2 pr-4">
                     {c.hasAuthorBylines ? (
-                      <span style={{ color: '#34D399' }}>Yes</span>
+                      <span style={{ color: 'var(--color-success)' }}>Yes</span>
                     ) : (
                       <span className="text-surface-600">No</span>
                     )}
                   </td>
                   <td className="py-2 pr-4">
                     {c.hasFaqSections ? (
-                      <span style={{ color: '#34D399' }}>Yes</span>
+                      <span style={{ color: 'var(--color-success)' }}>Yes</span>
                     ) : (
                       <span className="text-surface-600">No</span>
                     )}
                   </td>
                   <td className="py-2 pr-4">
                     {c.hasHowToContent ? (
-                      <span style={{ color: '#34D399' }}>Yes</span>
+                      <span style={{ color: 'var(--color-success)' }}>Yes</span>
                     ) : (
                       <span className="text-surface-600">No</span>
                     )}
@@ -321,7 +321,7 @@ export default function VerticalBenchmarkClient({
             <ul className="space-y-1.5">
               {report.clientGaps.map((g, i) => (
                 <li key={i} className="text-xs text-surface-400 flex gap-2">
-                  <span style={{ color: '#FBBF24' }}>△</span>
+                  <span style={{ color: 'var(--color-warning)' }}>△</span>
                   {g}
                 </li>
               ))}

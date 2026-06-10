@@ -34,7 +34,7 @@ interface Props {
 }
 
 function StatusIcon({ status }: { status: string }) {
-  if (status === 'complete') return <CheckCircle2 size={13} style={{ color: '#34D399' /* success */ }} />
+  if (status === 'complete') return <CheckCircle2 size={13} style={{ color: 'var(--color-success)' }} />
   if (status === 'failed') return <XCircle size={13} className="text-error" />
   if (status === 'running' || status === 'queued') return <Loader2 size={13} className="animate-spin text-surface-400" />
   return <Clock size={13} className="text-surface-400" />

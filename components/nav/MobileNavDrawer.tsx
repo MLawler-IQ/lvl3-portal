@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect } from "react"
 import {
   X,
   Home,
@@ -41,6 +42,16 @@ export default function MobileNavDrawer({
   postsBadgeCount,
   servicesBadgeCount,
 }: MobileNavDrawerProps) {
+  // Lock background scroll while the drawer is open
+  useEffect(() => {
+    if (!isOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previous
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
   function isActive(href: string) {
@@ -75,6 +86,9 @@ export default function MobileNavDrawer({
 
       {/* Drawer */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         className="fixed top-0 left-0 bottom-0 w-64 z-50 flex flex-col animate-fade-in"
         style={{
           backgroundColor: "var(--sidebar-bg)",
@@ -97,7 +111,7 @@ export default function MobileNavDrawer({
           </span>
           <button
             onClick={onClose}
-            className="p-1.5 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             style={{ color: "var(--sidebar-text)" }}
             aria-label="Close menu"
           >
@@ -122,7 +136,7 @@ export default function MobileNavDrawer({
                 key={href}
                 href={href}
                 onClick={onClose}
-                className="flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors"
                 style={{
                   color: active ? "var(--sidebar-active)" : "var(--sidebar-text)",
                   backgroundColor: active ? "var(--active-bg)" : "transparent",
@@ -166,7 +180,7 @@ export default function MobileNavDrawer({
                     key={href}
                     href={href}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded text-sm font-medium transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors"
                     style={{
                       color: active ? "var(--sidebar-active)" : "var(--sidebar-text)",
                       backgroundColor: active ? "var(--active-bg)" : "transparent",

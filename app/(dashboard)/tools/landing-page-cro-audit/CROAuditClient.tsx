@@ -5,6 +5,7 @@ import { MousePointerClick } from 'lucide-react'
 import UrlInputTool from '@/components/tools/primitives/UrlInputTool'
 import BackgroundJobTool, { type JobStatus } from '@/components/tools/primitives/BackgroundJobTool'
 import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
+import { statusColor, statusTint, type StatusLevel } from '@/lib/status-color'
 
 // ── Types (mirrored from API route) ──────────────────────────────────────────
 
@@ -35,18 +36,26 @@ type StreamEvent =
 
 // ── Grade colours ─────────────────────────────────────────────────────────────
 
+const GRADE_LEVEL: Record<CROAuditScore['grade'], StatusLevel> = {
+  A: 'success',
+  B: 'success',
+  C: 'warning',
+  D: 'error',
+  F: 'error',
+}
+
 const GRADE_COLOR: Record<CROAuditScore['grade'], string> = {
-  A: '#059669', // emerald-600
-  B: '#34D399', // emerald-400
-  C: '#D97706', // amber-600
-  D: '#F87171', // red-400
-  F: '#DC2626', // red-600
+  A: statusColor(GRADE_LEVEL.A),
+  B: statusColor(GRADE_LEVEL.B),
+  C: statusColor(GRADE_LEVEL.C),
+  D: statusColor(GRADE_LEVEL.D),
+  F: statusColor(GRADE_LEVEL.F),
 }
 
 const IMPACT_COLOR: Record<'high' | 'medium' | 'low', string> = {
-  high: '#F87171',
-  medium: '#FBBF24',
-  low: '#34D399',
+  high: statusColor('error'),
+  medium: statusColor('warning'),
+  low: statusColor('success'),
 }
 
 // ── Sub-components ───────────────────────────────────────────────────────────
@@ -55,7 +64,7 @@ function GradeBadge({ grade }: { grade: CROAuditScore['grade'] }) {
   return (
     <span
       className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold font-mono"
-      style={{ backgroundColor: `${GRADE_COLOR[grade]}22`, color: GRADE_COLOR[grade] }}
+      style={{ backgroundColor: statusTint(GRADE_LEVEL[grade], 13), color: GRADE_COLOR[grade] }}
     >
       {grade}
     </span>
@@ -81,7 +90,7 @@ function SectionCard({ title, data }: { title: string; data: CROAuditScore }) {
           <ul className="space-y-1">
             {data.issues.map((issue, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-surface-300">
-                <span className="mt-0.5 shrink-0" style={{ color: '#F87171' }}>&#x2022;</span>
+                <span className="mt-0.5 shrink-0" style={{ color: 'var(--color-error)' }}>&#x2022;</span>
                 {issue}
               </li>
             ))}

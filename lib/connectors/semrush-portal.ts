@@ -1,4 +1,5 @@
 import { logError } from '@/lib/logging'
+import { connectorErr, connectorOk, type ConnectorResult } from './types'
 
 export interface SemrushDomainRank {
   domain: string
@@ -50,11 +51,12 @@ function parseCSV(text: string): Record<string, string>[] {
   })
 }
 
+/** data is null when Semrush has no rows for the domain (≠ API failure). */
 export async function fetchSemrushDomainRanks(
   domain: string,
   apiKey: string,
   database = 'us',
-): Promise<SemrushDomainRank | null> {
+): Promise<ConnectorResult<SemrushDomainRank | null>> {
   try {
     const text = await semrushFetch({
       type: 'domain_ranks',
@@ -65,25 +67,26 @@ export async function fetchSemrushDomainRanks(
     })
 
     const rows = parseCSV(text)
-    if (rows.length === 0) return null
+    if (rows.length === 0) return connectorOk(null)
 
     const row = rows[0]
-    return {
+    return connectorOk({
       domain,
       organic_keywords: parseInt(row['Organic Keywords'] ?? row['Or'] ?? '0', 10),
       organic_traffic: parseInt(row['Organic Traffic'] ?? row['Ot'] ?? '0', 10),
       organic_cost: parseFloat(row['Organic Cost'] ?? row['Oc'] ?? '0'),
-    }
+    })
   } catch (err) {
     logError('semrush.domain_ranks', `fetch failed for ${domain}`, err)
-    return null
+    return connectorErr(err)
   }
 }
 
+/** data is null when Semrush has no backlink rows for the domain (≠ API failure). */
 export async function fetchSemrushBacklinksOverview(
   domain: string,
   apiKey: string,
-): Promise<SemrushBacklinksOverview | null> {
+): Promise<ConnectorResult<SemrushBacklinksOverview | null>> {
   try {
     const text = await semrushFetch({
       type: 'backlinks_overview',
@@ -94,19 +97,19 @@ export async function fetchSemrushBacklinksOverview(
     })
 
     const rows = parseCSV(text)
-    if (rows.length === 0) return null
+    if (rows.length === 0) return connectorOk(null)
 
     const row = rows[0]
-    return {
+    return connectorOk({
       total_backlinks: parseInt(row['total'] ?? row['Total'] ?? '0', 10),
       referring_domains: parseInt(row['domains_num'] ?? row['Referring Domains'] ?? '0', 10),
       follow_links: parseInt(row['follows_num'] ?? row['Follow'] ?? '0', 10),
       nofollow_links: parseInt(row['nofollows_num'] ?? row['Nofollow'] ?? '0', 10),
       authority_score: parseInt(row['score'] ?? row['Authority Score'] ?? '0', 10),
-    }
+    })
   } catch (err) {
     logError('semrush.backlinks_overview', `fetch failed for ${domain}`, err)
-    return null
+    return connectorErr(err)
   }
 }
 
@@ -115,27 +118,34 @@ export async function fetchSemrushDomainOrganic(
   apiKey: string,
   database = 'us',
   limit = 100,
-): Promise<SemrushKeywordRow[]> {
-  const text = await semrushFetch({
-    type: 'domain_organic',
-    key: apiKey,
-    domain,
-    database,
-    display_limit: String(limit),
-    export_columns: 'Ph,Po,Nq,Co,Ur,Sf',
-  })
+): Promise<ConnectorResult<SemrushKeywordRow[]>> {
+  try {
+    const text = await semrushFetch({
+      type: 'domain_organic',
+      key: apiKey,
+      domain,
+      database,
+      display_limit: String(limit),
+      export_columns: 'Ph,Po,Nq,Co,Ur,Sf',
+    })
 
-  if (!text.trim()) return []
+    if (!text.trim()) return connectorOk([])
 
-  const rows = parseCSV(text)
-  return rows
-    .map((row) => ({
-      keyword: row['Keyword'] ?? row['Ph'] ?? '',
-      position: parseInt(row['Position'] ?? row['Po'] ?? '0', 10),
-      volume: parseInt(row['Search Volume'] ?? row['Nq'] ?? '0', 10),
-      competition: parseFloat(row['Competition'] ?? row['Co'] ?? '0'),
-      url: row['Url'] ?? row['Ur'] ?? '',
-      serp_features: parseInt(row['SERP Features'] ?? row['Sf'] ?? '0', 10) || 0,
-    }))
-    .filter((r) => r.keyword)
+    const rows = parseCSV(text)
+    return connectorOk(
+      rows
+        .map((row) => ({
+          keyword: row['Keyword'] ?? row['Ph'] ?? '',
+          position: parseInt(row['Position'] ?? row['Po'] ?? '0', 10),
+          volume: parseInt(row['Search Volume'] ?? row['Nq'] ?? '0', 10),
+          competition: parseFloat(row['Competition'] ?? row['Co'] ?? '0'),
+          url: row['Url'] ?? row['Ur'] ?? '',
+          serp_features: parseInt(row['SERP Features'] ?? row['Sf'] ?? '0', 10) || 0,
+        }))
+        .filter((r) => r.keyword),
+    )
+  } catch (err) {
+    logError('semrush.domain_organic', `fetch failed for ${domain}`, err)
+    return connectorErr(err)
+  }
 }

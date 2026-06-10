@@ -1,14 +1,22 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { fetchPageSeoAudit } from '@/app/actions/tools-extended'
 import type { PageSeoResult } from '@/app/actions/tools-extended'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
+import { listToolRuns } from '@/app/actions/tool-runs'
 
 export default function PageSeoClient() {
   const [url, setUrl] = useState('')
   const [result, setResult] = useState<PageSeoResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [runs, setRuns] = useState<ToolRun[]>([])
+
+  useEffect(() => {
+    listToolRuns('page-seo-audit').then(setRuns)
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -20,6 +28,16 @@ export default function PageSeoClient() {
       if (res.error) setError(res.error)
       else if (res.data) setResult(res.data)
     })
+  }
+
+  function handleLoadRun(run: ToolRun) {
+    const output = run.output as { result?: PageSeoResult } | null
+    if (output?.result) {
+      setResult(output.result)
+      setError(null)
+      const loadedInput = run.input as { url?: string }
+      if (loadedInput.url) setUrl(loadedInput.url)
+    }
   }
 
   return (
@@ -53,6 +71,34 @@ export default function PageSeoClient() {
 
       {result && (
         <div className="space-y-4">
+          <ExportTool
+            toolSlug="page-seo-audit"
+            input={{ url: result.url }}
+            output={{ result }}
+            filename={`page-seo-audit-${new Date().toISOString().slice(0, 10)}`}
+            title="Page SEO Audit"
+            data={{
+              headers: ['Field', 'Value'],
+              rows: [
+                ['URL', result.url],
+                ['Title', result.title],
+                ['Title Length', result.title.length],
+                ['Meta Description', result.metaDescription],
+                ['Meta Description Length', result.metaDescription.length],
+                ['Canonical', result.canonical],
+                ['Robots', result.robots],
+                ['Word Count', result.wordCount],
+                ['Content/HTML Ratio (%)', result.contentToHtmlRatio],
+                ['Headings', result.headings.length],
+                ['Images', result.images.length],
+                ['Images Missing Alt', result.images.filter((i) => !i.hasAlt).length],
+                ['Structured Data Blocks', result.structuredData.length],
+                ...result.issues.map((issue, i) => [`Issue ${i + 1}`, issue]),
+              ],
+            }}
+            formats={['csv', 'xlsx', 'docx']}
+            onSaved={() => listToolRuns('page-seo-audit').then(setRuns)}
+          />
           {/* Issues */}
           {result.issues.length > 0 && (
             <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-2">
@@ -69,7 +115,7 @@ export default function PageSeoClient() {
           )}
           {result.issues.length === 0 && (
             <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-              <p className="text-sm text-green-400">No issues found.</p>
+              <p className="text-sm text-success">No issues found.</p>
             </div>
           )}
 
@@ -167,6 +213,13 @@ export default function PageSeoClient() {
               <p className="text-sm text-surface-400">No structured data found.</p>
             )}
           </div>
+        </div>
+      )}
+
+      {runs.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+          <RunHistory runs={runs} onLoad={handleLoadRun} />
         </div>
       )}
     </div>

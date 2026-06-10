@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, CheckCircle2, XCircle, Clock, AlertTriangle } from 'lucide-react'
-import type { TopicState } from '../SeoContentEngineClient'
+import type { TopicState } from '@/hooks/usePipelineStream'
 
 interface PipelineProgressProps {
   topicTitles: string[]

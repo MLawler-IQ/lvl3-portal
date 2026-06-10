@@ -8,6 +8,7 @@ import { parseSheetId, fetchSheetHeaders } from '@/lib/google-sheets'
 import { fetchGA4Metrics, GA4Metrics, fetchGA4Report, GA4Report, ChannelRow, MonthlySessionPoint, SourceMediumRow, LandingPageRow } from '@/lib/google-analytics'
 import { fetchGSCMetrics, GSCMetrics, listGSCSites, fetchGSCReport, GSCReport, GSCMonthlyPoint, QueryRow, UrlRow, SerpDistribution } from '@/lib/google-search-console'
 import { buildDateRange, DateRange } from '@/lib/date-range'
+import { normalizeDomain } from '@/lib/normalize-domain'
 import Anthropic from '@anthropic-ai/sdk'
 
 export type { GA4Metrics, GSCMetrics, GA4Report, GSCReport, ChannelRow, MonthlySessionPoint, SourceMediumRow, LandingPageRow, GSCMonthlyPoint, QueryRow, UrlRow, SerpDistribution, DateRange }
@@ -142,25 +143,12 @@ export async function fetchDashboardReport(
 // ── GSC site detection ────────────────────────────────────────────────────────
 
 
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url.replace(/^www\./, '')
-  }
-}
-
 function siteMatchesDomain(site: string, domain: string): boolean {
   if (site.startsWith('sc-domain:')) {
-    const d = site.replace('sc-domain:', '').replace(/^www\./, '')
+    const d = normalizeDomain(site)
     return d === domain || d.endsWith('.' + domain)
   }
-  try {
-    const d = new URL(site).hostname.replace(/^www\./, '')
-    return d === domain
-  } catch {
-    return false
-  }
+  return normalizeDomain(site) === domain
 }
 
 export async function detectGSCSiteUrl(
@@ -187,7 +175,7 @@ export async function detectGSCSiteUrl(
       const streams = streamsResult.value.data.dataStreams ?? []
       const webStream = streams.find((s) => s.type === 'WEB_DATA_STREAM')
       const defaultUri = webStream?.webStreamData?.defaultUri ?? ''
-      if (defaultUri) ga4Domain = extractDomain(defaultUri)
+      if (defaultUri) ga4Domain = normalizeDomain(defaultUri)
     }
 
     // Best case: service account has GSC access — return real sites + auto-match

@@ -1,6 +1,9 @@
 import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
 import { checkAIVisibility } from '@/app/actions/tools'
+import { listToolRuns } from '@/app/actions/tool-runs'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory from '@/components/tools/RunHistory'
 import { Eye } from 'lucide-react'
 
 export default async function AIVisibilityPage() {
@@ -20,7 +23,10 @@ export default async function AIVisibilityPage() {
     'id, name'
   )
 
-  const { result, error } = await checkAIVisibility(selectedClientId)
+  const [{ result, error }, runs] = await Promise.all([
+    checkAIVisibility(selectedClientId),
+    listToolRuns('ai-visibility', selectedClientId),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
@@ -40,6 +46,26 @@ export default async function AIVisibilityPage() {
         </div>
       ) : result ? (
         <div className="space-y-6">
+          <ExportTool
+            toolSlug="ai-visibility"
+            clientId={selectedClientId}
+            input={{ clientId: selectedClientId }}
+            output={{ result }}
+            filename={`ai-visibility-${new Date().toISOString().slice(0, 10)}`}
+            title="AI Visibility Check"
+            data={{
+              headers: ['Metric / Query', 'Type', 'Clicks', 'Impressions', 'Position'],
+              rows: [
+                ['Branded Click Share (%)', 'KPI', result.brandedClickShare, '', ''],
+                ['Branded Impression Share (%)', 'KPI', result.brandedImpressionShare, '', ''],
+                ['Total Clicks', 'KPI', result.totalClicks, '', ''],
+                ['Total Impressions', 'KPI', result.totalImpressions, '', ''],
+                ...result.topBrandedQueries.map((q) => [q.query, 'Branded', q.clicks, q.impressions, q.position]),
+                ...result.topNonBrandedQueries.map((q) => [q.query, 'Non-Branded', q.clicks, q.impressions, q.position]),
+              ],
+            }}
+            formats={['csv', 'xlsx']}
+          />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'Branded Click Share', value: `${result.brandedClickShare}%` },
@@ -97,6 +123,13 @@ export default async function AIVisibilityPage() {
             are classified as branded. High branded share may indicate strong AI-driven brand
             awareness. Low branded share means most organic traffic is discovery-based.
           </p>
+
+          {runs.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+              <RunHistory runs={runs} />
+            </div>
+          )}
         </div>
       ) : null}
     </div>

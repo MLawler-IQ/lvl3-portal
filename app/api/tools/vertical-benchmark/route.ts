@@ -1,8 +1,9 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { userCanAccessClient } from '@/lib/auth'
+import { createServiceClient } from '@/lib/supabase/server'
+import { guardRoute, jsonError } from '@/lib/api/route-guard'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { crawlTargets } from '@/lib/crawlers/index'
 import type { CrawlResult } from '@/lib/crawlers/index'
+import { normalizeDomain } from '@/lib/normalize-domain'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const maxDuration = 600
@@ -51,7 +52,9 @@ function getTopPages(domain: string): string[] {
 }
 
 function buildCompetitorProfile(domain: string, results: CrawlResult[]): CompetitorProfile {
-  const pages = results.filter(r => r.url.includes(domain) && !r.page.error)
+  // Hostname compare, not substring — "foo.com" must not match "notfoo.com.evil.io"
+  const target = normalizeDomain(domain)
+  const pages = results.filter(r => normalizeDomain(r.url) === target && !r.page.error)
   if (pages.length === 0) {
     return {
       domain,
@@ -95,26 +98,8 @@ function buildCompetitorProfile(domain: string, results: CrawlResult[]): Competi
 
 export async function POST(request: Request) {
   // Auth (before ReadableStream — needs sync context)
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, client_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !['admin', 'member'].includes(profile.role as string)) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
-
-  const body = (await request.json()) as {
-    vertical: string
+  const body = (await request.json().catch(() => ({}))) as {
+    vertical?: string
     clientId?: string
     competitorDomains?: string[]
   }
@@ -122,15 +107,12 @@ export async function POST(request: Request) {
   const { vertical, clientId, competitorDomains } = body
 
   if (!vertical?.trim()) {
-    return new Response(JSON.stringify({ error: 'Missing vertical' }), { status: 400 })
+    return jsonError('Missing vertical', 400)
   }
 
-  if (clientId && !(await userCanAccessClient(
-    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
-    clientId,
-  ))) {
-    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
-  }
+  const guard = await guardRoute({ roles: ['admin', 'member'], clientId })
+  if (!guard.ok) return guard.response
+  const { user } = guard
 
   const rl = await checkRateLimit(user.id, { maxPerHour: 30, toolSlug: 'vertical-benchmark' })
   if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)
@@ -167,10 +149,7 @@ export async function POST(request: Request) {
             clientName = (clientRow as Record<string, unknown>).name as string | null
             const gscUrl = (clientRow as Record<string, unknown>).gsc_site_url as string | null
             if (gscUrl) {
-              clientDomain = gscUrl
-                .replace('sc-domain:', '')
-                .replace(/^https?:\/\//, '')
-                .replace(/\/$/, '')
+              clientDomain = normalizeDomain(gscUrl)
             }
           }
         }

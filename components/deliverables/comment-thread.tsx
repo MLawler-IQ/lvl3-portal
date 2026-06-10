@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ChevronRight, Send, Check } from "lucide-react";
+import { useState } from "react";
+import { ChevronRight, Send } from "lucide-react";
 import { postComment, resolveComment } from "@/app/actions/deliverables";
 import type { CommentWithUser } from "@/app/actions/deliverables";
+import { useToast } from "@/components/ui/ToastProvider";
 
 type ThreadedComment = CommentWithUser & { replies: CommentWithUser[] };
 
@@ -22,37 +23,6 @@ function formatDate(dateStr: string) {
     hour: "numeric",
     minute: "2-digit",
   });
-}
-
-interface ToastState {
-  message: string;
-  onUndo: (() => void) | null;
-}
-
-function Toast({
-  message,
-  onUndo,
-  onDismiss,
-}: ToastState & { onDismiss: () => void }) {
-  useEffect(() => {
-    const t = setTimeout(onDismiss, 5000);
-    return () => clearTimeout(t);
-  }, [onDismiss]);
-
-  return (
-    <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-surface-800 border border-surface-600 rounded-xl px-4 py-3 shadow-xl z-[60] animate-slide-in-up whitespace-nowrap">
-      <Check size={14} className="text-accent-400 shrink-0" />
-      <span className="text-sm text-surface-200">{message}</span>
-      {onUndo && (
-        <button
-          onClick={onUndo}
-          className="text-sm text-surface-400 hover:text-surface-100 underline underline-offset-2 transition-colors"
-        >
-          Undo
-        </button>
-      )}
-    </div>
-  );
 }
 
 function CommentInput({
@@ -106,13 +76,12 @@ function Thread({
   thread,
   deliverableId,
   onChanged,
-  onToast,
 }: {
   thread: ThreadedComment;
   deliverableId: string;
   onChanged: () => void;
-  onToast: (state: ToastState) => void;
 }) {
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(!thread.resolved);
   const [showReply, setShowReply] = useState(false);
   const [showRequestChanges, setShowRequestChanges] = useState(false);
@@ -137,8 +106,8 @@ function Thread({
       await resolveComment(thread.id, nextResolved);
       onChanged();
       if (nextResolved) {
-        onToast({
-          message: "Thread resolved.",
+        toast("Thread resolved.", "success", {
+          duration: 5000,
           onUndo: async () => {
             await resolveComment(thread.id, false);
             onChanged();
@@ -147,6 +116,7 @@ function Thread({
       }
     } catch (err) {
       console.error("Failed to resolve:", err);
+      toast("Failed to update thread.", "error");
     } finally {
       setResolving(false);
     }
@@ -294,21 +264,12 @@ export default function CommentThread({
   onChanged,
 }: Props) {
   const [showResolved, setShowResolved] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
 
   const threads = groupComments(comments);
   const visibleThreads = showResolved
     ? threads
     : threads.filter((t) => !t.resolved);
   const resolvedCount = threads.filter((t) => t.resolved).length;
-
-  const handleToast = useCallback((state: ToastState) => {
-    setToast(state);
-  }, []);
-
-  const dismissToast = useCallback(() => {
-    setToast(null);
-  }, []);
 
   async function handleNewComment(body: string) {
     await postComment(deliverableId, body);
@@ -352,7 +313,6 @@ export default function CommentThread({
               thread={thread}
               deliverableId={deliverableId}
               onChanged={onChanged}
-              onToast={handleToast}
             />
           ))}
         </div>
@@ -361,14 +321,6 @@ export default function CommentThread({
       <div className="pt-1">
         <CommentInput onSubmit={handleNewComment} />
       </div>
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          onUndo={toast.onUndo}
-          onDismiss={dismissToast}
-        />
-      )}
     </div>
   );
 }

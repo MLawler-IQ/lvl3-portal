@@ -70,8 +70,12 @@ export default function TfkGeneratorClient() {
 
   function parseOutputXlsx(base64: string): TfkLocation[] {
     try {
-      const buffer = Buffer.from(base64, 'base64')
-      const wb = XLSX.read(buffer, { type: 'buffer' })
+      const binary = atob(base64)
+      const bytes = new Uint8Array(binary.length)
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i)
+      }
+      const wb = XLSX.read(bytes, { type: 'array' })
       const ws = wb.Sheets[wb.SheetNames[0]]
       const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws)
       return rows as unknown as TfkLocation[]
@@ -93,8 +97,16 @@ export default function TfkGeneratorClient() {
       if (!rows || rows.length === 0) throw new Error('No rows found in xlsx')
 
       // Build a base64 string so the Download button still works
-      const buffer = Buffer.from(arrayBuffer)
-      const base64 = buffer.toString('base64')
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(
+          null,
+          Array.from(bytes.subarray(i, i + chunkSize))
+        )
+      }
+      const base64 = btoa(binary)
 
       setOutputRows(rows)
       setOutputBase64(base64)

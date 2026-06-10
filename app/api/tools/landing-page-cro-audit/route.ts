@@ -3,7 +3,8 @@
  * Crawls a URL, runs PageSpeed Insights, and asks Claude to score
  * the page across 5 CRO dimensions.
  */
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
+import { guardRoute, jsonError } from '@/lib/api/route-guard'
 import { analyzePage, analyzePsi } from '@/lib/crawlers/page-analyzer'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -58,27 +59,13 @@ function defaultAudit(url: string, rawText?: string): CROAudit {
 
 export async function POST(request: Request) {
   // ── Auth (before ReadableStream — cookies need sync context) ──
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 })
-  }
+  const guard = await guardRoute({ roles: ['admin', 'member'] })
+  if (!guard.ok) return guard.response
+  const { user } = guard
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !['admin', 'member'].includes(profile.role)) {
-    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
-  }
-
-  const body = await request.json() as { url?: string }
+  const body = await request.json().catch(() => ({})) as { url?: string }
   if (!body.url?.startsWith('http')) {
-    return new Response(JSON.stringify({ error: 'Invalid URL' }), { status: 400 })
+    return jsonError('Invalid URL', 400)
   }
 
   const { url } = body

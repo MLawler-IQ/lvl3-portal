@@ -77,7 +77,7 @@ export default function TopBar({
       {/* Hamburger — mobile only */}
       <button
         onClick={onMobileNavOpen}
-        className="md:hidden p-2 rounded-lg -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        className="md:hidden p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-lg -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         style={{ color: 'var(--nav-text)' }}
         aria-label="Open menu"
       >
@@ -180,7 +180,7 @@ export default function TopBar({
       {/* Notifications */}
       <button
         onClick={onNotificationsOpen}
-        className="relative p-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        className="relative p-2 max-sm:min-w-[44px] max-sm:min-h-[44px] inline-flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         style={{ color: 'var(--nav-text)' }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLButtonElement
@@ -205,7 +205,7 @@ export default function TopBar({
       {/* Help */}
       <a
         href="/help"
-        className="p-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        className="p-2 max-sm:min-w-[44px] max-sm:min-h-[44px] inline-flex items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         style={{ color: 'var(--nav-text)' }}
         onMouseEnter={e => {
           const el = e.currentTarget as HTMLAnchorElement
@@ -226,7 +226,7 @@ export default function TopBar({
       <div className="relative">
         <button
           onClick={() => setUserMenuOpen(!userMenuOpen)}
-          className="flex items-center gap-1.5 p-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          className="flex items-center justify-center gap-1.5 p-1.5 max-sm:min-w-[44px] max-sm:min-h-[44px] rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           style={{ color: 'var(--nav-text)' }}
           onMouseEnter={e => {
             const el = e.currentTarget as HTMLButtonElement

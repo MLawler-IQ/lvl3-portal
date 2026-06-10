@@ -10,6 +10,9 @@ interface NewClientModalProps {
   onClose: () => void
 }
 
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'
+
 function slugify(text: string) {
   return text
     .toLowerCase()
@@ -29,10 +32,42 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameRef = useRef<HTMLInputElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     nameRef.current?.focus()
   }, [])
+
+  // Focus trap — pattern copied from CommandPalette
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key === 'Tab') {
+        const panel = panelRef.current
+        if (!panel) return
+        const els = panel.querySelectorAll<HTMLElement>(FOCUSABLE)
+        if (!els.length) return
+        const first = els[0]
+        const last = els[els.length - 1]
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault()
+            last.focus()
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault()
+            first.focus()
+          }
+        }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   function handleNameChange(val: string) {
     setName(val)
@@ -70,11 +105,17 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-client-title"
+        className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl"
+      >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-surface-100 font-semibold text-lg">New client</h2>
-          <button onClick={onClose} className="text-surface-500 hover:text-surface-100 transition-colors">
+          <h2 id="new-client-title" className="text-surface-100 font-semibold text-lg">New client</h2>
+          <button onClick={onClose} aria-label="Close dialog" className="text-surface-500 hover:text-surface-100 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -88,6 +129,8 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
               ref={nameRef}
               type="text"
               required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? 'new-client-error' : undefined}
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Acme Corp"
@@ -160,7 +203,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
             </div>
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p id="new-client-error" role="alert" className="text-red-400 text-sm">{error}</p>}
 
           <div className="flex gap-3 pt-1">
             <button

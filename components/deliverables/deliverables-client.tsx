@@ -9,6 +9,7 @@ import { markViewed, fetchComments, getSignedUrl } from "@/app/actions/deliverab
 import DeliverableCard from "./deliverable-card";
 import DeliverableSlideOver from "./deliverable-slide-over";
 import AddDeliverableModal from "./add-deliverable-modal";
+import { useToast } from "@/components/ui/ToastProvider";
 
 type FilterType = "all" | "new" | "needs-review" | "open-threads" | "resolved";
 type SortType = "needs-attention" | "newest" | "oldest";
@@ -27,6 +28,7 @@ export default function DeliverablesClient({
   currentUserId,
 }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [deliverables, setDeliverables] = useState(initialDeliverables);
   const [selected, setSelected] = useState<DeliverableWithCounts | null>(null);
   const [triggerEl, setTriggerEl] = useState<HTMLElement | null>(null);
@@ -119,14 +121,20 @@ export default function DeliverablesClient({
     setCommentsLoading(true);
     fetchComments(deliverable.id)
       .then(setComments)
-      .catch((err) => console.error("Failed to fetch comments:", err))
+      .catch((err) => {
+        console.error("Failed to fetch comments:", err);
+        toast("Failed to load comments.", "error");
+      })
       .finally(() => setCommentsLoading(false));
 
     if (deliverable.file_type === "pdf" && deliverable.file_url) {
       setSignedUrlLoading(true);
       getSignedUrl(deliverable.file_url)
         .then(setSignedUrl)
-        .catch((err) => console.error("Failed to get signed URL:", err))
+        .catch((err) => {
+          console.error("Failed to get signed URL:", err);
+          toast("Failed to load the PDF preview.", "error");
+        })
         .finally(() => setSignedUrlLoading(false));
     }
   }

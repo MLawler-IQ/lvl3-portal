@@ -22,7 +22,7 @@ type InsightsClient = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   SEO: "bg-brand-500/15 text-brand-400 border-brand-500/20",
-  CRO: "bg-purple-500/15 text-purple-400 border-purple-500/20",
+  CRO: "bg-accent-400/15 text-accent-400 border-accent-400/20",
   Analytics: "bg-amber-500/15 text-amber-400 border-amber-500/20",
   "AI Search": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
 };

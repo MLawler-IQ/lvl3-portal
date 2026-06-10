@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
 import { fetchContentGaps } from '@/app/actions/tools'
+import { listToolRuns } from '@/app/actions/tool-runs'
 import { FileSearch } from 'lucide-react'
 import ContentGapsTable from './ContentGapsTable'
 
@@ -21,7 +22,10 @@ export default async function ContentGapsPage() {
     'id, name'
   )
 
-  const { gaps, error } = await fetchContentGaps(selectedClientId)
+  const [{ gaps, error }, runs] = await Promise.all([
+    fetchContentGaps(selectedClientId),
+    listToolRuns('content-gaps', selectedClientId),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
@@ -44,7 +48,7 @@ export default async function ContentGapsPage() {
           <p className="text-sm text-surface-400">No content gaps detected for this period.</p>
         </div>
       ) : gaps ? (
-        <ContentGapsTable gaps={gaps} />
+        <ContentGapsTable gaps={gaps} clientId={selectedClientId} runs={runs} />
       ) : null}
     </div>
   )

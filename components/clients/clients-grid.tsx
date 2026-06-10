@@ -49,7 +49,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
                 {client.logo_url ? (
                   <img
                     src={client.logo_url}
-                    alt={client.name}
+                    alt={`${client.name} logo`}
                     className="w-10 h-10 rounded-lg object-contain bg-surface-800 flex-shrink-0"
                   />
                 ) : (

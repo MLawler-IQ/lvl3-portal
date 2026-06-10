@@ -20,6 +20,7 @@ import {
   type SemrushKeywordRow,
 } from '@/lib/connectors/semrush-portal'
 import { fetchAndParse, type ParsedPage } from '@/lib/connectors/crawler'
+import { tryConnector, type ConnectorResult } from '@/lib/connectors/types'
 import { fetchGSCRows, type GSCRow } from '@/lib/tools-gsc'
 
 export class DataSources {
@@ -49,7 +50,7 @@ export class DataSources {
 
   private async tracked<T>(
     source: keyof DataAvailability,
-    fn: () => Promise<T>,
+    fn: () => Promise<ConnectorResult<T>>,
   ): Promise<T | null> {
     if (!DATA_SOURCE_TOGGLES[source]) {
       const status: DataSourceStatus = { status: 'skipped', reason: 'disabled in config' }
@@ -59,22 +60,28 @@ export class DataSources {
     }
 
     const start = performance.now()
+    let result: ConnectorResult<T>
     try {
-      const result = await fn()
-      const latency_ms = Math.round(performance.now() - start)
-      const count = Array.isArray(result) ? result.length : undefined
-      const status: DataSourceStatus = { status: 'success', latency_ms, count }
-      this._availability[source] = status
-      this.onDataSource(source, status)
-      return result
+      result = await fn()
     } catch (err) {
-      const latency_ms = Math.round(performance.now() - start)
-      const error = err instanceof Error ? err.message : String(err)
-      const status: DataSourceStatus = { status: 'failed', error, latency_ms }
+      // Defensive: connectors shouldn't throw under the contract, but a bug
+      // in one must still be recorded as a failed source, not crash the run.
+      result = { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+    const latency_ms = Math.round(performance.now() - start)
+
+    if (!result.ok) {
+      const status: DataSourceStatus = { status: 'failed', error: result.error, latency_ms }
       this._availability[source] = status
       this.onDataSource(source, status)
       return null
     }
+
+    const count = Array.isArray(result.data) ? result.data.length : undefined
+    const status: DataSourceStatus = { status: 'success', latency_ms, count }
+    this._availability[source] = status
+    this.onDataSource(source, status)
+    return result.data
   }
 
   // ── Keywords Everywhere ─────────────────────────────────────
@@ -139,7 +146,7 @@ export class DataSources {
     }
 
     const rows = await this.tracked('gsc', () =>
-      fetchGSCRows(this.gscSiteUrl!, days),
+      tryConnector(() => fetchGSCRows(this.gscSiteUrl!, days)),
     )
     return rows ?? []
   }

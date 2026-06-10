@@ -1,21 +1,31 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { fetchCoreWebVitals } from '@/app/actions/tools-extended'
 import type { PageSpeedResult } from '@/lib/connectors/pagespeed'
+import { statusColor, type StatusLevel } from '@/lib/status-color'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
+import { listToolRuns } from '@/app/actions/tool-runs'
+
+function categoryLevel(category: string | null): StatusLevel {
+  if (category === 'FAST') return 'success'
+  if (category === 'AVERAGE') return 'warning'
+  if (category === 'SLOW') return 'error'
+  return 'neutral'
+}
 
 function MetricBadge({ label, value, unit, category }: { label: string; value: number; unit: string; category: string | null }) {
-  const color =
-    category === 'FAST' ? 'text-green-400' : category === 'AVERAGE' ? 'text-yellow-400' : category === 'SLOW' ? 'text-red-400' : 'text-surface-400'
+  const color = statusColor(categoryLevel(category))
 
   return (
     <div className="bg-surface-800 rounded-lg p-4 space-y-1">
       <p className="text-xs text-surface-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-lg font-bold ${color}`}>
+      <p className="text-lg font-bold" style={{ color }}>
         {value.toLocaleString()}
         <span className="text-xs font-normal ml-1">{unit}</span>
       </p>
-      {category && <p className={`text-xs font-medium ${color}`}>{category}</p>}
+      {category && <p className="text-xs font-medium" style={{ color }}>{category}</p>}
     </div>
   )
 }
@@ -26,6 +36,11 @@ export default function CoreWebVitalsClient() {
   const [result, setResult] = useState<PageSpeedResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [runs, setRuns] = useState<ToolRun[]>([])
+
+  useEffect(() => {
+    listToolRuns('core-web-vitals').then(setRuns)
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,6 +53,37 @@ export default function CoreWebVitalsClient() {
       else if (res.data) setResult(res.data)
     })
   }
+
+  function handleLoadRun(run: ToolRun) {
+    const output = run.output as { result?: PageSpeedResult } | null
+    if (output?.result) {
+      setResult(output.result)
+      setError(null)
+      const loadedInput = run.input as { url?: string; strategy?: 'mobile' | 'desktop' }
+      if (loadedInput.url) setUrl(loadedInput.url)
+      if (loadedInput.strategy) setStrategy(loadedInput.strategy)
+    }
+  }
+
+  const exportRows: unknown[][] = result
+    ? [
+        ['Lighthouse Score', result.lighthouse_score, ''],
+        ['CWV Assessment', result.cwv_pass ? 'PASS' : 'FAIL', ''],
+        ...(['lcp', 'cls', 'inp', 'fcp', 'ttfb'] as const)
+          .filter((k) => result.crux[k])
+          .map((k) => [
+            `CrUX ${k.toUpperCase()}`,
+            k === 'cls' ? result.crux[k]!.percentile / 100 : result.crux[k]!.percentile,
+            result.crux[k]!.category,
+          ]),
+        ['Lab FCP (ms)', Math.round(result.lighthouse.fcp_ms), ''],
+        ['Lab LCP (ms)', Math.round(result.lighthouse.lcp_ms), ''],
+        ['Lab TBT (ms)', Math.round(result.lighthouse.tbt_ms), ''],
+        ['Lab CLS', Math.round(result.lighthouse.cls * 1000) / 1000, ''],
+        ['Lab Speed Index (ms)', Math.round(result.lighthouse.si_ms), ''],
+        ['Lab TTI (ms)', Math.round(result.lighthouse.tti_ms), ''],
+      ]
+    : []
 
   return (
     <div className="space-y-4">
@@ -81,17 +127,33 @@ export default function CoreWebVitalsClient() {
 
       {result && (
         <div className="space-y-4">
+          <ExportTool
+            toolSlug="core-web-vitals"
+            input={{ url: result.url, strategy: result.strategy }}
+            output={{ result }}
+            filename={`core-web-vitals-${new Date().toISOString().slice(0, 10)}`}
+            title="Core Web Vitals"
+            data={{ headers: ['Metric', 'Value', 'Category'], rows: exportRows }}
+            formats={['csv', 'xlsx']}
+            onSaved={() => listToolRuns('core-web-vitals').then(setRuns)}
+          />
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Lighthouse Score</h2>
               <span
                 className="text-2xl font-bold"
-                style={{ color: result.lighthouse_score >= 90 ? '#4ade80' : result.lighthouse_score >= 50 ? '#facc15' : '#f87171' }}
+                style={{ color: statusColor(result.lighthouse_score >= 90 ? 'success' : result.lighthouse_score >= 50 ? 'warning' : 'error') }}
               >
                 {result.lighthouse_score}/100
               </span>
             </div>
-            <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${result.cwv_pass ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
+            <div
+              className="text-xs font-medium px-2 py-1 rounded-full inline-block"
+              style={{
+                color: statusColor(result.cwv_pass ? 'success' : 'error'),
+                backgroundColor: result.cwv_pass ? 'var(--color-success-bg, rgba(34,197,94,0.12))' : 'var(--color-error-bg, rgba(239,68,68,0.12))',
+              }}
+            >
               CWV Assessment: {result.cwv_pass ? 'PASS' : 'FAIL'}
             </div>
           </div>
@@ -121,6 +183,13 @@ export default function CoreWebVitalsClient() {
               <MetricBadge label="TTI" value={Math.round(result.lighthouse.tti_ms)} unit="ms" category={null} />
             </div>
           </div>
+        </div>
+      )}
+
+      {runs.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+          <RunHistory runs={runs} onLoad={handleLoadRun} />
         </div>
       )}
     </div>

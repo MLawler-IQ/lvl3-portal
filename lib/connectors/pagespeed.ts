@@ -1,3 +1,5 @@
+import { connectorErr, connectorOk, type ConnectorResult } from './types'
+
 export interface CruxMetric {
   category: 'FAST' | 'AVERAGE' | 'SLOW' | 'NONE'
   percentile: number
@@ -30,7 +32,7 @@ export async function fetchPageSpeedInsights(
   url: string,
   strategy: 'mobile' | 'desktop' = 'mobile',
   apiKey?: string,
-): Promise<PageSpeedResult> {
+): Promise<ConnectorResult<PageSpeedResult>> {
   const params = new URLSearchParams({
     url,
     strategy,
@@ -39,12 +41,15 @@ export async function fetchPageSpeedInsights(
   if (apiKey) params.set('key', apiKey)
 
   const endpoint = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${params}`
-  const res = await fetch(endpoint)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const json: any = await res.json()
-
-  if (!res.ok) {
-    throw new Error(`PageSpeed API error: ${json?.error?.message ?? res.status}`)
+  let json: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  try {
+    const res = await fetch(endpoint)
+    json = await res.json()
+    if (!res.ok) {
+      throw new Error(`PageSpeed API error: ${json?.error?.message ?? res.status}`)
+    }
+  } catch (err) {
+    return connectorErr(err)
   }
 
   const cruxMetrics = json.loadingExperience?.metrics ?? {}
@@ -74,7 +79,7 @@ export async function fetchPageSpeedInsights(
     (cls === null || cls.category === 'FAST') &&
     (inp === null || inp.category === 'FAST')
 
-  return {
+  return connectorOk({
     url,
     strategy,
     lighthouse_score: lighthouseScore,
@@ -95,5 +100,5 @@ export async function fetchPageSpeedInsights(
       tti_ms: parseFloat(audits['interactive']?.numericValue ?? '0'),
     },
     cwv_pass: cwvPass,
-  }
+  })
 }

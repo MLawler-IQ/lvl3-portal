@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
 import { fetchQuickWins } from '@/app/actions/tools'
+import { listToolRuns } from '@/app/actions/tool-runs'
 import { TrendingUp } from 'lucide-react'
 import QuickWinsTable from './QuickWinsTable'
 
@@ -21,7 +22,10 @@ export default async function KeywordQuickWinsPage() {
     'id, name'
   )
 
-  const { wins, error } = await fetchQuickWins(selectedClientId)
+  const [{ wins, error }, runs] = await Promise.all([
+    fetchQuickWins(selectedClientId),
+    listToolRuns('keyword-quick-wins', selectedClientId),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
@@ -44,7 +48,7 @@ export default async function KeywordQuickWinsPage() {
           <p className="text-sm text-surface-400">No quick wins found for this period.</p>
         </div>
       ) : wins ? (
-        <QuickWinsTable wins={wins} />
+        <QuickWinsTable wins={wins} clientId={selectedClientId} runs={runs} />
       ) : null}
     </div>
   )

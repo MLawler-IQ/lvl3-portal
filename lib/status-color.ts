@@ -27,3 +27,8 @@ export function scoreLevel(score: number): StatusLevel {
   if (score >= 60) return 'warning'
   return 'error'
 }
+
+/** Translucent tint of a status token for badge/pill fills and borders. */
+export function statusTint(level: StatusLevel, pct = 10): string {
+  return `color-mix(in srgb, ${statusColor(level)} ${pct}%, transparent)`
+}

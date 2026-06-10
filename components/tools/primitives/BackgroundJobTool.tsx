@@ -108,7 +108,7 @@ export default function BackgroundJobTool({
     <div className="max-w-7xl mx-auto px-6 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CheckCircle2 size={15} style={{ color: '#34D399' /* success */ }} />
+          <CheckCircle2 size={15} style={{ color: 'var(--color-success)' }} />
           <span className="text-sm font-medium text-surface-100">{resultLabel}</span>
         </div>
         {onReset && (

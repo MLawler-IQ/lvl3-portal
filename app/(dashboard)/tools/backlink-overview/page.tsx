@@ -1,6 +1,9 @@
 import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
 import { fetchBacklinkOverview } from '@/app/actions/tools-extended'
+import { listToolRuns } from '@/app/actions/tool-runs'
+import ExportTool from '@/components/tools/primitives/ExportTool'
+import RunHistory from '@/components/tools/RunHistory'
 import { Link2 } from 'lucide-react'
 
 export default async function BacklinkOverviewPage() {
@@ -16,7 +19,10 @@ export default async function BacklinkOverviewPage() {
   }
 
   const client = await getClientById<{ id: string; name: string }>(selectedClientId, 'id, name')
-  const { data, error } = await fetchBacklinkOverview(selectedClientId)
+  const [{ data, error }, runs] = await Promise.all([
+    fetchBacklinkOverview(selectedClientId),
+    listToolRuns('backlink-overview', selectedClientId),
+  ])
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
@@ -32,10 +38,44 @@ export default async function BacklinkOverviewPage() {
 
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-error">Semrush request failed for {client?.name ?? 'this client'}: {error}</p>
+          <p className="text-xs text-surface-500 mt-1">
+            This is an API error, not an empty backlink profile — check the Semrush key/quota if it persists.
+          </p>
         </div>
       ) : data ? (
         <div className="space-y-4">
+          <ExportTool
+            toolSlug="backlink-overview"
+            clientId={selectedClientId}
+            input={{ clientId: selectedClientId, domain: data.domain }}
+            output={{ data }}
+            filename={`backlink-overview-${new Date().toISOString().slice(0, 10)}`}
+            title="Backlink Overview"
+            data={{
+              headers: ['Metric', 'Value'],
+              rows: [
+                ['Domain', data.domain],
+                ...(data.ranks
+                  ? ([
+                      ['Organic Keywords', data.ranks.organic_keywords],
+                      ['Organic Traffic', data.ranks.organic_traffic],
+                      ['Traffic Cost ($)', data.ranks.organic_cost],
+                    ] as unknown[][])
+                  : []),
+                ...(data.backlinks
+                  ? ([
+                      ['Total Backlinks', data.backlinks.total_backlinks],
+                      ['Referring Domains', data.backlinks.referring_domains],
+                      ['Follow Links', data.backlinks.follow_links],
+                      ['Nofollow Links', data.backlinks.nofollow_links],
+                      ['Authority Score', data.backlinks.authority_score],
+                    ] as unknown[][])
+                  : []),
+              ],
+            }}
+            formats={['csv', 'xlsx']}
+          />
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
             <p className="text-xs text-surface-400 mb-3 uppercase tracking-wide">Domain: {data.domain}</p>
 
@@ -93,6 +133,13 @@ export default async function BacklinkOverviewPage() {
               <p className="text-sm text-surface-400">No Semrush data available for this domain.</p>
             )}
           </div>
+
+          {runs.length > 0 && (
+            <div className="space-y-2">
+              <h2 className="text-xs font-medium uppercase tracking-wide text-surface-400">Recent Runs</h2>
+              <RunHistory runs={runs} />
+            </div>
+          )}
         </div>
       ) : null}
     </div>
