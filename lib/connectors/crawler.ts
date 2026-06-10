@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { assertPublicHttpUrl } from '@/lib/url-guard'
 
 export interface HeadingInfo {
   level: number
@@ -58,6 +59,7 @@ function getHostname(url: string): string {
 }
 
 export async function fetchAndParse(url: string): Promise<ParsedPage> {
+  assertPublicHttpUrl(url)
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'LVL3-Portal-Crawler/1.0',

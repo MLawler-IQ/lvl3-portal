@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { assertPublicHttpUrl } from '@/lib/url-guard'
 
 export interface SchemaBlock {
   type: string
@@ -46,6 +47,7 @@ export function getHost(url: string): string {
 /** Fetch and parse a page, returning structured analysis */
 export async function analyzePage(url: string): Promise<PageAnalysis> {
   try {
+    assertPublicHttpUrl(url)
     const res = await fetch(url, {
       headers: {
         'User-Agent': 'LVL3-Crawler/1.0 (+https://lvl3-portal.vercel.app)',

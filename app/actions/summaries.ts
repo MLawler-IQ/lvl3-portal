@@ -2,6 +2,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth'
 import { getSheetData } from '@/app/actions/projects'
 
 function isCurrentMonth(monthStr: string): boolean {
@@ -12,6 +13,8 @@ function isCurrentMonth(monthStr: string): boolean {
 }
 
 export async function generateClientSummary(clientId: string): Promise<void> {
+  // Admin-only: triggers a paid Anthropic call and writes ai_summary.
+  await requireAdmin()
   const service = await createServiceClient()
 
   const { data: client } = await service

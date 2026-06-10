@@ -47,8 +47,8 @@
   --color-cream:     rgb(var(--surface-950));
   --color-cream-alt: rgb(var(--surface-900));
   --color-card:      255 255 255;                     /* pure white on warm canvas */
-  --color-accent:    rgb(var(--brand-500));           /* red */
-  --color-primary:   rgb(var(--brand-500));
+  --color-accent:    rgb(var(--brand-500));           /* red — large text / non-text accents only */
+  --color-primary:   rgb(var(--brand-600));           /* darker red — AA-compliant for body-size text/links */
   --color-muted:     rgb(var(--surface-500));
   --color-border:    rgb(var(--surface-800));
 
@@ -62,7 +62,7 @@
   --nav-hover:       rgb(var(--surface-900));
   --nav-text:        rgb(var(--surface-400));
   --nav-text-bright: rgb(var(--surface-100));
-  --nav-active:      rgb(var(--brand-500));
+  --nav-active:      rgb(var(--brand-600));   /* AA-compliant red for active nav text */
   --nav-border:      rgb(var(--surface-800));
 
   /* ── Sidebar tokens (light) ─────────────────────────── */
@@ -70,7 +70,7 @@
   --sidebar-hover:       rgb(var(--surface-900));
   --sidebar-text:        rgb(var(--surface-400));
   --sidebar-text-bright: rgb(var(--surface-100));
-  --sidebar-active:      rgb(var(--brand-500));
+  --sidebar-active:      rgb(var(--brand-600));   /* AA-compliant red for active sidebar text */
   --sidebar-border:      rgb(var(--surface-800));
 
   /* ── Chart tokens (light) ───────────────────────────── */

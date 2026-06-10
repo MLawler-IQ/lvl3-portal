@@ -1,4 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { userCanAccessClient } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { getAdminGBPOAuthClient } from '@/lib/gbp-auth'
 import { listGBPLocations, auditLocation } from '@/lib/connectors/gbp'
 
@@ -23,7 +25,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role')
+    .select('role, client_id')
     .eq('id', user.id)
     .single()
   if (!profile || !['admin', 'member'].includes(profile.role)) {
@@ -36,6 +38,16 @@ export async function POST(request: Request) {
   if (!accountName) {
     return new Response(JSON.stringify({ error: 'accountName is required' }), { status: 400 })
   }
+
+  if (clientId && !(await userCanAccessClient(
+    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
+    clientId,
+  ))) {
+    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
+  }
+
+  const rl = await checkRateLimit(user.id, { maxPerHour: 30, toolSlug: 'gbp-audit' })
+  if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)
 
   const service = await createServiceClient()
 

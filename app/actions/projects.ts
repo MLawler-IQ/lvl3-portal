@@ -6,6 +6,7 @@ import {
   createClient as createSupabaseClient,
   createServiceClient,
 } from '@/lib/supabase/server'
+import { requireAuth, userCanAccessClient } from '@/lib/auth'
 import { generateClientSummary } from '@/app/actions/summaries'
 
 export type { SheetRow }
@@ -20,6 +21,20 @@ export async function getSheetData(
   headerRow: number = 1,
   columnMap: ColumnMap | null = null
 ): Promise<SheetData> {
+  const { user } = await requireAuth()
+  // Guard against arbitrary sheetId reads: non-admins may only read a sheet
+  // that belongs to a client they have access to.
+  if (user.role !== 'admin') {
+    const service = await createServiceClient()
+    const { data: owner } = await service
+      .from('clients')
+      .select('id')
+      .eq('google_sheet_id', sheetId)
+      .maybeSingle()
+    if (!owner || !(await userCanAccessClient(user, (owner as { id: string }).id))) {
+      throw new Error('Not authorized to read this sheet')
+    }
+  }
   const rows = await fetchSheetRows(sheetId, headerRow, columnMap)
   return {
     rows,

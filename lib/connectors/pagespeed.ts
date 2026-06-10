@@ -67,10 +67,12 @@ export async function fetchPageSpeedInsights(
   const cls = extractCrux('CUMULATIVE_LAYOUT_SHIFT_SCORE')
   const inp = extractCrux('INTERACTION_TO_NEXT_PAINT')
 
+  // Google's Core Web Vitals "good" status requires every metric in the FAST
+  // bucket. AVERAGE is "needs improvement" and must NOT count as a pass.
   const cwvPass =
-    (lcp === null || lcp.category === 'FAST' || lcp.category === 'AVERAGE') &&
-    (cls === null || cls.category === 'FAST' || cls.category === 'AVERAGE') &&
-    (inp === null || inp.category === 'FAST' || inp.category === 'AVERAGE')
+    (lcp === null || lcp.category === 'FAST') &&
+    (cls === null || cls.category === 'FAST') &&
+    (inp === null || inp.category === 'FAST')
 
   return {
     url,

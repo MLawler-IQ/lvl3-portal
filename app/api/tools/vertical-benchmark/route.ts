@@ -1,4 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { userCanAccessClient } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { crawlTargets } from '@/lib/crawlers/index'
 import type { CrawlResult } from '@/lib/crawlers/index'
 import Anthropic from '@anthropic-ai/sdk'
@@ -103,7 +105,7 @@ export async function POST(request: Request) {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role')
+    .select('role, client_id')
     .eq('id', user.id)
     .single()
 
@@ -123,6 +125,16 @@ export async function POST(request: Request) {
     return new Response(JSON.stringify({ error: 'Missing vertical' }), { status: 400 })
   }
 
+  if (clientId && !(await userCanAccessClient(
+    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
+    clientId,
+  ))) {
+    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
+  }
+
+  const rl = await checkRateLimit(user.id, { maxPerHour: 30, toolSlug: 'vertical-benchmark' })
+  if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)
+
   const service = await createServiceClient()
   const anthropic = new Anthropic()
 
@@ -136,6 +148,8 @@ export async function POST(request: Request) {
           /* stream closed */
         }
       }
+
+      let runId = 'unknown'
 
       try {
         // ── 1. Fetch client data ────────────────────────────────────────────
@@ -179,7 +193,7 @@ export async function POST(request: Request) {
           .select('id')
           .single()
 
-        const runId = (runRow as Record<string, unknown> | null)?.id as string | null ?? 'unknown'
+        runId = (runRow as Record<string, unknown> | null)?.id as string | null ?? 'unknown'
 
         emit({ type: 'progress', message: `Starting benchmark for "${vertical}"`, pct: 2 })
 
@@ -403,7 +417,13 @@ Focus on actionable SEO and GEO patterns: content depth, schema usage, trust sig
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unexpected error'
         emit({ type: 'error', message })
-        // Mark run as failed if we have a runId
+        if (runId !== 'unknown') {
+          await service
+            .from('tool_runs')
+            .update({ status: 'failed', error: message, completed_at: new Date().toISOString() })
+            .eq('id', runId)
+            .then(() => {}, () => {})
+        }
       } finally {
         controller.close()
       }

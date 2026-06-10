@@ -1,3 +1,5 @@
+import { logError } from '@/lib/logging'
+
 export interface SemrushDomainRank {
   domain: string
   organic_keywords: number
@@ -72,7 +74,8 @@ export async function fetchSemrushDomainRanks(
       organic_traffic: parseInt(row['Organic Traffic'] ?? row['Ot'] ?? '0', 10),
       organic_cost: parseFloat(row['Organic Cost'] ?? row['Oc'] ?? '0'),
     }
-  } catch {
+  } catch (err) {
+    logError('semrush.domain_ranks', `fetch failed for ${domain}`, err)
     return null
   }
 }
@@ -101,7 +104,8 @@ export async function fetchSemrushBacklinksOverview(
       nofollow_links: parseInt(row['nofollows_num'] ?? row['Nofollow'] ?? '0', 10),
       authority_score: parseInt(row['score'] ?? row['Authority Score'] ?? '0', 10),
     }
-  } catch {
+  } catch (err) {
+    logError('semrush.backlinks_overview', `fetch failed for ${domain}`, err)
     return null
   }
 }

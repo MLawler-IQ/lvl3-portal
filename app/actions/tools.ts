@@ -113,25 +113,31 @@ export async function checkAIVisibility(clientId: string): Promise<{
 
     const rows = await fetchGSCRows(client.gsc_site_url, 90)
 
-    // Extract the registrable domain name (e.g. "example" from www.example.com or example.co.uk)
-    const siteHost = (() => {
-      const clean = client.gsc_site_url
-        .replace('sc-domain:', '')
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .replace(/\/$/, '')
-      // Take the first label of the cleaned hostname (before any dot)
-      return clean.split('.')[0]
+    // Registrable brand label — subdomain-safe. normalizeDomain strips
+    // sc-domain:/protocol/www/path; then pick the label before the public
+    // suffix so shop.brand.com → "brand" and brand.co.uk → "brand".
+    const brandToken = (() => {
+      const labels = normalizeDomain(client.gsc_site_url).split('.').filter(Boolean)
+      if (labels.length <= 2) return labels[0] ?? ''
+      const MULTI_PART_TLD = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu'])
+      const secondToLast = labels[labels.length - 2]
+      return MULTI_PART_TLD.has(secondToLast) ? labels[labels.length - 3] : secondToLast
     })()
 
     const brandTerms = [
       client.slug.toLowerCase(),
-      siteHost.toLowerCase(),
+      brandToken.toLowerCase(),
       client.name.toLowerCase(),
     ].filter(Boolean)
 
-    const isBranded = (query: string) =>
-      brandTerms.some((term) => query.toLowerCase().includes(term))
+    // Word-boundary match so a brand term like "shoe" doesn't match "shoelace".
+    const isBranded = (query: string) => {
+      const q = query.toLowerCase()
+      return brandTerms.some((term) => {
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(q)
+      })
+    }
 
     const branded = rows.filter((r) => isBranded(r.query))
     const nonBranded = rows.filter((r) => !isBranded(r.query))

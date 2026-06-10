@@ -4,6 +4,8 @@
  * Topics execute in parallel with a configurable concurrency limit.
  */
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { userCanAccessClient } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit'
 import { SeoAnthropicClient } from '@/lib/seo-content-engine/anthropic-client'
 import { DataSources } from '@/lib/seo-content-engine/data-sources'
 import { KeywordEngine } from '@/lib/seo-content-engine/keyword-engine'
@@ -33,7 +35,7 @@ export async function POST(request: Request) {
   // Check role
   const { data: profile } = await supabase
     .from('users')
-    .select('role')
+    .select('role, client_id')
     .eq('id', user.id)
     .single()
 
@@ -53,6 +55,17 @@ export async function POST(request: Request) {
   if (!clientId || !topicsJson) {
     return new Response(JSON.stringify({ error: 'Missing clientId or topics' }), { status: 400 })
   }
+
+  // Enforce client scope: members may only run against assigned clients
+  if (!(await userCanAccessClient(
+    { id: user.id, role: profile.role as 'admin' | 'member' | 'client', client_id: profile.client_id as string | null },
+    clientId,
+  ))) {
+    return new Response(JSON.stringify({ error: 'Forbidden: no access to this client' }), { status: 403 })
+  }
+
+  const rl = await checkRateLimit(user.id, { maxPerHour: 10, toolSlug: 'seo-content-engine' })
+  if (!rl.ok) return rateLimitResponse(rl.retryAfterSeconds)
 
   let topics: TopicInput[]
   try {

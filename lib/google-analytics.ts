@@ -1,6 +1,10 @@
 import { google } from 'googleapis'
 import type { DateRange } from './date-range'
 import { getAdminOAuthClient } from '@/lib/google-auth'
+import { cachedFetch } from '@/lib/api-cache'
+
+const GA4_TTL_SECONDS = 6 * 3600 // GA4 data is ~24h stale; 6h cache is safe.
+const rangeKey = (range?: DateRange) => `${range?.startDate ?? 'def'}:${range?.endDate ?? 'def'}`
 
 export type GA4Metrics = {
   sessions: number
@@ -14,6 +18,12 @@ export type GA4Metrics = {
 }
 
 export async function fetchGA4Metrics(propertyId: string, range?: DateRange): Promise<GA4Metrics> {
+  return cachedFetch(`ga4:metrics:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4MetricsUncached(propertyId, range),
+  )
+}
+
+async function _fetchGA4MetricsUncached(propertyId: string, range?: DateRange): Promise<GA4Metrics> {
   const auth = await getAdminOAuthClient()
 
   const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
@@ -127,6 +137,12 @@ export type GA4Report = {
 }
 
 export async function fetchGA4Report(propertyId: string, range?: DateRange): Promise<GA4Report> {
+  return cachedFetch(`ga4:report:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4ReportUncached(propertyId, range),
+  )
+}
+
+async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): Promise<GA4Report> {
   const auth = await getAdminOAuthClient()
   const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
 

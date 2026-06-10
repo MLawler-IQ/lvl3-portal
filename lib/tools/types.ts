@@ -12,7 +12,7 @@ export type ToolInputType = 'client' | 'url' | 'keyword' | 'file' | 'none' | 'mi
 
 export type ToolDataSource =
   | 'gsc' | 'ga4' | 'semrush' | 'claude' | 'gbp'
-  | 'psi' | 'keywords-everywhere' | 'google-places'
+  | 'psi' | 'keywords-everywhere' | 'google-places' | 'openai'
 
 export type ToolAccess = 'admin' | 'member' | 'client'
 
