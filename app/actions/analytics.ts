@@ -10,6 +10,8 @@ import { fetchGSCMetrics, GSCMetrics, listGSCSites, fetchGSCReport, GSCReport, G
 import { buildDateRange, DateRange } from '@/lib/date-range'
 import { normalizeDomain } from '@/lib/normalize-domain'
 import Anthropic from '@anthropic-ai/sdk'
+import type { InsightCard } from '@/lib/dashboard/types'
+import { deriveInsightCards, deriveHeadline, type InsightSignals } from '@/lib/dashboard/insights'
 
 export type { GA4Metrics, GSCMetrics, GA4Report, GSCReport, ChannelRow, MonthlySessionPoint, SourceMediumRow, LandingPageRow, GSCMonthlyPoint, QueryRow, UrlRow, SerpDistribution, DateRange }
 
@@ -17,6 +19,10 @@ export type SnapshotInsights = {
   takeaways: string
   anomalies: string
   opportunities: string
+  /** Structured insight layer (Phase B). Optional so existing consumers keep working. */
+  headline?: string
+  cards?: InsightCard[]
+  generatedAt?: string
 }
 
 // ── Logo ──────────────────────────────────────────────────────────────────────
@@ -329,6 +335,7 @@ export async function generateAnalyticsInsights(
           role: 'user',
           content: `Based on this analytics data, generate a structured report using this exact JSON format:
 {
+  "headline": "ONE punchy sentence (max ~14 words) naming the single most important shift this period, e.g. \\"Organic clicks up 18% drove the strongest month of the quarter.\\"",
   "summary": "2-3 paragraphs in plain, client-friendly language covering overall performance.",
   "takeaways": "2-3 sentences highlighting the most notable positive results.",
   "anomalies": "2-3 sentences on any unusual patterns or concerns. If nothing notable, write: No significant anomalies detected this period.",
@@ -353,10 +360,31 @@ ${parts.join('\n\n')}`,
     }
 
     const summary = parsed.summary ?? ''
+
+    // ── Structured insight layer ──────────────────────────────────────────────
+    // Derive InsightCard[] deterministically from the already-fetched GA4/GSC
+    // deltas (no extra LLM call). GA4 exposes signed-percent deltas; GSC metrics
+    // carry no comparison fields, so only GA4-backed cards are produced here.
+    const signals: InsightSignals = { period: 'vs prior period' }
+    if (data.ga4) {
+      signals.sessions = { value: data.ga4.sessions, delta: data.ga4.sessionsDelta }
+      signals.users = { value: data.ga4.users, delta: data.ga4.usersDelta }
+      signals.pageviews = { value: data.ga4.pageviews, delta: data.ga4.pageviewsDelta }
+    }
+    const cards = deriveInsightCards(signals)
+    // Prefer the LLM headline; fall back to a deterministic one from the top card.
+    const headline =
+      (typeof parsed.headline === 'string' && parsed.headline.trim()) ||
+      deriveHeadline(cards) ||
+      undefined
+
     const snapshot_insights: SnapshotInsights = {
       takeaways: parsed.takeaways ?? '',
       anomalies: parsed.anomalies ?? '',
       opportunities: parsed.opportunities ?? '',
+      headline,
+      cards,
+      generatedAt: new Date().toISOString(),
     }
 
     const service = await createServiceClient()
