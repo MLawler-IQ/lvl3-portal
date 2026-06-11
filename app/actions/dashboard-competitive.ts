@@ -24,6 +24,8 @@ import { normalizeDomain } from '@/lib/normalize-domain'
 import {
   fetchSemrushDomainRanks,
   fetchSemrushBacklinksOverview,
+  type SemrushDomainRank,
+  type SemrushBacklinksOverview,
 } from '@/lib/connectors/semrush-portal'
 
 // 6h TTL — Semrush domain overview / backlink metrics move slowly and the
@@ -32,6 +34,10 @@ const CACHE_TTL_SECONDS = 6 * 60 * 60
 const SEMRUSH_DATABASE = 'us'
 // Cap how many competitor domains we fan out to, to bound Semrush API spend.
 const MAX_COMPETITORS = 8
+// Domains processed per batch. Each domain makes 2 Semrush calls; Semrush
+// rate-limits around 10 req/s, so 3×2 = 6 concurrent stays safely under it
+// (an unbounded fan-out made every lookup fail on first uncached load).
+const DOMAIN_CONCURRENCY = 3
 
 export interface CompetitiveRow {
   /** Normalized domain (no scheme/www). */
@@ -69,39 +75,65 @@ type CompetitiveClient = {
   competitors: string[] | null
 }
 
-/** Fetch one domain's Semrush overview, cached, folded into a CompetitiveRow. */
+/** Cached organic-overview lookup. Throws on connector failure (not cached). */
+async function cachedRanks(domain: string, apiKey: string): Promise<SemrushDomainRank | null> {
+  return cachedFetch(`competitive:semrush:ranks:${SEMRUSH_DATABASE}:${domain}`, CACHE_TTL_SECONDS, async () => {
+    const res = await fetchSemrushDomainRanks(domain, apiKey, SEMRUSH_DATABASE)
+    if (!res.ok) throw new Error(res.error)
+    return res.data
+  })
+}
+
+/** Cached backlinks-overview lookup. Throws on connector failure (not cached). */
+async function cachedBacklinks(domain: string, apiKey: string): Promise<SemrushBacklinksOverview | null> {
+  return cachedFetch(`competitive:semrush:backlinks:${domain}`, CACHE_TTL_SECONDS, async () => {
+    const res = await fetchSemrushBacklinksOverview(domain, apiKey)
+    if (!res.ok) throw new Error(res.error)
+    return res.data
+  })
+}
+
+/**
+ * Fetch one domain's Semrush overview as a CompetitiveRow. The two endpoints
+ * are cached independently so one failing doesn't poison (or waste) the other —
+ * a partial row keeps whatever data succeeded, with `error` noting the gap.
+ * Never throws.
+ */
 async function fetchDomainRow(
   domain: string,
   isSelf: boolean,
   apiKey: string,
 ): Promise<CompetitiveRow> {
-  const key = `competitive:semrush:${SEMRUSH_DATABASE}:${domain}`
-  return cachedFetch<CompetitiveRow>(key, CACHE_TTL_SECONDS, async () => {
-    const [ranks, backlinks] = await Promise.all([
-      fetchSemrushDomainRanks(domain, apiKey, SEMRUSH_DATABASE),
-      fetchSemrushBacklinksOverview(domain, apiKey),
-    ])
+  const [ranks, backlinks] = await Promise.allSettled([
+    cachedRanks(domain, apiKey),
+    cachedBacklinks(domain, apiKey),
+  ])
 
-    // A connector failure (bad key, quota, network) is surfaced as a per-row
-    // error so a broken lookup doesn't masquerade as "no data". A successful
-    // call with no rows (data === null) stays null without an error.
-    if (!ranks.ok || !backlinks.ok) {
-      // Throw (don't return) so cachedFetch does NOT persist a failed lookup for
-      // the full TTL — the caller's allSettled handler turns a rejection into a
-      // per-row error, so a transient Semrush failure retries on the next load.
-      throw new Error(!ranks.ok ? ranks.error : (backlinks as { ok: false; error: string }).error)
-    }
+  const reason = (r: PromiseRejectedResult) =>
+    r.reason instanceof Error ? r.reason.message : 'Lookup failed'
 
-    return {
-      domain,
-      isSelf,
-      organicKeywords: ranks.data?.organic_keywords ?? null,
-      organicTraffic: ranks.data?.organic_traffic ?? null,
-      organicCost: ranks.data?.organic_cost ?? null,
-      referringDomains: backlinks.data?.referring_domains ?? null,
-      authorityScore: backlinks.data?.authority_score ?? null,
-    }
-  })
+  let error: string | undefined
+  if (ranks.status === 'rejected' && backlinks.status === 'rejected') {
+    error = reason(ranks)
+  } else if (ranks.status === 'rejected') {
+    error = `Organic lookup failed: ${reason(ranks)}`
+  } else if (backlinks.status === 'rejected') {
+    error = `Backlinks lookup failed: ${reason(backlinks)}`
+  }
+
+  const ranksData = ranks.status === 'fulfilled' ? ranks.value : null
+  const backlinksData = backlinks.status === 'fulfilled' ? backlinks.value : null
+
+  return {
+    domain,
+    isSelf,
+    organicKeywords: ranksData?.organic_keywords ?? null,
+    organicTraffic: ranksData?.organic_traffic ?? null,
+    organicCost: ranksData?.organic_cost ?? null,
+    referringDomains: backlinksData?.referring_domains ?? null,
+    authorityScore: backlinksData?.authority_score ?? null,
+    ...(error ? { error } : {}),
+  }
 }
 
 /**
@@ -145,24 +177,17 @@ export async function getCompetitiveData(): Promise<CompetitiveResult> {
     if (selfDomain) targets.push({ domain: selfDomain, isSelf: true })
     competitorDomains.forEach((domain) => targets.push({ domain, isSelf: false }))
 
-    const settled = await Promise.allSettled(
-      targets.map((t) => fetchDomainRow(t.domain, t.isSelf, apiKey)),
-    )
-
-    const rows: CompetitiveRow[] = settled.map((res, i) => {
-      if (res.status === 'fulfilled') return res.value
-      const { domain, isSelf } = targets[i]
-      return {
-        domain,
-        isSelf,
-        organicKeywords: null,
-        organicTraffic: null,
-        organicCost: null,
-        referringDomains: null,
-        authorityScore: null,
-        error: res.reason instanceof Error ? res.reason.message : 'Lookup failed',
-      }
-    })
+    // Bounded fan-out: DOMAIN_CONCURRENCY domains per batch so the 2-calls-per-
+    // domain pattern stays under Semrush's rate limit. fetchDomainRow never
+    // throws, and per-endpoint results are cached, so retries are cheap.
+    const rows: CompetitiveRow[] = []
+    for (let i = 0; i < targets.length; i += DOMAIN_CONCURRENCY) {
+      const batch = targets.slice(i, i + DOMAIN_CONCURRENCY)
+      const batchRows = await Promise.all(
+        batch.map((t) => fetchDomainRow(t.domain, t.isSelf, apiKey)),
+      )
+      rows.push(...batchRows)
+    }
 
     return {
       configured: true,
