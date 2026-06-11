@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { MapPin, ArrowDown, AlertTriangle } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { gbpLocationLabel, hasDuplicateTitles } from '@/lib/dashboard/gbp-labels'
 import type { DashboardGBPData, GBPClientInsights, GBPLocationInsight } from '@/app/actions/dashboard-gbp'
 
 // ── Metric presentation ─────────────────────────────────────────────────────
@@ -171,6 +172,8 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
   const visible = sortedRows.slice(0, cap)
   const hidden = sortedRows.length - visible.length
   const activeCol = COLUMNS.find((c) => c.key === sortKey) ?? COLUMNS[0]
+  // Chain brands share one title across every location — label by city instead.
+  const preferCity = hasDuplicateTitles(rows.map((r) => r.locationTitle))
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
@@ -223,8 +226,11 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
                     >
                       {i + 1}
                     </span>
-                    <span className="truncate text-surface-200" title={row.locationTitle}>
-                      {row.locationTitle}
+                    <span
+                      className="truncate text-surface-200"
+                      title={`${row.locationTitle}${row.locality ? ` — ${row.locality}${row.administrativeArea ? `, ${row.administrativeArea}` : ''}` : ''}`}
+                    >
+                      {gbpLocationLabel(row.locationTitle, row.locality, row.administrativeArea, preferCity)}
                     </span>
                     {row.error && (
                       <AlertTriangle

@@ -1,5 +1,6 @@
 import { ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { gbpLocationLabel, hasDuplicateTitles } from '@/lib/dashboard/gbp-labels'
 import type { DashboardGBPData, GBPAccountAudit } from '@/app/actions/dashboard-gbp'
 
 // ── Score → grade colors (matches HealthScorecard token usage) ───────────────
@@ -137,6 +138,8 @@ export default function LocationCompleteness({
   // Lowest-scoring locations needing attention. `audit.locations` is already
   // sorted score-ascending (worst first); only surface those below perfect.
   const attention = audit.locations.filter((l) => l.score < 100).slice(0, maxAttention)
+  // Chain brands share one title — label by city so rows are tellable apart.
+  const preferCity = hasDuplicateTitles(audit.locations.map((l) => l.title))
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
@@ -230,14 +233,20 @@ export default function LocationCompleteness({
           <ul className="space-y-2">
             {attention.map((loc) => {
               const tone = TONE_STYLES[scoreTone(loc.score)]
+              const label = gbpLocationLabel(
+                loc.title || loc.name,
+                loc.address?.locality,
+                loc.address?.administrativeArea,
+                preferCity,
+              )
               return (
                 <li
                   key={loc.name}
                   className="flex items-start justify-between gap-3 border-b border-surface-700/50 pb-2 last:border-0 last:pb-0"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-surface-200" title={loc.title}>
-                      {loc.title || loc.name}
+                    <p className="truncate text-sm text-surface-200" title={loc.addressFormatted || loc.title}>
+                      {label}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-surface-500" title={loc.issues.join(', ')}>
                       {loc.issues.length > 0
