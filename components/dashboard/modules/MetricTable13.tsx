@@ -99,7 +99,9 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-sm font-semibold text-surface-100">13-Month Metrics</p>
-        <p className="text-xs text-surface-500">Newest first · MoM Δ on latest full month</p>
+        <p className="text-xs text-surface-500">
+          Fixed 13-month window · MoM Δ on latest full month · in-progress month marked MTD, no Δ
+        </p>
       </div>
 
       {/* YoY summary strip — latest complete month vs 12 months earlier */}

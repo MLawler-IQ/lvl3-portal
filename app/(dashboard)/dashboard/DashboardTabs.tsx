@@ -23,7 +23,7 @@ import Alerts from "@/components/dashboard/modules/Alerts";
 import Targets from "@/components/dashboard/modules/Targets";
 import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
 import Annotations from "@/components/dashboard/modules/Annotations";
-import { CALENDAR_PRESETS } from "@/lib/date-range";
+import { buildDateRange, CALENDAR_PRESETS } from "@/lib/date-range";
 import { gbpLocationLabel, hasDuplicateTitles } from "@/lib/dashboard/gbp-labels";
 import type { Annotation } from "@/app/actions/annotations";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
@@ -188,6 +188,10 @@ export default function DashboardTabs({
   // Defaults must match page.tsx: last full month vs same month prior year.
   const period = searchParams.get("period") ?? "last_full_month";
   const compare = searchParams.get("compare") ?? "yoy";
+  // Window labels for the selected frame (pure date math, safe client-side):
+  // periodLabel e.g. "Last 28 days"; ghost-series label e.g. "Sessions (prior year)".
+  const range = buildDateRange(period, compare);
+  const ghostLabel = `Sessions (${range.compareLabel.replace(/^vs\.?\s*/, "")})`;
 
   function navigate(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString());
@@ -319,11 +323,16 @@ export default function DashboardTabs({
             {/* Goals & pacing (self-hides when no targets are set; admins get a setup nudge) */}
             <Targets pacing={pacing} isAdmin={isAdmin} clientId={clientId} />
 
-            {/* Period-aware traffic trend with prior-period ghost overlay */}
+            {/* Period-aware traffic trend with comparison ghost overlay */}
             {sessionsTrend.length >= 2 && (
               <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
                 <p className="text-sm font-semibold text-surface-100 mb-3">Traffic trend</p>
-                <TrendChart data={sessionsTrend} label="Sessions" granularity={trendGranularity} />
+                <TrendChart
+                  data={sessionsTrend}
+                  label="Sessions"
+                  granularity={trendGranularity}
+                  compareLabel={ghostLabel}
+                />
               </div>
             )}
 
@@ -344,7 +353,7 @@ export default function DashboardTabs({
                   Context
                 </p>
                 {isAdmin && (
-                  <RefreshAnalyticsButton clientId={clientId} />
+                  <RefreshAnalyticsButton clientId={clientId} period={period} compare={compare} />
                 )}
               </div>
 
@@ -391,7 +400,10 @@ export default function DashboardTabs({
           <div className="p-6 max-w-4xl space-y-6">
             {metricTrend.length >= 2 && (
               <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-                <p className="text-sm font-semibold text-surface-100 mb-3">13-month sessions trend</p>
+                <div className="mb-3 flex items-baseline justify-between gap-3">
+                  <p className="text-sm font-semibold text-surface-100">Sessions trend</p>
+                  <p className="text-xs text-surface-500">Last 13 full months · excludes the current month (MTD)</p>
+                </div>
                 <TrendChart data={metricTrend} label="Sessions" granularity="monthly" />
               </div>
             )}
@@ -415,7 +427,13 @@ export default function DashboardTabs({
 
         {/* Website tab */}
         {activeTab === "website" && (
-          <WebsiteTab ga4={dashboardReport.ga4} />
+          <WebsiteTab
+            ga4={dashboardReport.ga4}
+            sessionsTrend={sessionsTrend}
+            trendGranularity={trendGranularity}
+            periodLabel={range.label}
+            trendCompareLabel={ghostLabel}
+          />
         )}
 
         {/* SEO tab */}
@@ -425,6 +443,8 @@ export default function DashboardTabs({
             gsc={dashboardReport.gsc}
             gscError={dashboardReport.gscError}
             isAdmin={isAdmin}
+            trendGranularity={trendGranularity}
+            periodLabel={range.label}
           />
         )}
 

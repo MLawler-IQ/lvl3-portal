@@ -124,6 +124,7 @@ export default function Targets({ pacing, isAdmin = false, clientId }: TargetsPr
       <div className="mb-4 flex items-center gap-2">
         <TargetIcon className="h-4 w-4 text-surface-500" aria-hidden="true" />
         <p className="text-sm font-semibold text-surface-100">Monthly Goals</p>
+        <span className="ml-auto text-xs text-surface-500">Month to date</span>
       </div>
 
       <ul>

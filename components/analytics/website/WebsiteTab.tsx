@@ -1,4 +1,5 @@
 import type { GA4Report } from '@/lib/google-analytics'
+import type { TrendPoint, Granularity } from '@/lib/dashboard/types'
 import SectionHeader from '@/components/analytics/shared/SectionHeader'
 import WebsiteKpiRow from './WebsiteKpiRow'
 import ChannelBarChart from './ChannelBarChart'
@@ -7,9 +8,16 @@ import SourceMediumTable from './SourceMediumTable'
 
 interface Props {
   ga4: GA4Report | null
+  /** Period-aware sessions trend (follows the picker, with comparison overlay). */
+  sessionsTrend: TrendPoint[]
+  trendGranularity: Granularity
+  /** The selected window, e.g. "Last 28 days". */
+  periodLabel: string
+  /** Legend name for the trend's ghost comparison series. */
+  trendCompareLabel?: string
 }
 
-export default function WebsiteTab({ ga4 }: Props) {
+export default function WebsiteTab({ ga4, sessionsTrend, trendGranularity, periodLabel, trendCompareLabel }: Props) {
   if (!ga4) {
     return (
       <div className="p-6">
@@ -34,12 +42,14 @@ export default function WebsiteTab({ ga4 }: Props) {
         <SourceMediumTable rows={ga4.topSourceMediums} />
       </div>
 
-      {/* Monthly trend */}
-      {ga4.monthlyTrend.length > 0 && (
-        <div>
-          <SectionHeader title="Sessions Trend" period="Last 6 months" />
-          <MonthlySessionsChart data={ga4.monthlyTrend} />
-        </div>
+      {/* Period-aware sessions trend */}
+      {sessionsTrend.length >= 2 && (
+        <MonthlySessionsChart
+          data={sessionsTrend}
+          granularity={trendGranularity}
+          periodLabel={periodLabel}
+          compareLabel={trendCompareLabel}
+        />
       )}
     </div>
   )

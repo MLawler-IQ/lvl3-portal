@@ -1,6 +1,6 @@
 import { google } from 'googleapis'
 import type { DateRange, Granularity } from './date-range'
-import { buildTrendRange } from './date-range'
+import { buildTrendRange, pickGranularity } from './date-range'
 import { getAdminOAuthClient } from '@/lib/google-auth'
 import { cachedFetch } from '@/lib/api-cache'
 import { normalizeDomain } from '@/lib/normalize-domain'
@@ -81,7 +81,9 @@ export async function fetchGSCMetrics(siteUrl: string, range?: DateRange): Promi
 
 // ── Dashboard report types ────────────────────────────────────────────────────
 
-export type GSCMonthlyPoint = { month: string; yearMonth: string; clicks: number; impressions: number }
+/** One bucket of the period-aware report trend. `date` is YYYY-MM-DD (daily /
+ *  weekly bucket start) or YYYY-MM (monthly) — same convention as TrendPoint. */
+export type GSCTrendBucket = { date: string; clicks: number; impressions: number }
 export type QueryRow = { query: string; clicks: number; clicksDelta: number; impressions: number; impressionsDelta: number; position: number }
 export type UrlRow = { page: string; clicks: number; clicksDelta: number; impressions: number; position: number }
 
@@ -99,7 +101,8 @@ export type GSCReport = {
   position: number; positionDelta: number
   ctr: number
   compareLabel: string
-  monthlyTrend: GSCMonthlyPoint[]
+  /** Clicks/impressions over the SELECTED period, bucketed by pickGranularity. */
+  trend: GSCTrendBucket[]
   topQueries: QueryRow[]
   topUrls: UrlRow[]
   serpDistribution: SerpDistribution
@@ -116,11 +119,12 @@ function normalizeSiteUrl(raw: string): string {
 }
 
 export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promise<GSCReport> {
-  // Cache key includes the comparison window: the report's clicksDelta / per-query
+  // Cache key includes the comparison window (the report's clicksDelta / per-query
   // / per-URL deltas depend on compareStart/compareEnd, so 'prior' vs 'yoy' at the
-  // same period must NOT share a cache entry.
+  // same period must NOT share a cache entry) and the period key (it drives the
+  // trend's bucket granularity).
   return cachedFetch(
-    `gsc:report:${normalizeSiteUrl(siteUrl)}:${gscRangeKey(range)}:${range?.compareStart ?? 'def'}:${range?.compareEnd ?? 'def'}`,
+    `gsc:report:${normalizeSiteUrl(siteUrl)}:${gscRangeKey(range)}:${range?.compareStart ?? 'def'}:${range?.compareEnd ?? 'def'}:${range?.period ?? 'def'}`,
     GSC_TTL_SECONDS,
     () => _fetchGSCReportUncached(siteUrl, range),
   )
@@ -154,18 +158,18 @@ async function _fetchGSCReportUncached(siteUrl: string, range?: DateRange): Prom
     compareLabel = 'vs. prior 28 days'
   }
 
-  // 6-month daily range for monthly aggregation
-  const firstOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-  const monthlyEnd = fmt(new Date(firstOfCurrentMonth.getTime() - 86400000))
-  const monthlyStart = fmt(new Date(today.getFullYear(), today.getMonth() - 6, 1))
+  // Trend buckets follow the selected period: daily rows over the SAME window as
+  // the KPIs, rolled up at the granularity the period implies (daily / weekly /
+  // monthly) — no more fixed 6-month window pinned under a shorter picker.
+  const trendGranularity = pickGranularity(range?.period)
 
   const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
     // 1: current overall
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate, endDate } }),
     // 2: prior/compare overall
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate: priorStart, endDate: priorEnd } }),
-    // 3: daily data for monthly aggregation
-    searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate: monthlyStart, endDate: monthlyEnd, dimensions: ['date'], rowLimit: 200 } }),
+    // 3: daily data for the period-aware trend
+    searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate, endDate, dimensions: ['date'], rowLimit: 1000 } }),
     // 4: top queries current (500 rows for SERP distribution; top 25 shown in table)
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate, endDate, dimensions: ['query'], rowLimit: 500 } }),
     // 5: top queries prior (for delta)
@@ -199,27 +203,24 @@ async function _fetchGSCReportUncached(siteUrl: string, range?: DateRange): Prom
   const pct = (curr: number, prior: number) =>
     prior === 0 ? 0 : Math.round(((curr - prior) / prior) * 100)
 
-  // Monthly trend: aggregate daily rows by yearMonth
-  const monthlyMap = new Map<string, { clicks: number; impressions: number }>()
+  // Period-aware trend: roll the daily rows into buckets at the granularity the
+  // selected period implies (same bucket keys as fetchGSCTrend).
+  const trendMap = new Map<string, { clicks: number; impressions: number }>()
   if (r3.status === 'fulfilled') {
     for (const row of r3.value.data.rows ?? []) {
       const dateStr = row.keys?.[0] ?? ''
-      const ym = dateStr.slice(0, 7).replace('-', '') // "2025-01" -> "202501"
-      const prev = monthlyMap.get(ym) ?? { clicks: 0, impressions: 0 }
-      monthlyMap.set(ym, {
+      if (!dateStr) continue
+      const key = bucketKey(dateStr, trendGranularity)
+      const prev = trendMap.get(key) ?? { clicks: 0, impressions: 0 }
+      trendMap.set(key, {
         clicks: prev.clicks + (row.clicks ?? 0),
         impressions: prev.impressions + (row.impressions ?? 0),
       })
     }
   }
-  const monthlyTrend: GSCMonthlyPoint[] = Array.from(monthlyMap.entries())
+  const trend: GSCTrendBucket[] = Array.from(trendMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([ym, data]) => {
-      const yr = parseInt(ym.slice(0, 4))
-      const mo = parseInt(ym.slice(4, 6)) - 1
-      const label = new Date(yr, mo, 1).toLocaleString('en-US', { month: 'short' })
-      return { month: label, yearMonth: ym, ...data }
-    })
+    .map(([date, data]) => ({ date, ...data }))
 
   // Queries — all 500 rows used for SERP distribution, top 25 used for table
   const allQueryRows = r4.status === 'fulfilled' ? (r4.value.data.rows ?? []) : []
@@ -284,7 +285,7 @@ async function _fetchGSCReportUncached(siteUrl: string, range?: DateRange): Prom
     impressions, impressionsDelta: pct(impressions, priorImpressions),
     position, positionDelta: pct(position, priorPosition),
     ctr, compareLabel,
-    monthlyTrend, topQueries, topUrls, serpDistribution,
+    trend, topQueries, topUrls, serpDistribution,
   }
 }
 

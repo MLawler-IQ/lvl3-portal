@@ -1,5 +1,6 @@
 import type { GA4Report } from '@/lib/google-analytics'
 import type { GSCReport } from '@/lib/google-search-console'
+import type { Granularity } from '@/lib/dashboard/types'
 import SectionHeader from '@/components/analytics/shared/SectionHeader'
 import OrganicKpiRow from './organic/OrganicKpiRow'
 import DeviceDonutChart from './organic/DeviceDonutChart'
@@ -15,9 +16,13 @@ interface Props {
   gsc: GSCReport | null
   gscError?: string
   isAdmin: boolean
+  /** Bucket size of the GSC trend (matches the selected period). */
+  trendGranularity: Granularity
+  /** The selected window, e.g. "Last 28 days". */
+  periodLabel: string
 }
 
-export default function SeoTab({ ga4, gsc, gscError, isAdmin }: Props) {
+export default function SeoTab({ ga4, gsc, gscError, isAdmin, trendGranularity, periodLabel }: Props) {
   if (!ga4 && !gsc) {
     return (
       <div className="p-6 space-y-3">
@@ -58,7 +63,9 @@ export default function SeoTab({ ga4, gsc, gscError, isAdmin }: Props) {
           <SectionHeader title="Search Console" period={gsc.compareLabel} />
           <GscKpiRow gsc={gsc} compareLabel={gsc.compareLabel} />
           <SerpDistributionChart distribution={gsc.serpDistribution} />
-          {gsc.monthlyTrend.length > 0 && <GscTrendChart data={gsc.monthlyTrend} />}
+          {gsc.trend.length > 0 && (
+            <GscTrendChart data={gsc.trend} granularity={trendGranularity} periodLabel={periodLabel} />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <GscQueriesTable rows={gsc.topQueries} />
             <GscUrlsTable rows={gsc.topUrls} />
