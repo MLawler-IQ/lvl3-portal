@@ -17,12 +17,14 @@ import {
   fetchGA4Report,
   fetchGA4EcomFunnel,
   fetchGA4TopProducts,
+  fetchGA4NewVsReturningRevenue,
   type ChannelRow,
   type GA4EcomFunnel,
   type GA4TopProduct,
+  type GA4NewVsReturningRevenue,
 } from '@/lib/google-analytics'
 
-export type { TrendPoint, ChannelRow, GA4EcomFunnel, GA4TopProduct }
+export type { TrendPoint, ChannelRow, GA4EcomFunnel, GA4TopProduct, GA4NewVsReturningRevenue }
 
 type Opts = { period?: string; compare?: string }
 
@@ -118,5 +120,34 @@ export async function getGA4TopProductsData(opts?: Opts): Promise<GA4TopProducts
     return { configured: true, products }
   } catch (err) {
     return { configured: true, products: [], error: err instanceof Error ? err.message : 'Failed to load GA4 products' }
+  }
+}
+
+// ── 5. New vs returning revenue (admin-only, ecommerce) ───────────────────────
+// Revenue split by GA4's newVsReturning dimension, surfaced by the module as
+// SHARES + trend only. The render site (AnalyticsSection) fetches this ONLY for
+// admins on ecommerce clients, mirroring how MetricTable13 is gated.
+// TODO: exposing this to client-role users is a deliberate later decision —
+// keep the isAdmin gate at the fetch/render site until then.
+
+export type GA4NewVsReturningResult = {
+  configured: boolean
+  data: GA4NewVsReturningRevenue | null
+  error?: string
+}
+
+export async function getGA4NewVsReturningData(opts?: Opts): Promise<GA4NewVsReturningResult> {
+  try {
+    const { propertyId } = await resolveGA4PropertyId()
+    if (!propertyId) return { configured: false, data: null }
+    const range = buildDateRange(opts?.period, opts?.compare)
+    const data = await fetchGA4NewVsReturningRevenue(propertyId, range)
+    return { configured: true, data }
+  } catch (err) {
+    return {
+      configured: true,
+      data: null,
+      error: err instanceof Error ? err.message : 'Failed to load new vs returning revenue',
+    }
   }
 }
