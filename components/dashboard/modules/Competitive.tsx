@@ -74,7 +74,7 @@ export default function Competitive({ data }: { data: CompetitiveResult }) {
       <div className="flex items-center gap-2 border-b border-surface-700 px-5 py-3.5">
         <Swords className="h-4 w-4 text-accent-400" aria-hidden="true" />
         <h3 className="text-sm font-semibold text-surface-100">Competitive Landscape</h3>
-        <span className="text-xs text-surface-500">via Semrush</span>
+        <span className="text-xs text-surface-500">Latest Semrush snapshot · not period-linked</span>
       </div>
 
       {data.error && (

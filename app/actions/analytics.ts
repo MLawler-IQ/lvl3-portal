@@ -5,15 +5,15 @@ import { getAdminOAuthClient } from '@/lib/google-auth'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { parseSheetId, fetchSheetHeaders } from '@/lib/google-sheets'
-import { fetchGA4Metrics, GA4Metrics, fetchGA4Report, GA4Report, ChannelRow, MonthlySessionPoint, SourceMediumRow, LandingPageRow } from '@/lib/google-analytics'
-import { fetchGSCMetrics, GSCMetrics, listGSCSites, fetchGSCReport, GSCReport, GSCMonthlyPoint, QueryRow, UrlRow, SerpDistribution } from '@/lib/google-search-console'
+import { fetchGA4Metrics, GA4Metrics, fetchGA4Report, GA4Report, ChannelRow, SourceMediumRow, LandingPageRow } from '@/lib/google-analytics'
+import { fetchGSCMetrics, GSCMetrics, listGSCSites, fetchGSCReport, GSCReport, GSCTrendBucket, QueryRow, UrlRow, SerpDistribution } from '@/lib/google-search-console'
 import { buildDateRange, DateRange } from '@/lib/date-range'
 import { normalizeDomain } from '@/lib/normalize-domain'
 import Anthropic from '@anthropic-ai/sdk'
 import type { InsightCard } from '@/lib/dashboard/types'
 import { deriveInsightCards, deriveHeadline, type InsightSignals } from '@/lib/dashboard/insights'
 
-export type { GA4Metrics, GSCMetrics, GA4Report, GSCReport, ChannelRow, MonthlySessionPoint, SourceMediumRow, LandingPageRow, GSCMonthlyPoint, QueryRow, UrlRow, SerpDistribution, DateRange }
+export type { GA4Metrics, GSCMetrics, GA4Report, GSCReport, ChannelRow, SourceMediumRow, LandingPageRow, GSCTrendBucket, QueryRow, UrlRow, SerpDistribution, DateRange }
 
 export type SnapshotInsights = {
   takeaways: string
@@ -286,12 +286,21 @@ export async function listGSCSiteOptions(): Promise<{
 // ── Generate insights ─────────────────────────────────────────────────────────
 
 export async function generateAnalyticsInsights(
-  clientId: string
+  clientId: string,
+  opts?: { period?: string; compare?: string }
 ): Promise<{ error?: string }> {
   try {
     await requireAdmin()
 
-    const data = await fetchAnalyticsData(clientId)
+    // Generation frame. Defaults match the dashboard's default view
+    // (app/(dashboard)/dashboard/page.tsx: last full month vs prior year) so the
+    // stored narrative agrees with what the Snapshot opens on; the dashboard's
+    // refresh button passes the currently selected frame through instead.
+    const period = opts?.period ?? 'last_full_month'
+    const compare = opts?.compare ?? 'yoy'
+    const range = buildDateRange(period, compare)
+
+    const data = await fetchAnalyticsData(clientId, { period, compare })
 
     if (!data.ga4 && !data.gsc) {
       const msg = data.error
@@ -302,11 +311,13 @@ export async function generateAnalyticsInsights(
 
     const parts: string[] = []
 
+    const windowLabel = `${range.label} (${range.startDate} to ${range.endDate})`
+
     if (data.ga4) {
       const { sessions, users, pageviews, bounceRate, topChannels, sessionsDelta, usersDelta } =
         data.ga4
       parts.push(
-        `GA4 (last 30 days): ${sessions.toLocaleString()} sessions (${sessionsDelta >= 0 ? '+' : ''}${sessionsDelta}% vs prior period), ${users.toLocaleString()} users (${usersDelta >= 0 ? '+' : ''}${usersDelta}%), ${pageviews.toLocaleString()} pageviews, bounce rate ${(bounceRate * 100).toFixed(1)}%. Top channels: ${topChannels
+        `GA4 (${windowLabel}): ${sessions.toLocaleString()} sessions (${sessionsDelta >= 0 ? '+' : ''}${sessionsDelta}% ${range.compareLabel}), ${users.toLocaleString()} users (${usersDelta >= 0 ? '+' : ''}${usersDelta}%), ${pageviews.toLocaleString()} pageviews, bounce rate ${(bounceRate * 100).toFixed(1)}%. Top channels: ${topChannels
           .slice(0, 3)
           .map((c) => `${c.channel} (${c.sessions.toLocaleString()})`)
           .join(', ')}.`
@@ -316,7 +327,7 @@ export async function generateAnalyticsInsights(
     if (data.gsc) {
       const { clicks, impressions, ctr, position, topQueries } = data.gsc
       parts.push(
-        `Search Console (last 28 days): ${clicks.toLocaleString()} clicks, ${impressions.toLocaleString()} impressions, ${ctr.toFixed(1)}% CTR, avg position ${position.toFixed(1)}. Top queries: ${topQueries
+        `Search Console (${windowLabel}): ${clicks.toLocaleString()} clicks, ${impressions.toLocaleString()} impressions, ${ctr.toFixed(1)}% CTR, avg position ${position.toFixed(1)}. Top queries: ${topQueries
           .slice(0, 3)
           .map((q) => `"${q.query}" (${q.clicks} clicks)`)
           .join(', ')}.`
@@ -335,12 +346,14 @@ export async function generateAnalyticsInsights(
           role: 'user',
           content: `Based on this analytics data, generate a structured report using this exact JSON format:
 {
-  "headline": "ONE punchy sentence (max ~14 words) naming the single most important shift this period, e.g. \\"Organic clicks up 18% drove the strongest month of the quarter.\\"",
-  "summary": "2-3 paragraphs in plain, client-friendly language covering overall performance.",
-  "takeaways": "2-3 sentences highlighting the most notable positive results.",
+  "headline": "ONE punchy sentence (max ~14 words) naming the single most important shift in this reporting window, e.g. \\"Organic clicks up 18% year over year — the strongest result this window.\\"",
+  "summary": "2-3 paragraphs in plain, client-friendly language covering overall performance. The FIRST sentence must name the reporting window (e.g. \\"In May 2026…\\" or \\"Over the last 28 days…\\").",
+  "takeaways": "2-3 sentences highlighting the most notable positive results, phrased against the stated comparison.",
   "anomalies": "2-3 sentences on any unusual patterns or concerns. If nothing notable, write: No significant anomalies detected this period.",
   "opportunities": "2-3 sentences on specific, actionable opportunities to improve performance."
 }
+
+Reporting window: ${windowLabel}, compared ${range.compareLabel}. Every change you cite is measured against that comparison — state the frame that way and never describe it as a different window (e.g. do not write "last 30 days" or "vs prior period" unless that is literally the frame above).
 
 Data:
 ${parts.join('\n\n')}`,
@@ -363,9 +376,11 @@ ${parts.join('\n\n')}`,
 
     // ── Structured insight layer ──────────────────────────────────────────────
     // Derive InsightCard[] deterministically from the already-fetched GA4/GSC
-    // deltas (no extra LLM call). GA4 exposes signed-percent deltas; GSC metrics
-    // carry no comparison fields, so only GA4-backed cards are produced here.
-    const signals: InsightSignals = { period: 'vs prior period' }
+    // deltas (no extra LLM call), labeled with the generation frame's compare
+    // window. The dashboard renders LIVE cards (AnalyticsSection) — these stored
+    // cards are a frame-stamped record only. GA4 exposes signed-percent deltas;
+    // GSC metrics carry no comparison fields, so only GA4-backed cards appear.
+    const signals: InsightSignals = { period: range.compareLabel }
     if (data.ga4) {
       signals.sessions = { value: data.ga4.sessions, delta: data.ga4.sessionsDelta }
       signals.users = { value: data.ga4.users, delta: data.ga4.usersDelta }

@@ -121,7 +121,6 @@ async function _fetchGA4MetricsUncached(propertyId: string, range?: DateRange): 
 // ── Dashboard report types ────────────────────────────────────────────────────
 
 export type ChannelRow = { channel: string; sessions: number; sessionsDelta: number; purchaseRevenue: number }
-export type MonthlySessionPoint = { month: string; yearMonth: string; sessions: number }
 export type SourceMediumRow = { sourceMedium: string; sessions: number; users: number }
 export type LandingPageRow = { page: string; sessions: number; sessionsDelta: number }
 
@@ -130,7 +129,6 @@ export type GA4Report = {
   purchaseRevenue: number; purchaseRevenueDelta: number
   transactions: number; transactionsDelta: number
   topChannels: ChannelRow[]
-  monthlyTrend: MonthlySessionPoint[]
   topSourceMediums: SourceMediumRow[]
   organicSessions: number; organicSessionsDelta: number
   organicUsers: number; organicUsersDelta: number
@@ -203,10 +201,6 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     compareLabel = 'vs. prior 28 days'
   }
 
-  const firstOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-  const monthlyEnd = fmt(new Date(firstOfCurrentMonth.getTime() - 86400000))
-  const monthlyStart = fmt(new Date(today.getFullYear(), today.getMonth() - 6, 1))
-
   const prop = `properties/${propertyId}`
   const organicFilter = {
     filter: {
@@ -215,7 +209,7 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     },
   }
 
-  const [r1, r2, r4cur, r4pri, r5, r6, r7cur, r7pri, r8cur, r8pri] = await Promise.allSettled([
+  const [r1, r2, r4cur, r4pri, r6, r7cur, r7pri, r8cur, r8pri] = await Promise.allSettled([
     // 1: overall current
     analyticsdata.properties.runReport({
       property: prop,
@@ -251,16 +245,6 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
         dimensions: [{ name: 'sessionDefaultChannelGroup' }],
         metrics: [{ name: 'sessions' }],
         limit: '20',
-      },
-    }),
-    // 5: monthly trend (fixed 6-month window)
-    analyticsdata.properties.runReport({
-      property: prop,
-      requestBody: {
-        dateRanges: [{ startDate: monthlyStart, endDate: monthlyEnd }],
-        dimensions: [{ name: 'yearMonth' }],
-        metrics: [{ name: 'sessions' }],
-        orderBys: [{ dimension: { dimensionName: 'yearMonth' }, desc: false }],
       },
     }),
     // 6: source/medium current
@@ -358,20 +342,6 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     }
   }
 
-  // Monthly trend
-  const monthlyTrend: MonthlySessionPoint[] = []
-  if (r5.status === 'fulfilled') {
-    for (const row of r5.value.data.rows ?? []) {
-      const ym = row.dimensionValues?.[0]?.value ?? ''
-      const s = parseInt(row.metricValues?.[0]?.value ?? '0')
-      if (ym.length === 6) {
-        const yr = parseInt(ym.slice(0, 4))
-        const mo = parseInt(ym.slice(4, 6)) - 1
-        monthlyTrend.push({ month: new Date(yr, mo, 1).toLocaleString('en-US', { month: 'short' }), yearMonth: ym, sessions: s })
-      }
-    }
-  }
-
   // Source/medium
   const topSourceMediums: SourceMediumRow[] = []
   if (r6.status === 'fulfilled') {
@@ -435,7 +405,7 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     sessions, sessionsDelta: pct(sessions, priorSessions), compareLabel,
     purchaseRevenue, purchaseRevenueDelta: pct(purchaseRevenue, priorRevenue),
     transactions, transactionsDelta: pct(transactions, priorTransactions),
-    topChannels, monthlyTrend, topSourceMediums,
+    topChannels, topSourceMediums,
     organicSessions, organicSessionsDelta: pct(organicSessions, priorOrganicSessions),
     organicUsers, organicUsersDelta: pct(organicUsers, priorOrganicUsers),
     organicTransactions, organicTransactionsDelta: pct(organicTransactions, priorOrganicTransactions),
@@ -444,9 +414,8 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
 }
 
 // ── Period-aware traffic trend ────────────────────────────────────────────────
-// Replaces the legacy hardcoded 6-month monthlyTrend for chart consumers that
-// want a trend that follows the selected KPI period. Buckets sessions at the
-// granularity chosen by buildTrendRange, and aligns the comparison window by
+// The sessions trend that follows the selected KPI period. Buckets sessions at
+// the granularity chosen by buildTrendRange, and aligns the comparison window by
 // bucket index so the ghost-overlay series lines up 1:1 with the current series.
 
 /** Convert YYYYMMDD (GA4 `date` dimension) → YYYY-MM-DD. */

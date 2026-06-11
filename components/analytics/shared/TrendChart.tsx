@@ -21,6 +21,9 @@ export interface TrendChartProps {
   valueFormatter?: (n: number) => string
   /** Drives x-axis tick formatting (daily → M/D, weekly → week of M/D, monthly → Mon 'YY). */
   granularity?: Granularity
+  /** Legend/tooltip name for the ghost comparison series, e.g. "Sessions (prior year)".
+   *  Defaults to `${label} (prior)`. */
+  compareLabel?: string
   /** Chart height in px (ResponsiveContainer handles width). Defaults to 240. */
   height?: number
 }
@@ -45,7 +48,7 @@ function parseBucket(key: string): Date | null {
 }
 
 /** Granularity-aware x-axis tick formatter. Falls back to the raw key if unparseable. */
-function makeAxisFormatter(granularity: Granularity) {
+export function makeAxisFormatter(granularity: Granularity) {
   return (key: string): string => {
     const d = parseBucket(key)
     if (!d) return key
@@ -75,11 +78,12 @@ export default function TrendChart({
   label = 'Value',
   valueFormatter = defaultFormat,
   granularity = 'daily',
+  compareLabel,
   height = 240,
 }: TrendChartProps) {
   const hasCompare = data.some((p) => typeof p.compareValue === 'number')
   const axisFormatter = makeAxisFormatter(granularity)
-  const compareLabel = `${label} (prior)`
+  const compareSeriesName = compareLabel ?? `${label} (prior)`
 
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -125,7 +129,7 @@ export default function TrendChart({
           <Line
             type="monotone"
             dataKey="compareValue"
-            name={compareLabel}
+            name={compareSeriesName}
             stroke="var(--chart-line-secondary)"
             strokeWidth={1.5}
             strokeDasharray="4 3"

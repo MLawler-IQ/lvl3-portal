@@ -5,7 +5,17 @@ import { useRouter } from 'next/navigation'
 import { RefreshCw } from 'lucide-react'
 import { generateAnalyticsInsights } from '@/app/actions/analytics'
 
-export default function RefreshAnalyticsButton({ clientId }: { clientId: string }) {
+interface RefreshAnalyticsButtonProps {
+  clientId: string
+  /** Generation frame for the regenerated narrative. Omit for the dashboard
+   *  default (last full month vs prior year); the dashboard's context panel
+   *  passes the currently selected period/compare so an admin refreshing while
+   *  viewing a frame regenerates in that frame. */
+  period?: string
+  compare?: string
+}
+
+export default function RefreshAnalyticsButton({ clientId, period, compare }: RefreshAnalyticsButtonProps) {
   const router = useRouter()
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -13,7 +23,7 @@ export default function RefreshAnalyticsButton({ clientId }: { clientId: string 
   async function handleRefresh() {
     setRefreshing(true)
     setError(null)
-    const result = await generateAnalyticsInsights(clientId)
+    const result = await generateAnalyticsInsights(clientId, { period, compare })
     if (result.error) {
       setError(result.error)
     } else {
