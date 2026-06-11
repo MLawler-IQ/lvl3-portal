@@ -469,7 +469,7 @@ All files in this directory start with `'use server'`. Each exported function is
 
 ### 7.9 Analytics (`components/analytics/`)
 `AnalyticsKpiStrip.tsx`, plus subdirectories:
-- `website/`: `WebsiteTab.tsx`, `ChannelBarChart.tsx`, `MonthlySessionsChart.tsx`, `SourceMediumTable.tsx`.
+- `website/`: `ChannelBarChart.tsx`, `SourceMediumTable.tsx` (rendered on Snapshot / Detail; the Website tab was merged into Detail).
 - `seo/`: SEO-specific analytics views.
 - `shared/`: shared chart + table primitives.
 

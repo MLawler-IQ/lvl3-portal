@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MessageCircle, Send, Loader2, Trash2, FileSpreadsheet, Download } from 'lucide-react'
 import { type ChatMessage, type ChatArtifact } from '@/app/actions/ask-lvl3'
+import MarkdownLite from '@/components/ui/MarkdownLite'
 import {
   loadConversation,
   deleteConversation,
@@ -356,7 +357,11 @@ export default function AskLvl3Chat({
                   : 'bg-surface-900 text-surface-200 border border-surface-700'
               }`}
             >
-              <p className="whitespace-pre-wrap">{msg.content}</p>
+              {msg.role === 'assistant' ? (
+                <MarkdownLite text={msg.content} />
+              ) : (
+                <p className="whitespace-pre-wrap">{msg.content}</p>
+              )}
               {msg.artifacts?.map((a, j) => (
                 <button
                   key={j}

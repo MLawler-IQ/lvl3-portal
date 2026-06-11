@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Search } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -9,6 +10,8 @@ export interface BrandedSplitProps {
   branded: GSCBrandedSplit | null
   /** Optional local-vs-general intent breakdown; hidden when absent or empty. */
   intent?: GSCIntentSplit | null
+  /** Admins get a deep-link to the query-level AI Visibility tool. */
+  isAdmin?: boolean
 }
 
 const BRANDED_COLOR = 'var(--chart-line)'
@@ -46,7 +49,7 @@ function ClicksTooltip({ active, payload }: { active?: boolean; payload?: Toolti
   )
 }
 
-export default function BrandedSplit({ branded, intent }: BrandedSplitProps) {
+export default function BrandedSplit({ branded, intent, isAdmin = false }: BrandedSplitProps) {
   const brandedClicks = branded?.branded.clicks ?? 0
   const nonBrandedClicks = branded?.nonBranded.clicks ?? 0
   const totalClicks = brandedClicks + nonBrandedClicks
@@ -74,9 +77,19 @@ export default function BrandedSplit({ branded, intent }: BrandedSplitProps) {
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-      <div className="mb-4">
-        <p className="text-sm font-semibold text-surface-100">Branded Search</p>
-        <p className="text-xs text-surface-400 mt-0.5">Branded vs non-branded query mix</p>
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-surface-100">Branded Search</p>
+          <p className="text-xs text-surface-400 mt-0.5">Branded vs non-branded query mix</p>
+        </div>
+        {isAdmin && (
+          <Link
+            href="/tools/ai-visibility"
+            className="shrink-0 text-xs font-medium text-accent-400 transition-colors hover:text-accent-500"
+          >
+            AI Visibility tool →
+          </Link>
+        )}
       </div>
 
       {!hasBranded ? (

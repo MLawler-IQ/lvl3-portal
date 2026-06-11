@@ -36,13 +36,17 @@ export default function SemrushGapClient({
   clientName,
   clientId,
   defaultClientDomain,
+  defaultCompetitors = [],
 }: {
   clientName: string
   clientId: string
   defaultClientDomain: string
+  defaultCompetitors?: string[]
 }) {
   const [clientDomain, setClientDomain] = useState(defaultClientDomain)
-  const [competitors, setCompetitors] = useState<string[]>([''])
+  const [competitors, setCompetitors] = useState<string[]>(
+    defaultCompetitors.length > 0 ? defaultCompetitors : ['']
+  )
   const [pageSection, setPageSection] = useState('all')
   const [database, setDatabase] = useState('us')
   const [isPending, startTransition] = useTransition()

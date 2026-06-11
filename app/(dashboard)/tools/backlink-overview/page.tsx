@@ -4,7 +4,6 @@ import { fetchBacklinkOverview } from '@/app/actions/tools-extended'
 import { listToolRuns } from '@/app/actions/tool-runs'
 import ExportTool from '@/components/tools/primitives/ExportTool'
 import RunHistory from '@/components/tools/RunHistory'
-import { Link2 } from 'lucide-react'
 
 export default async function BacklinkOverviewPage() {
   const { user } = await requireAdmin()
@@ -26,15 +25,9 @@ export default async function BacklinkOverviewPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
-      <div className="flex items-center gap-3">
-        <Link2 className="w-5 h-5 text-surface-400" />
-        <div>
-          <h1 className="text-xl font-semibold text-surface-100">Backlink Overview</h1>
-          <p className="mt-0.5 text-sm text-surface-400">
-            {client?.name} — domain authority, traffic, and backlink profile via Semrush.
-          </p>
-        </div>
-      </div>
+      <p className="text-sm text-surface-400">
+        {client?.name} — domain authority, traffic, and backlink profile via Semrush.
+      </p>
 
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">

@@ -4,12 +4,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import LookerEmbed from "@/components/dashboard/looker-embed";
 import RefreshAnalyticsButton from "@/components/home/RefreshAnalyticsButton";
-import WebsiteTab from "@/components/analytics/website/WebsiteTab";
 import SeoTab from "@/components/analytics/seo/SeoTab";
 import ExecutiveSummaryBand, { type ExecutiveSummaryBandProps } from "@/components/dashboard/exec/ExecutiveSummaryBand";
 import TrendChart from "@/components/analytics/shared/TrendChart";
 import RankedBarChart from "@/components/analytics/shared/RankedBarChart";
 import ChannelBarChart from "@/components/analytics/website/ChannelBarChart";
+import SourceMediumTable from "@/components/analytics/website/SourceMediumTable";
 import InsightCards from "@/components/dashboard/modules/InsightCards";
 import EcomFunnel from "@/components/dashboard/modules/EcomFunnel";
 import TopProducts from "@/components/dashboard/modules/TopProducts";
@@ -69,7 +69,7 @@ interface Props {
   annotations: Annotation[];
 }
 
-type Tab = "snapshot" | "locations" | "detail" | "website" | "seo" | "full";
+type Tab = "snapshot" | "locations" | "detail" | "seo" | "full";
 
 // Modules that live on the "Detail" tab (kept off the at-a-glance Snapshot).
 const DETAIL_MODULE_IDS: DashboardModuleId[] = [
@@ -215,20 +215,20 @@ export default function DashboardTabs({
   const hasLocations = !!gbp?.configured;
   const hasDetail =
     DETAIL_MODULE_IDS.some((id) => modules.includes(id)) ||
-    (isAdmin && metricTableRows.length > 0);
+    (isAdmin && metricTableRows.length > 0) ||
+    hasAnalytics;
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "snapshot" as Tab, label: "Snapshot" },
     ...(hasLocations ? [{ key: "locations" as Tab, label: "Locations" }] : []),
     ...(hasDetail ? [{ key: "detail" as Tab, label: "Detail" }] : []),
-    ...(hasAnalytics ? [{ key: "website" as Tab, label: "Website" }] : []),
     ...(hasAnalytics ? [{ key: "seo" as Tab, label: "SEO" }] : []),
     ...(hasLooker ? [{ key: "full" as Tab, label: "Full Dashboard" }] : []),
   ];
 
   const showDateSelector =
     ["snapshot", "detail", "locations"].includes(activeTab) ||
-    (["website", "seo"].includes(activeTab) && hasAnalytics);
+    (activeTab === "seo" && hasAnalytics);
 
   // Derived chart data. The 13-month trend ends at the last complete month —
   // the in-progress MTD row would render as a fabricated cliff.
@@ -412,8 +412,11 @@ export default function DashboardTabs({
               {modules.includes("top_products") && <TopProducts products={moduleData.topProducts} />}
               {modules.includes("converting_pages") && <ConvertingPages rows={moduleData.convertingPages} />}
               {modules.includes("content_performance") && <ContentPerformance rows={moduleData.contentPerformance} />}
+              {dashboardReport.ga4 && dashboardReport.ga4.topSourceMediums.length > 0 && (
+                <SourceMediumTable rows={dashboardReport.ga4.topSourceMediums} />
+              )}
               {modules.includes("branded_split") && (
-                <BrandedSplit branded={moduleData.branded} intent={moduleData.intent} />
+                <BrandedSplit branded={moduleData.branded} intent={moduleData.intent} isAdmin={isAdmin} />
               )}
               {modules.includes("competitive") && moduleData.competitive && (
                 <div className="lg:col-span-2">
@@ -423,17 +426,6 @@ export default function DashboardTabs({
             </div>
             {isAdmin && <MetricTable13 rows={metricTableRows} />}
           </div>
-        )}
-
-        {/* Website tab */}
-        {activeTab === "website" && (
-          <WebsiteTab
-            ga4={dashboardReport.ga4}
-            sessionsTrend={sessionsTrend}
-            trendGranularity={trendGranularity}
-            periodLabel={range.label}
-            trendCompareLabel={ghostLabel}
-          />
         )}
 
         {/* SEO tab */}

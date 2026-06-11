@@ -25,8 +25,14 @@ export interface SemrushKeywordRow {
   serp_features: number
 }
 
-async function semrushFetch(params: Record<string, string>): Promise<string> {
-  const url = `https://api.semrush.com/?${new URLSearchParams(params).toString()}`
+// Classic base serves the domain reports (domain_ranks, domain_organic, …);
+// backlinks report types only exist on the Analytics API v1 endpoint — the
+// classic base answers them with "ERROR :: query type not found".
+const SEMRUSH_BASE = 'https://api.semrush.com/'
+const SEMRUSH_ANALYTICS_V1_BASE = 'https://api.semrush.com/analytics/v1/'
+
+async function semrushFetch(params: Record<string, string>, base = SEMRUSH_BASE): Promise<string> {
+  const url = `${base}?${new URLSearchParams(params).toString()}`
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) })
   const text = await res.text()
 
@@ -88,13 +94,16 @@ export async function fetchSemrushBacklinksOverview(
   apiKey: string,
 ): Promise<ConnectorResult<SemrushBacklinksOverview | null>> {
   try {
-    const text = await semrushFetch({
-      type: 'backlinks_overview',
-      key: apiKey,
-      target: domain,
-      target_type: 'root_domain',
-      export_columns: 'total,domains_num,follows_num,nofollows_num,score',
-    })
+    const text = await semrushFetch(
+      {
+        type: 'backlinks_overview',
+        key: apiKey,
+        target: domain,
+        target_type: 'root_domain',
+        export_columns: 'total,domains_num,follows_num,nofollows_num,score',
+      },
+      SEMRUSH_ANALYTICS_V1_BASE,
+    )
 
     const rows = parseCSV(text)
     if (rows.length === 0) return connectorOk(null)

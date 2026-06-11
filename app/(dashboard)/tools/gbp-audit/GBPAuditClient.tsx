@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
-import { MapPin, CheckCircle, AlertCircle, XCircle, ExternalLink, Download } from 'lucide-react'
+import { CheckCircle, AlertCircle, XCircle, ExternalLink, Download } from 'lucide-react'
 import { statusColor, statusTint, scoreLevel } from '@/lib/status-color'
 import type { GBPAccount, LocationAudit } from '@/lib/connectors/gbp'
 
@@ -153,19 +153,6 @@ export default function GBPAuditClient({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-brand-500/10 flex items-center justify-center">
-          <MapPin className="w-4 h-4 text-brand-400" />
-        </div>
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500">Audit</p>
-          <h1 className="text-xl font-bold text-surface-100" style={{ fontFamily: 'JetBrains Mono, Consolas, monospace' }}>
-            GBP Audit
-          </h1>
-        </div>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 border-b border-surface-700">
         {(['run', 'history'] as const).map((t) => (

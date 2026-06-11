@@ -92,6 +92,10 @@ export type AIVisibilityResult = {
   topBrandedQueries: { query: string; clicks: number; impressions: number; position: number }[]
   topNonBrandedQueries: { query: string; clicks: number; impressions: number; position: number }[]
   periodDays: number
+  /** Terms actually used to classify queries as branded. */
+  brandTerms: string[]
+  /** 'configured' = the client's saved brand_terms (same source as the dashboard's Branded Search module); 'heuristic' = name/slug/domain fallback. */
+  termsSource: 'configured' | 'heuristic'
 }
 
 export async function checkAIVisibility(clientId: string): Promise<{
@@ -103,7 +107,7 @@ export async function checkAIVisibility(clientId: string): Promise<{
     const service = await createServiceClient()
     const { data: client } = await service
       .from('clients')
-      .select('gsc_site_url, name, slug')
+      .select('gsc_site_url, name, slug, brand_terms, brand_match_mode')
       .eq('id', clientId)
       .single()
 
@@ -113,8 +117,15 @@ export async function checkAIVisibility(clientId: string): Promise<{
 
     const rows = await fetchGSCRows(client.gsc_site_url, 90)
 
-    // Registrable brand label — subdomain-safe. normalizeDomain strips
-    // sc-domain:/protocol/www/path; then pick the label before the public
+    // Prefer the client's configured brand_terms — the same source (and matching
+    // semantics) the dashboard's Branded Search module uses via
+    // fetchGSCBrandedSplit: substring match, or whole-query equality in 'exact' mode.
+    const configuredTerms = ((client.brand_terms as string[] | null) ?? [])
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+
+    // Heuristic fallback: registrable brand label — subdomain-safe. normalizeDomain
+    // strips sc-domain:/protocol/www/path; then pick the label before the public
     // suffix so shop.brand.com → "brand" and brand.co.uk → "brand".
     const brandToken = (() => {
       const labels = normalizeDomain(client.gsc_site_url).split('.').filter(Boolean)
@@ -124,15 +135,25 @@ export async function checkAIVisibility(clientId: string): Promise<{
       return MULTI_PART_TLD.has(secondToLast) ? labels[labels.length - 3] : secondToLast
     })()
 
-    const brandTerms = [
-      client.slug.toLowerCase(),
-      brandToken.toLowerCase(),
-      client.name.toLowerCase(),
-    ].filter(Boolean)
+    const termsSource: 'configured' | 'heuristic' =
+      configuredTerms.length > 0 ? 'configured' : 'heuristic'
 
-    // Word-boundary match so a brand term like "shoe" doesn't match "shoelace".
+    const brandTerms =
+      termsSource === 'configured'
+        ? configuredTerms
+        : [client.slug.toLowerCase(), brandToken.toLowerCase(), client.name.toLowerCase()].filter(
+            Boolean,
+          )
+
+    const exactMatch = client.brand_match_mode === 'exact'
+
+    // Configured terms mirror the module's matching; the heuristic keeps a
+    // word-boundary match so a brand term like "shoe" doesn't match "shoelace".
     const isBranded = (query: string) => {
       const q = query.toLowerCase()
+      if (termsSource === 'configured') {
+        return exactMatch ? brandTerms.includes(q) : brandTerms.some((t) => q.includes(t))
+      }
       return brandTerms.some((term) => {
         const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(q)
@@ -184,6 +205,8 @@ export async function checkAIVisibility(clientId: string): Promise<{
         topBrandedQueries: aggregateByQuery(branded),
         topNonBrandedQueries: aggregateByQuery(nonBranded),
         periodDays: 90,
+        brandTerms,
+        termsSource,
       },
     }
   } catch (err) {

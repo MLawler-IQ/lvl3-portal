@@ -4,7 +4,6 @@ import { checkAIVisibility } from '@/app/actions/tools'
 import { listToolRuns } from '@/app/actions/tool-runs'
 import ExportTool from '@/components/tools/primitives/ExportTool'
 import RunHistory from '@/components/tools/RunHistory'
-import { Eye } from 'lucide-react'
 
 export default async function AIVisibilityPage() {
   const { user } = await requireAdmin()
@@ -30,15 +29,13 @@ export default async function AIVisibilityPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
-      <div className="flex items-center gap-3">
-        <Eye className="w-5 h-5 text-surface-400" />
-        <div>
-          <h1 className="text-xl font-semibold text-surface-100">AI Visibility Check</h1>
-          <p className="mt-0.5 text-sm text-surface-400">
-            {client?.name} — branded vs. non-branded search share, last 90 days
-          </p>
-        </div>
-      </div>
+      <p className="text-sm text-surface-400">
+        {client?.name} — fixed window: last {result?.periodDays ?? 90} days
+        {result &&
+          (result.termsSource === 'configured'
+            ? ` · configured brand terms (${result.brandTerms.length})`
+            : ' · name/slug heuristic (no brand terms configured)')}
+      </p>
 
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
@@ -66,25 +63,6 @@ export default async function AIVisibilityPage() {
             }}
             formats={['csv', 'xlsx']}
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { label: 'Branded Click Share', value: `${result.brandedClickShare}%` },
-              { label: 'Branded Impression Share', value: `${result.brandedImpressionShare}%` },
-              { label: 'Total Clicks', value: result.totalClicks.toLocaleString() },
-              { label: 'Total Impressions', value: result.totalImpressions.toLocaleString() },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-                <p
-                  className="text-3xl font-bold leading-none mb-2"
-                  style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-                >
-                  {value}
-                </p>
-                <p className="text-xs font-medium uppercase tracking-widest text-surface-400">{label}</p>
-              </div>
-            ))}
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
               { title: 'Top Branded Queries', data: result.topBrandedQueries },
@@ -119,9 +97,12 @@ export default async function AIVisibilityPage() {
           </div>
 
           <p className="text-xs text-surface-500">
-            Brand detection uses the client name, slug, and domain. Queries containing these terms
-            are classified as branded. High branded share may indicate strong AI-driven brand
-            awareness. Low branded share means most organic traffic is discovery-based.
+            {result.termsSource === 'configured'
+              ? 'Branded queries match the brand terms configured in client settings — the same terms the dashboard’s Branded Search module uses (over its selected period).'
+              : 'No brand terms configured — brand detection falls back to the client name, slug, and domain. Set brand terms in client settings to match the dashboard’s Branded Search module.'}{' '}
+            High branded share may indicate strong AI-driven brand awareness. Low branded share
+            means most organic traffic is discovery-based. Branded-share KPIs live on the dashboard
+            (Detail → Branded Search); this tool breaks the split down by query.
           </p>
 
           {runs.length > 0 && (
