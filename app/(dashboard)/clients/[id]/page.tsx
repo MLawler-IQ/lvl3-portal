@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getClientUsers } from '@/app/actions/clients'
 import ClientUsersTable from '@/components/clients/client-users-table'
 import ClientSettingsForm from '@/components/clients/ClientSettingsForm'
+import type { Targets } from '@/lib/dashboard/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -108,6 +109,7 @@ export default async function ClientDetailPage({ params }: Props) {
             gbp_location_group: (client.gbp_location_group as string | null) ?? null,
             key_event_names: (client.key_event_names as string[] | null) ?? null,
             competitors: (client.competitors as string[] | null) ?? null,
+            targets: (client.targets as Targets | null) ?? null,
           }}
         />
       </div>

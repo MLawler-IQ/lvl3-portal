@@ -16,8 +16,9 @@ import {
 import { fetchGBPAccounts } from '@/app/actions/tools-extended'
 import type { GBPAccount } from '@/lib/connectors/gbp'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
-import { CLIENT_TYPES, CLIENT_TYPE_LABELS, type ClientType } from '@/lib/dashboard/types'
+import { CLIENT_TYPES, CLIENT_TYPE_LABELS, type ClientType, type Targets } from '@/lib/dashboard/types'
 import { inferClientType } from '@/lib/dashboard/registry'
+import { TARGET_METRIC_IDS, TARGET_METRIC_LABELS } from '@/lib/dashboard/pacing'
 
 interface ClientData {
   id: string
@@ -37,6 +38,7 @@ interface ClientData {
   gbp_location_group: string | null
   key_event_names: string[] | null
   competitors: string[] | null
+  targets: Targets | null
 }
 
 interface Props {
@@ -107,6 +109,16 @@ export default function ClientSettingsForm({ client }: Props) {
   // Key events + competitors (text[] → comma/newline separated)
   const [keyEventNames, setKeyEventNames] = useState((client.key_event_names ?? []).join(', '))
   const [competitors, setCompetitors] = useState((client.competitors ?? []).join(', '))
+
+  // Monthly goals (clients.targets jsonb) → metric id → string input value
+  const [targets, setTargets] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {}
+    for (const metricId of TARGET_METRIC_IDS) {
+      const value = client.targets?.[metricId]?.value
+      init[metricId] = typeof value === 'number' && value > 0 ? String(value) : ''
+    }
+    return init
+  })
 
   // UI states
   const [logoFetching, setLogoFetching] = useState(false)
@@ -231,6 +243,9 @@ export default function ClientSettingsForm({ client }: Props) {
         fd.set('gbp_location_group', gbpLocationGroup)
         fd.set('key_event_names', keyEventNames)
         fd.set('competitors', competitors)
+        for (const metricId of TARGET_METRIC_IDS) {
+          fd.set(`target_${metricId}`, targets[metricId] ?? '')
+        }
         await updateClient(client.id, fd)
         router.refresh()
       } catch (err) {
@@ -702,6 +717,34 @@ export default function ClientSettingsForm({ client }: Props) {
           <p className="text-surface-500 text-xs mt-1.5">
             Competitor domains tracked in the competitive module. Comma-separated.
           </p>
+        </div>
+      </div>
+
+      {/* ── Monthly Goals ────────────────────────────────────────────── */}
+      <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
+        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Monthly Goals</h2>
+        <p className="text-surface-500 text-xs">
+          Monthly targets that power the dashboard pacing module. Leave blank to skip a metric.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {TARGET_METRIC_IDS.map((metricId) => (
+            <div key={metricId}>
+              <label className="block text-surface-400 text-sm mb-1.5">
+                {TARGET_METRIC_LABELS[metricId]}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={targets[metricId] ?? ''}
+                onChange={(e) =>
+                  setTargets((prev) => ({ ...prev, [metricId]: e.target.value }))
+                }
+                placeholder="—"
+                className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500 font-mono"
+              />
+            </div>
+          ))}
         </div>
       </div>
 

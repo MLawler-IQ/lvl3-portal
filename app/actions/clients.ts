@@ -6,7 +6,8 @@ import {
   createServiceClient,
 } from '@/lib/supabase/server'
 import { parseSheetId } from '@/lib/google-sheets'
-import { CLIENT_TYPES, type ClientType } from '@/lib/dashboard/types'
+import { CLIENT_TYPES, type ClientType, type Targets } from '@/lib/dashboard/types'
+import { TARGET_METRIC_IDS } from '@/lib/dashboard/pacing'
 
 /** Parse a comma/newline-separated list into a clean string[] (or null when empty). */
 function parseStringList(raw: string | null): string[] | null {
@@ -16,6 +17,25 @@ function parseStringList(raw: string | null): string[] | null {
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
   return items.length > 0 ? items : null
+}
+
+/**
+ * Parse `target_<metricId>` form fields into the clients.targets jsonb shape.
+ * Each non-blank, positive numeric value becomes `{ value, period: YYYY-MM }`
+ * for the current month. Blank/zero/invalid values are omitted. Returns null
+ * when no targets are set, so the column clears cleanly.
+ */
+function parseTargets(formData: FormData): Targets | null {
+  const period = new Date().toISOString().slice(0, 7) // YYYY-MM
+  const targets: Targets = {}
+  for (const metricId of TARGET_METRIC_IDS) {
+    const raw = (formData.get(`target_${metricId}`) as string | null)?.trim()
+    if (!raw) continue
+    const value = Number(raw)
+    if (!Number.isFinite(value) || value <= 0) continue
+    targets[metricId] = { value, period }
+  }
+  return Object.keys(targets).length > 0 ? targets : null
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -110,6 +130,7 @@ export async function updateClient(clientId: string, formData: FormData) {
   const gbp_location_group = (formData.get('gbp_location_group') as string | null)?.trim() || null
   const key_event_names = parseStringList((formData.get('key_event_names') as string | null) ?? null)
   const competitors = parseStringList((formData.get('competitors') as string | null) ?? null)
+  const targets = parseTargets(formData)
 
   const { error } = await service
     .from('clients')
@@ -130,6 +151,7 @@ export async function updateClient(clientId: string, formData: FormData) {
       gbp_location_group,
       key_event_names,
       competitors,
+      targets,
     })
     .eq('id', clientId)
 
