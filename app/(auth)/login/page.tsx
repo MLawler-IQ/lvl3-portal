@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -20,9 +21,10 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    // Use NEXT_PUBLIC_SITE_URL if set (production), otherwise fall back to
-    // the current origin so magic links always point to the right host.
-    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
+    // Use the host the user actually loaded. The magic link must return to the
+    // same origin where signInWithOtp ran, or the PKCE code-verifier cookie set
+    // here won't be present at /auth/callback and the exchange fails.
+    const origin = window.location.origin
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -57,14 +59,16 @@ export default function LoginPage() {
 
         {/* Brand mark — above the card */}
         <div className="text-center mb-8">
-          <span
-            className="text-5xl font-bold tracking-tight"
-            style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            LVL3
-          </span>
+          <Image
+            src="/logo-black.png"
+            alt="IgniteIQ"
+            width={56}
+            height={56}
+            priority
+            className="mx-auto"
+          />
           <p
-            className="mt-2 text-xs font-medium uppercase tracking-[0.14em]"
+            className="mt-3 text-xs font-medium uppercase tracking-[0.14em]"
             style={{ color: 'var(--nav-text)' }}
           >
             Client Portal
@@ -132,7 +136,7 @@ export default function LoginPage() {
                     style={{
                       backgroundColor: 'var(--color-cream)',
                       border: '1px solid var(--color-border)',
-                      color: 'var(--background)',
+                      color: 'var(--foreground)',
                     }}
                     onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
                     onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
@@ -157,7 +161,7 @@ export default function LoginPage() {
                     style={{
                       backgroundColor: 'var(--color-cream)',
                       border: '1px solid var(--color-border)',
-                      color: 'var(--background)',
+                      color: 'var(--foreground)',
                     }}
                     onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
                     onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
@@ -174,9 +178,9 @@ export default function LoginPage() {
                 type="submit"
                 disabled={loading}
                 className="w-full rounded-[4px] px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--background)', color: 'var(--color-cream)' }}
-                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#2e2510' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--background)' }}
+                style={{ backgroundColor: 'var(--foreground)', color: 'var(--color-cream)' }}
+                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgb(var(--surface-300))' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--foreground)' }}
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
@@ -236,7 +240,7 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full rounded-[4px] px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--color-accent)', color: 'var(--background)' }}
-                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#9D7AE8' }}
+                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-accent)' }}
               >
                 {loading ? 'Sending…' : 'Send magic link'}

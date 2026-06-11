@@ -26,13 +26,13 @@ const aeonikFono = localFont({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://lvl3-portal.vercel.app'),
+  metadataBase: new URL('https://portal.igniteiq.com'),
   title: 'IgniteIQ Portal · Own Your Intelligence',
   description: 'The Decision Engine for Modern Trades.',
   openGraph: {
     title: 'IgniteIQ Portal',
     description: 'The Decision Engine for Modern Trades.',
-    url: 'https://lvl3-portal.vercel.app',
+    url: 'https://portal.igniteiq.com',
     siteName: 'IgniteIQ Portal',
     type: 'website',
   },
