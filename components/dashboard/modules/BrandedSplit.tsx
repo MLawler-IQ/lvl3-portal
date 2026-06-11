@@ -13,6 +13,9 @@ export interface BrandedSplitProps {
 
 const BRANDED_COLOR = 'var(--chart-line)'
 const NONBRANDED_COLOR = 'var(--chart-bar-secondary)'
+// Distinct from BRANDED_COLOR so the (separate) local-intent breakdown isn't
+// confused with the branded donut slice within the same card.
+const LOCAL_INTENT_COLOR = 'rgb(var(--brand-400))'
 
 function fmtNum(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
@@ -153,7 +156,7 @@ export default function BrandedSplit({ branded, intent }: BrandedSplitProps) {
                   className="h-full"
                   style={{
                     width: `${pct(localClicks, totalIntentClicks)}%`,
-                    backgroundColor: BRANDED_COLOR,
+                    backgroundColor: LOCAL_INTENT_COLOR,
                   }}
                 />
                 <div
@@ -168,7 +171,7 @@ export default function BrandedSplit({ branded, intent }: BrandedSplitProps) {
                 <span className="flex items-center gap-2 text-surface-300">
                   <span
                     className="inline-block w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: BRANDED_COLOR }}
+                    style={{ backgroundColor: LOCAL_INTENT_COLOR }}
                     aria-hidden="true"
                   />
                   Local

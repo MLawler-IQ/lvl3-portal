@@ -800,7 +800,9 @@ async function _fetchGA4ConvertingPagesUncached(
   if (sessRes.status === 'fulfilled') {
     for (const row of sessRes.value.data.rows ?? []) {
       sessionsByPage.set(
-        row.dimensionValues?.[0]?.value ?? '',
+        // Match the conversions-loop fallback so a null landing-page dimension
+        // ('(not set)') joins correctly instead of missing and forcing rate 0.
+        row.dimensionValues?.[0]?.value ?? '(not set)',
         parseInt(row.metricValues?.[0]?.value ?? '0'),
       )
     }

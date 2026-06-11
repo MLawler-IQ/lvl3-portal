@@ -86,16 +86,10 @@ async function fetchDomainRow(
     // error so a broken lookup doesn't masquerade as "no data". A successful
     // call with no rows (data === null) stays null without an error.
     if (!ranks.ok || !backlinks.ok) {
-      return {
-        domain,
-        isSelf,
-        organicKeywords: null,
-        organicTraffic: null,
-        organicCost: null,
-        referringDomains: null,
-        authorityScore: null,
-        error: !ranks.ok ? ranks.error : (backlinks as { ok: false; error: string }).error,
-      }
+      // Throw (don't return) so cachedFetch does NOT persist a failed lookup for
+      // the full TTL — the caller's allSettled handler turns a rejection into a
+      // per-row error, so a transient Semrush failure retries on the next load.
+      throw new Error(!ranks.ok ? ranks.error : (backlinks as { ok: false; error: string }).error)
     }
 
     return {

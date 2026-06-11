@@ -256,3 +256,38 @@ describe('calendar preset edge cases', () => {
     expect(isoDiff(r.compareStart, r.compareEnd)).toBe(isoDiff(r.startDate, r.endDate))
   })
 })
+
+describe('calendar preset compare-window clamping (shorter prior period)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('mtd prior clamps to the prior month end and never overlaps when Feb is shorter', () => {
+    // now = Mar 31 → MTD = Mar 1–30 (30-day window). The prior month (Feb, 28d)
+    // is shorter, so the same-offset compare end must clamp to Feb 28, not roll
+    // forward into March and overlap the main window.
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-03-31T12:00:00Z'))
+    const r = buildDateRange('mtd', 'prior')
+    expect(r.startDate).toBe('2026-03-01')
+    expect(r.endDate).toBe('2026-03-30')
+    expect(r.compareStart).toBe('2026-02-01')
+    expect(r.compareEnd).toBe('2026-02-28')
+    // The compare window must end before the main window starts (no overlap).
+    expect(r.compareEnd < r.startDate).toBe(true)
+  })
+
+  it('qtd prior clamps to the prior quarter end at a quarter boundary', () => {
+    // now = Jul 1 → yesterday = Jun 30 (Q2). QTD = full Q2 (Apr 1–Jun 30, 91d).
+    // The prior quarter Q1 is shorter (90d), so the compare end must clamp to
+    // Mar 31 rather than overflowing into Apr (the current quarter).
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-01T12:00:00Z'))
+    const r = buildDateRange('qtd', 'prior')
+    expect(r.startDate).toBe('2026-04-01')
+    expect(r.endDate).toBe('2026-06-30')
+    expect(r.compareStart).toBe('2026-01-01')
+    expect(r.compareEnd).toBe('2026-03-31')
+    expect(r.compareEnd < r.startDate).toBe(true)
+  })
+})

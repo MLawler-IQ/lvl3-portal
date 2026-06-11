@@ -64,6 +64,9 @@ const dayDiff = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / 86400000)
 /** Quarter index (0–3) for a 0-based month. */
 const quarterOf = (month: number) => Math.floor(month / 3)
+/** Last day (UTC) of the month at 0-based index `m` of year `y` (m may overflow). */
+const monthEndUTC = (y: number, m: number) => utc(y, m + 1, 0)
+const minDate = (a: Date, b: Date) => (a.getTime() <= b.getTime() ? a : b)
 
 /**
  * Compute a calendar-aligned DateRange. `now` is the current instant; the public
@@ -118,14 +121,18 @@ function buildCalendarRange(period: CalendarPeriod, compare: string, now: Date):
 
     if (compare === 'yoy') {
       const cStart = utc(yYear - 1, yMonth, 1)
-      const cEnd = utc(yYear - 1, yMonth, 1 + len)
+      // Clamp into the comparison month so a shorter month (e.g. Feb) can't overflow.
+      const cEnd = minDate(utc(yYear - 1, yMonth, 1 + len), monthEndUTC(yYear - 1, yMonth))
       compareStart = fmtUTC(cStart)
       compareEnd = fmtUTC(cEnd)
       compareLabel = 'vs. prior year'
     } else {
-      // Same-length window in the prior month, anchored to its 1st.
+      // Same-length window in the prior month, anchored to its 1st and clamped to
+      // that month's last day so a shorter prior month can't overflow forward.
       const cStart = utc(yYear, yMonth - 1, 1)
-      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      const cy = cStart.getUTCFullYear()
+      const cm = cStart.getUTCMonth()
+      const cEnd = minDate(utc(cy, cm, 1 + len), monthEndUTC(cy, cm))
       compareStart = fmtUTC(cStart)
       compareEnd = fmtUTC(cEnd)
       compareLabel = 'vs. prior month to date'
@@ -142,14 +149,18 @@ function buildCalendarRange(period: CalendarPeriod, compare: string, now: Date):
 
     if (compare === 'yoy') {
       const cStart = utc(yYear - 1, qStartMonth, 1)
-      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      // Clamp into the comparison quarter (its 3rd month's last day).
+      const cEnd = minDate(utc(yYear - 1, qStartMonth, 1 + len), monthEndUTC(yYear - 1, qStartMonth + 2))
       compareStart = fmtUTC(cStart)
       compareEnd = fmtUTC(cEnd)
       compareLabel = 'vs. prior year'
     } else {
-      // Same-length window in the prior quarter, anchored to its 1st.
+      // Same-length window in the prior quarter, anchored to its 1st and clamped
+      // to the prior quarter's last day so it can't overflow into this quarter.
       const cStart = utc(yYear, qStartMonth - 3, 1)
-      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      const cy = cStart.getUTCFullYear()
+      const cm = cStart.getUTCMonth()
+      const cEnd = minDate(utc(cy, cm, 1 + len), monthEndUTC(cy, cm + 2))
       compareStart = fmtUTC(cStart)
       compareEnd = fmtUTC(cEnd)
       compareLabel = 'vs. prior quarter to date'
