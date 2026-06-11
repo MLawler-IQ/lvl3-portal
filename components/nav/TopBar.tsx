@@ -71,7 +71,7 @@ export default function TopBar({
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 h-14 z-30 flex items-center px-4 gap-3"
+      className="fixed top-0 left-0 right-0 h-14 z-30 flex items-center px-4 gap-3 print:hidden"
       style={{ backgroundColor: 'var(--nav-bg)', borderBottom: '1px solid var(--nav-border)' }}
     >
       {/* Hamburger — mobile only */}
@@ -166,12 +166,12 @@ export default function TopBar({
         </kbd>
       </button>
 
-      {/* Last updated */}
+      {/* Analytics freshness */}
       {summaryUpdatedAt && (
         <span
           className="hidden lg:block text-xs shrink-0"
           style={{ color: 'var(--nav-text)' }}
-          title={`Client data last synced: ${new Date(summaryUpdatedAt).toLocaleString()}`}
+          title={`Analytics insights refreshed: ${new Date(summaryUpdatedAt).toLocaleString()}`}
         >
           Updated {formatRelativeTime(summaryUpdatedAt)}
         </span>

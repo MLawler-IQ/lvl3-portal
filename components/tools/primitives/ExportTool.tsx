@@ -26,6 +26,10 @@ interface Props {
   formats?: ExportFormat[]
   /** Heading used in the DOCX export. Defaults to the filename. */
   title?: string
+  /** Save the run to tool_runs on export (default true). Pass false for
+      download-only surfaces that shouldn't write history — note onSaved
+      never fires in that mode. */
+  persist?: boolean
   /** Notify the parent when the run is saved (e.g. to refresh RunHistory). */
   onSaved?: (runId: string) => void
 }
@@ -44,6 +48,7 @@ export default function ExportTool({
   data,
   formats = ['csv', 'xlsx'],
   title,
+  persist = true,
   onSaved,
 }: Props) {
   const [savedRunId, setSavedRunId] = useState<string | null>(null)
@@ -60,7 +65,7 @@ export default function ExportTool({
   }, [output])
 
   async function ensurePersisted() {
-    if (persistedFor.current === output || saving) return
+    if (!persist || persistedFor.current === output || saving) return
     setSaving(true)
     try {
       const result = await persistRun({ toolSlug, clientId, input, output })
@@ -144,7 +149,7 @@ export default function ExportTool({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 print:hidden">
       <span className="text-xs text-surface-500 mr-1">Export</span>
       {formats.map((format) => {
         const meta = FORMAT_META[format]
@@ -156,6 +161,7 @@ export default function ExportTool({
             onClick={() => handleExport(format)}
             disabled={exporting !== null || data.rows.length === 0}
             className={buttonClass}
+            aria-label={`Export as ${meta.label}`}
           >
             {exporting === format ? <Loader2 size={13} className="animate-spin" /> : <Icon size={13} />}
             {meta.label}
