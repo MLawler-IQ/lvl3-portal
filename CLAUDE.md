@@ -108,6 +108,7 @@ Specs in `design-system/DESIGN.md`.
 
 - `.claude/CLAUDE-db-schema.md` — Database schema
 - `.claude/CLAUDE-routes.md` — App routes, route handlers, server actions, lib files
+- `.claude/CLAUDE-dashboard.md` — Type-aware dashboard: client types, module registry, tabs, data flow, insights/alerts/pacing
 - `.claude/CLAUDE-google-api.md` — Google API auth (OAuth2 vs service account)
 - `.claude/CLAUDE-seo-tools.md` — SEO tools, Ask LVL3, dashboard date range
 
