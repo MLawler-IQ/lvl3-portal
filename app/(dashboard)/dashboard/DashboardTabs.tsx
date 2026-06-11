@@ -89,25 +89,6 @@ const PERIOD_OPTIONS: { value: string; label: string }[] = [
   { value: "365d", label: "12M" },
 ];
 
-function SnapshotSection({
-  title,
-  content,
-  isEmpty,
-}: {
-  title: string;
-  content: string;
-  isEmpty: boolean;
-}) {
-  return (
-    <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-      <p className="text-sm font-semibold text-surface-100 mb-2">{title}</p>
-      <p className={`text-sm leading-relaxed ${isEmpty ? "text-surface-500 italic" : "text-surface-300"}`}>
-        {content}
-      </p>
-    </div>
-  );
-}
-
 const GBP_TILE_LABELS: Record<string, string> = {
   CALL_CLICKS: "Calls",
   WEBSITE_CLICKS: "Website clicks",
@@ -351,9 +332,9 @@ export default function DashboardTabs({
               <ChannelBarChart channels={dashboardReport.ga4.topChannels} />
             )}
 
-            {/* Key insights (narrative; richer modules live on Locations / Detail) */}
+            {/* Key insights (live verdict cards; the headline's single home is the exec band) */}
             {modules.includes("insight_cards") && insightCards.length > 0 && (
-              <InsightCards cards={insightCards} headline={execBand.headline} />
+              <InsightCards cards={insightCards} />
             )}
 
             {/* Context panel */}
@@ -368,30 +349,17 @@ export default function DashboardTabs({
               </div>
 
               <div className="space-y-3">
-                <SnapshotSection
-                  title="Takeaways"
-                  content={
-                    snapshotInsights?.takeaways ||
-                    "Takeaways will appear here once analytics insights are generated."
-                  }
-                  isEmpty={!snapshotInsights?.takeaways}
-                />
-                <SnapshotSection
-                  title="Anomalies"
-                  content={
-                    snapshotInsights?.anomalies ||
-                    "No anomalies detected this period."
-                  }
-                  isEmpty={!snapshotInsights?.anomalies}
-                />
-                <SnapshotSection
-                  title="Opportunities"
-                  content={
-                    snapshotInsights?.opportunities ||
-                    "Opportunities will appear here once analytics insights are generated."
-                  }
-                  isEmpty={!snapshotInsights?.opportunities}
-                />
+                <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
+                  <p className="text-sm font-semibold text-surface-100 mb-2">Takeaways</p>
+                  <p
+                    className={`text-sm leading-relaxed ${
+                      snapshotInsights?.takeaways ? "text-surface-300" : "text-surface-500 italic"
+                    }`}
+                  >
+                    {snapshotInsights?.takeaways ||
+                      "Takeaways will appear here once analytics insights are generated."}
+                  </p>
+                </div>
                 <Annotations annotations={annotations} isAdmin={isAdmin} clientId={clientId} />
               </div>
             </div>
