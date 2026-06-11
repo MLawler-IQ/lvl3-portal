@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { requireAuth } from "@/lib/auth";
 import { resolveSelectedClientId, getClientById } from "@/lib/client-resolution";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -12,6 +13,7 @@ import RefreshAnalyticsButton from "@/components/home/RefreshAnalyticsButton";
 import AnalyticsKpiStrip from "@/components/analytics/AnalyticsKpiStrip";
 import HeroBanner from "@/components/home/HeroBanner";
 import EngagementStrip from "@/components/home/EngagementStrip";
+import AdminTriageSection, { AdminTriageSkeleton } from "@/components/home/AdminTriageSection";
 
 type HomeClient = {
   id: string;
@@ -109,6 +111,13 @@ export default async function HomePage() {
         openThreadCount={totalOpenThreads}
       />
 
+      {/* Cross-client triage (admin only, deferred) */}
+      {isAdmin && (
+        <Suspense fallback={<AdminTriageSkeleton />}>
+          <AdminTriageSection />
+        </Suspense>
+      )}
+
       {/* No client selected */}
       {!selectedClient && showSelector && (
         <div className="rounded-xl border border-surface-700 bg-surface-900 px-6 py-10 text-center">
@@ -124,7 +133,7 @@ export default async function HomePage() {
           {/* Analytics KPI strip (compact) */}
           <section>
             <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
-              Key Metrics
+              Key Metrics <span className="text-surface-600">· Last 28 days</span>
             </p>
             {hasAnalytics ? (
               <AnalyticsKpiStrip
