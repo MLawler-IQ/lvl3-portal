@@ -54,7 +54,7 @@ The portal is the single pane of glass through which the agency:
 
 | Item | Value |
 |---|---|
-| Production URL | https://lvl3-portal.vercel.app |
+| Production URL | https://portal.igniteiq.com (legacy https://lvl3-portal.vercel.app redirects here) |
 | Repo | https://github.com/MLawler-IQ/lvl3-portal |
 | Supabase Project | `zoeaifsxnaenlcdkavzf` |
 | Vercel Project | `lvl3-portal` (production alias auto-aliased) |
@@ -1064,7 +1064,7 @@ There is no test framework. Type-check + build are the only gates.
 ### Vercel
 
 - **Project name:** `lvl3-portal`
-- **Production alias:** `lvl3-portal.vercel.app`
+- **Primary domain:** `portal.igniteiq.com` (custom domain; `lvl3-portal.vercel.app` 308-redirects to it)
 - **Framework preset:** Next.js (auto-detected)
 - **Build command:** default (`next build`)
 - **Output:** default (`.next`)

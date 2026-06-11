@@ -2,7 +2,7 @@
 
 Internal client portal for LVL3 digital marketing agency. Admins manage clients, view analytics, deliver work, and run SEO tools. Clients log in to view deliverables, a project tracker, and their dashboard.
 
-Deployed at: **https://lvl3-portal.vercel.app** | Repo: **https://github.com/MLawler-IQ/lvl3-portal**
+Deployed at: **https://portal.igniteiq.com** | Repo: **https://github.com/MLawler-IQ/lvl3-portal**
 
 ## Stack
 
@@ -16,7 +16,7 @@ Deployed at: **https://lvl3-portal.vercel.app** | Repo: **https://github.com/MLa
 | Charts | Recharts v2 |
 | AI | Anthropic SDK (`claude-sonnet-4-6`) |
 | Google APIs | `googleapis` npm package |
-| Deployment | Vercel (prod auto-alias: lvl3-portal.vercel.app) |
+| Deployment | Vercel · primary domain portal.igniteiq.com (lvl3-portal.vercel.app redirects here) |
 
 No ORM. All DB queries are raw Supabase client calls.
 
@@ -196,7 +196,7 @@ Intelligence infrastructure company for the modern trades (home services). Found
 **Mission:** "Owning your intelligence is the only advantage that compounds."
 
 ### LVL3 Portal (the product)
-Internal client dashboard. Next.js 14, TypeScript, Supabase, Tailwind, Recharts, Anthropic SDK. Deployed at lvl3-portal.vercel.app.
+Internal client dashboard. Next.js 14, TypeScript, Supabase, Tailwind, Recharts, Anthropic SDK. Deployed at portal.igniteiq.com.
 
 ### Apex Service Partners (key client)
 PE-backed home services aggregator, ~250+ brands. Ryan Metcalf (SEO Director) is primary contact.
