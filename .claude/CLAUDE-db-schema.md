@@ -24,6 +24,7 @@ clients
   key_event_names text[]      -- GA4 key-event (conversion) names (lead-gen)
   competitors text[]          -- competitor domains for the competitive module
   brand_terms text[]          -- branded-query matchers for the branded split (null = domain-derived)
+  brand_match_mode text        -- 'contains' (substring, default) | 'exact' (full-query equality)
   targets jsonb               -- monthly goals: { "<metricId>": { value, period: "YYYY-MM" } }
   semrush_project_id text     -- Semrush Site Audit project id
 

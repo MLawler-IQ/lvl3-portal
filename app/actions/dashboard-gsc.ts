@@ -21,6 +21,7 @@ import {
   type GSCBrandedSplit,
   type GSCIntentSplit,
   type GSCReport,
+  type BrandMatchMode,
 } from '@/lib/google-search-console'
 
 type Opts = { period?: string; compare?: string }
@@ -45,22 +46,28 @@ const EMPTY_INTENT: GSCIntentSplit = {
  * the user can't access it, or GSC isn't configured — callers map that to the
  * typed empty result.
  */
-async function resolveGscSiteUrl(): Promise<{ siteUrl: string | null; brandTerms: string[] }> {
+async function resolveGscSiteUrl(): Promise<{
+  siteUrl: string | null
+  brandTerms: string[]
+  brandMatchMode: BrandMatchMode
+}> {
   const { user } = await requireAuth()
   const clientId = await resolveSelectedClientId(user)
-  if (!clientId) return { siteUrl: null, brandTerms: [] }
-  if (!(await userCanAccessClient(user, clientId))) return { siteUrl: null, brandTerms: [] }
+  if (!clientId) return { siteUrl: null, brandTerms: [], brandMatchMode: 'contains' }
+  if (!(await userCanAccessClient(user, clientId)))
+    return { siteUrl: null, brandTerms: [], brandMatchMode: 'contains' }
 
   const service = await createServiceClient()
   const { data: client } = await service
     .from('clients')
-    .select('gsc_site_url, brand_terms')
+    .select('gsc_site_url, brand_terms, brand_match_mode')
     .eq('id', clientId)
     .single()
 
   return {
     siteUrl: client?.gsc_site_url ?? null,
     brandTerms: (client?.brand_terms as string[] | null) ?? [],
+    brandMatchMode: client?.brand_match_mode === 'exact' ? 'exact' : 'contains',
   }
 }
 
@@ -86,11 +93,11 @@ export async function getGSCBrandedSplitAction(
   opts?: Opts & { brandTerms?: string[] },
 ): Promise<GSCBrandedSplit> {
   try {
-    const { siteUrl, brandTerms } = await resolveGscSiteUrl()
+    const { siteUrl, brandTerms, brandMatchMode } = await resolveGscSiteUrl()
     if (!siteUrl) return EMPTY_BRANDED
     const range = buildDateRange(opts?.period, opts?.compare)
     const terms = opts?.brandTerms?.length ? opts.brandTerms : brandTerms
-    return await fetchGSCBrandedSplit(siteUrl, range, terms)
+    return await fetchGSCBrandedSplit(siteUrl, range, terms, brandMatchMode)
   } catch {
     return EMPTY_BRANDED
   }

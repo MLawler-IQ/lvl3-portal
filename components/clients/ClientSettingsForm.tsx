@@ -40,6 +40,7 @@ interface ClientData {
   key_event_names: string[] | null
   competitors: string[] | null
   brand_terms: string[] | null
+  brand_match_mode: string | null
   targets: Targets | null
 }
 
@@ -112,6 +113,9 @@ export default function ClientSettingsForm({ client }: Props) {
   const [keyEventNames, setKeyEventNames] = useState((client.key_event_names ?? []).join(', '))
   const [competitors, setCompetitors] = useState((client.competitors ?? []).join(', '))
   const [brandTerms, setBrandTerms] = useState((client.brand_terms ?? []).join(', '))
+  const [brandMatchMode, setBrandMatchMode] = useState<'contains' | 'exact'>(
+    client.brand_match_mode === 'exact' ? 'exact' : 'contains'
+  )
 
   // Recommendation buttons (one loading flag + hint per field)
   const [recLoading, setRecLoading] = useState<'brand' | 'competitors' | 'keyEvents' | null>(null)
@@ -321,6 +325,7 @@ export default function ClientSettingsForm({ client }: Props) {
         fd.set('key_event_names', keyEventNames)
         fd.set('competitors', competitors)
         fd.set('brand_terms', brandTerms)
+        fd.set('brand_match_mode', brandMatchMode)
         for (const metricId of TARGET_METRIC_IDS) {
           fd.set(`target_${metricId}`, targets[metricId] ?? '')
         }
@@ -785,8 +790,32 @@ export default function ClientSettingsForm({ client }: Props) {
           />
           <p className="text-surface-500 text-xs mt-1.5">
             {recHints.brand ||
-              'Case-insensitive matchers: any search query containing one of these counts as branded. Comma-separated. Blank = auto-derive from the domain.'}
+              'Case-insensitive matchers. Comma-separated. Blank = auto-derive from the domain.'}
           </p>
+          <div className="mt-2.5 flex items-center gap-2">
+            <span className="text-surface-400 text-xs">Match mode:</span>
+            <div className="inline-flex rounded-lg border border-surface-600 overflow-hidden">
+              {(['contains', 'exact'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setBrandMatchMode(mode)}
+                  className={`px-3 py-1 text-xs transition-colors ${
+                    brandMatchMode === mode
+                      ? 'bg-brand-500 text-surface-100'
+                      : 'bg-surface-800 text-surface-400 hover:text-surface-100'
+                  }`}
+                >
+                  {mode === 'contains' ? 'Contains' : 'Exact match'}
+                </button>
+              ))}
+            </div>
+            <span className="text-surface-500 text-xs">
+              {brandMatchMode === 'contains'
+                ? 'query contains a term anywhere'
+                : 'query equals a term exactly'}
+            </span>
+          </div>
         </div>
 
         <div>
