@@ -21,7 +21,9 @@ import Competitive from "@/components/dashboard/modules/Competitive";
 import Alerts from "@/components/dashboard/modules/Alerts";
 import Targets from "@/components/dashboard/modules/Targets";
 import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
+import Annotations from "@/components/dashboard/modules/Annotations";
 import { CALENDAR_PRESETS } from "@/lib/date-range";
+import type { Annotation } from "@/app/actions/annotations";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
 import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import type { GA4EcomFunnel, GA4TopProduct } from "@/app/actions/dashboard-ga4";
@@ -62,6 +64,7 @@ interface Props {
   alerts: DashboardAlert[];
   pacing: PacingRow[];
   metricTableRows: MetricTableRow[];
+  annotations: Annotation[];
 }
 
 type Tab = "snapshot" | "website" | "seo" | "full" | "definitions";
@@ -181,6 +184,7 @@ export default function DashboardTabs({
   alerts,
   pacing,
   metricTableRows,
+  annotations,
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -406,21 +410,7 @@ export default function DashboardTabs({
                   }
                   isEmpty={!snapshotInsights?.opportunities}
                 />
-                <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-surface-100 mb-2">
-                      What we changed
-                    </p>
-                    {isAdmin && (
-                      <button className="text-xs text-surface-500 hover:text-surface-400 transition-colors shrink-0">
-                        Admin: Edit
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-sm text-surface-500 italic">
-                    Recent agency activity notes will appear here.
-                  </p>
-                </div>
+                <Annotations annotations={annotations} isAdmin={isAdmin} clientId={clientId} />
               </div>
             </div>
           </div>

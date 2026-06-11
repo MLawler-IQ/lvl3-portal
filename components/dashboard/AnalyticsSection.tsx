@@ -4,6 +4,7 @@ import { getGSCTrendAction, getGSCBrandedSplitAction, getGSCIntentSplitAction } 
 import { getConvertingPagesData, getContentPerformanceData } from "@/app/actions/dashboard-leadgen";
 import { getCompetitiveData } from "@/app/actions/dashboard-competitive";
 import { get13MonthTable, type MetricTableRow } from "@/app/actions/dashboard-metrics-table";
+import { listAnnotations, type Annotation } from "@/app/actions/annotations";
 import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import { defaultModulesForType } from "@/lib/dashboard/registry";
 import { computePacing, monthElapsedFraction, type PacingRow } from "@/lib/dashboard/pacing";
@@ -225,6 +226,9 @@ export default async function AnalyticsSection({
     metricTableRows = mt?.rows ?? [];
   }
 
+  // "What we changed" annotations timeline (best-effort).
+  const annotations: Annotation[] = (await safe(listAnnotations(clientId))) ?? [];
+
   // ── Assemble the executive summary band ──────────────────────────────────
   const kpis: ExecKpi[] = [];
   if (ga4) {
@@ -304,6 +308,7 @@ export default async function AnalyticsSection({
           alerts={alerts}
           pacing={pacing}
           metricTableRows={metricTableRows}
+          annotations={annotations}
         />
       </div>
     </div>
