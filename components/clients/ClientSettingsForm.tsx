@@ -148,7 +148,9 @@ export default function ClientSettingsForm({ client }: Props) {
           setRecHints((p) => ({
             ...p,
             competitors:
-              res.source === 'semrush'
+              res.source === 'semrush+llm'
+                ? 'From Semrush SERP overlap, AI-screened to direct competitors — review before saving.'
+                : res.source === 'semrush'
                 ? 'From Semrush organic competitors (real SERP overlap) — review before saving.'
                 : 'AI-suggested — verify these are real direct competitors before saving.',
           }))

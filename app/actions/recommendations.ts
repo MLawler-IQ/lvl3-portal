@@ -136,9 +136,69 @@ Respond with ONLY a JSON array of strings, e.g. ["brand name","brandname"]. Max 
 
 // ── Competitors ───────────────────────────────────────────────────────────────
 
+// Known non-competitor platforms that rank for everything: directories, review
+// sites, marketplaces, delivery apps, social, media. Matched on the domain root.
+const NON_COMPETITOR_ROOTS = new Set([
+  'yelp', 'tripadvisor', 'opentable', 'doordash', 'ubereats', 'grubhub', 'seamless',
+  'postmates', 'yellowpages', 'mapquest', 'foursquare', 'zomato', 'allmenus', 'menupages',
+  'wikipedia', 'facebook', 'instagram', 'tiktok', 'youtube', 'pinterest', 'reddit',
+  'quora', 'linkedin', 'x', 'twitter', 'nextdoor', 'medium',
+  'indeed', 'glassdoor', 'ziprecruiter', 'bbb',
+  'amazon', 'walmart', 'target', 'ebay', 'etsy', 'instacart', 'groupon',
+  'eater', 'thrillist', 'timeout', 'infatuation', 'usatoday', 'nytimes', 'forbes',
+])
+
+function isNonCompetitorPlatform(domain: string): boolean {
+  const root = domain.split('.')[0]
+  return NON_COMPETITOR_ROOTS.has(root)
+}
+
+/**
+ * AI screen over Semrush candidates: keep only genuine direct competitors
+ * (a subset of `candidates` — never invents domains). Null when the model
+ * reply is unparseable, so callers fall back to the unscreened list.
+ */
+async function screenCompetitorsWithLLM(
+  client: RecsClient,
+  domain: string,
+  candidates: Array<{ domain: string; commonKeywords: number }>,
+): Promise<string[] | null> {
+  if (!process.env.ANTHROPIC_API_KEY) return null
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 400,
+    messages: [
+      {
+        role: 'user',
+        content: `You are screening organic-search competitor candidates for a business. Keep ONLY genuine direct competitors — businesses a customer would realistically choose INSTEAD of this one (same category of product/service).
+
+Business: ${client.name}
+Domain: ${domain}
+${client.brand_context ? `Context: ${client.brand_context.slice(0, 1200)}` : ''}
+
+Candidates (domain — shared ranking keywords with the business):
+${candidates.map((c) => `${c.domain} — ${c.commonKeywords}`).join('\n')}
+
+EXCLUDE: directories, review/listing sites, marketplaces, delivery platforms, news/media/blogs, shopping malls & mixed-use developments, real-estate/landlord sites, suppliers, and anything that is not a competing business in the same category.
+
+Respond with ONLY a JSON array of the kept domains, ordered most→least competitive, e.g. ["competitor.com"]. Return [] if none qualify. Do not add domains that are not in the candidate list.`,
+      },
+    ],
+  })
+
+  const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
+  const kept = parseStringArray(raw)
+  if (kept === null) return null
+  // Enforce subset-of-candidates: the screen selects, it never invents.
+  const candidateSet = new Set(candidates.map((c) => c.domain))
+  return kept.map((d) => normalizeDomain(d)).filter((d) => candidateSet.has(d))
+}
+
 /**
  * Recommend competitor domains: Semrush organic competitors (real SERP
- * overlap) when available, otherwise Claude from the brand context.
+ * overlap), denylist-filtered and AI-screened down to genuine direct
+ * competitors. Falls back to Claude-from-context when Semrush has nothing.
  */
 export async function recommendCompetitors(clientId: string): Promise<RecsResult> {
   try {
@@ -149,13 +209,25 @@ export async function recommendCompetitors(clientId: string): Promise<RecsResult
     const apiKey = process.env.SEMRUSH_API_KEY
 
     if (apiKey && domain) {
-      const res = await fetchSemrushOrganicCompetitors(domain, apiKey, 'us', 12)
+      // Over-fetch so the screen still has enough to choose from after pruning.
+      const res = await fetchSemrushOrganicCompetitors(domain, apiKey, 'us', 20)
       if (res.ok && res.data.length > 0) {
-        const suggestions = res.data
-          .map((c) => c.domain.toLowerCase())
-          .filter((d) => d && d !== domain)
-          .slice(0, 8)
-        if (suggestions.length > 0) return { suggestions, source: 'semrush' }
+        const candidates = res.data
+          .map((c) => ({ domain: normalizeDomain(c.domain), commonKeywords: c.commonKeywords }))
+          .filter((c) => c.domain && c.domain !== domain && !isNonCompetitorPlatform(c.domain))
+        if (candidates.length > 0) {
+          let screened: string[] | null = null
+          try {
+            screened = await screenCompetitorsWithLLM(client, domain, candidates)
+          } catch {
+            screened = null // screen unavailable — fall back to unscreened candidates
+          }
+          const suggestions = (screened ?? candidates.map((c) => c.domain)).slice(0, 8)
+          if (suggestions.length > 0) {
+            return { suggestions, source: screened ? 'semrush+llm' : 'semrush' }
+          }
+          // Screen rejected everything — fall through to the from-context path.
+        }
       }
     }
 
