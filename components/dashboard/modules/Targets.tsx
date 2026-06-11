@@ -29,13 +29,11 @@ const STATUS_STYLES: Record<
 
 const MONO = { fontFamily: 'var(--font-jetbrains-mono), monospace' }
 
-/** Compact, locale-aware number formatting (e.g. 12.4K, 1.2M). */
+/** Compact, locale-aware number formatting (e.g. 12.4K, 1.2M) — Intl handles the
+ *  magnitude boundaries correctly (999,999 → "1M", not "1000K"). */
 function formatValue(n: number): string {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (abs >= 10_000) return `${(n / 1_000).toFixed(0)}K`
-  if (abs >= 1_000) return `${(n / 1_000).toFixed(1)}K`
-  return Math.round(n).toLocaleString('en-US')
+  if (Math.abs(n) < 1_000) return Math.round(n).toLocaleString('en-US')
+  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(n)
 }
 
 function PacingRowItem({ row }: { row: PacingRow }) {

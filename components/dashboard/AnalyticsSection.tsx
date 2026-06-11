@@ -32,6 +32,17 @@ const fmtInt = (n: number) => Math.round(n).toLocaleString();
 const fmtCurrency = (n: number) =>
   n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
+// Pacing uses snake_case metric ids (TARGET_METRIC_IDS); the alert engine keys
+// chartRef/labels by the camelCase AlertMetrics keys. Bridge them so goal-miss
+// alerts deep-link and label correctly.
+const PACING_TO_ALERT_KEY: Record<string, string> = {
+  sessions: "sessions",
+  organic_clicks: "organicClicks",
+  conversions: "conversions",
+  revenue: "revenue",
+  gbp_calls: "gbpCalls",
+};
+
 /** Recent deliverables for the exec-band activity feed. Best-effort; empty on any failure. */
 async function fetchActivity(clientId: string): Promise<ActivityItem[]> {
   try {
@@ -138,6 +149,11 @@ export default async function AnalyticsSection({
   // ── Phase C: pacing (month-to-date vs goals), alerts, 13-month table ──
   const targetsMap = targets ?? {};
   const hasTargets = Object.keys(targetsMap).length > 0;
+  // GA4/GSC data lags to yesterday and buildDateRange('mtd') anchors its window
+  // to yesterday, so pace the run-rate against yesterday (not today) — otherwise
+  // the elapsed-fraction divisor is misaligned with the actuals (a ~30x blow-up
+  // on the 1st of the month, a mild under-projection on other days).
+  const pacingAsOf = new Date(Date.now() - 86400000);
 
   let pacing: PacingRow[] = [];
   if (hasTargets) {
@@ -155,7 +171,7 @@ export default async function AnalyticsSection({
       actuals.conversions = mtdR.ga4.transactions;
     }
     if (gbp?.configured && gbp.insights) actuals.gbp_calls = gbp.insights.totals["CALL_CLICKS"] ?? 0;
-    pacing = computePacing(actuals, targetsMap);
+    pacing = computePacing(actuals, targetsMap, pacingAsOf);
   }
 
   // Alerts from current-period deltas + GBP health + pacing (engine self-ranks).
@@ -193,11 +209,11 @@ export default async function AnalyticsSection({
           }
         : undefined,
     pacing: pacing.map((p) => ({
-      metricId: p.metricId,
+      metricId: PACING_TO_ALERT_KEY[p.metricId] ?? p.metricId,
       status: p.status,
       pctToTarget: p.pctToTarget ?? undefined,
       label: p.label,
-      monthProgress: monthElapsedFraction(),
+      monthProgress: monthElapsedFraction(pacingAsOf),
     })),
   };
   const alerts: DashboardAlert[] = deriveAlerts(alertInput);
