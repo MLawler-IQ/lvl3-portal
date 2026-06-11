@@ -205,8 +205,9 @@ export default function DashboardTabs({
   const [iframeTimedOut, setIframeTimedOut] = useState(false);
 
   const activeTab = (searchParams.get("tab") ?? "snapshot") as Tab;
-  const period = searchParams.get("period") ?? "28d";
-  const compare = searchParams.get("compare") ?? "prior";
+  // Defaults must match page.tsx: last full month vs same month prior year.
+  const period = searchParams.get("period") ?? "last_full_month";
+  const compare = searchParams.get("compare") ?? "yoy";
 
   function navigate(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString());

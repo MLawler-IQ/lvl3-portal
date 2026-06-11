@@ -12,8 +12,9 @@ export default async function DashboardPage({
 }) {
   const { user } = await requireAuth();
   const params = await searchParams;
-  const period = params.period ?? '28d';
-  const compare = params.compare ?? 'prior';
+  // Default view: the last fully-completed month vs the same month a year ago.
+  const period = params.period ?? 'last_full_month';
+  const compare = params.compare ?? 'yoy';
 
   type ClientRow = {
     id: string;

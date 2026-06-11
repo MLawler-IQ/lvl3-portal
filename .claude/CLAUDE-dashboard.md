@@ -45,6 +45,7 @@ All underlying GA4/GSC/GBP/Semrush lib fetches are `cachedFetch`-wrapped.
 
 `lib/date-range.ts`: rolling periods `7d/28d/90d/180d/365d` + calendar presets
 `mtd`/`qtd`/`last_full_month` (`CALENDAR_PRESETS`); `compare` = `prior`/`yoy`.
+Dashboard default (page.tsx + DashboardTabs, keep in sync): `last_full_month` + `yoy`.
 `buildTrendRange` + `pickGranularity` drive period-aware trends (daily/weekly/monthly)
 with an aligned ghost-overlay comparison series.
 
