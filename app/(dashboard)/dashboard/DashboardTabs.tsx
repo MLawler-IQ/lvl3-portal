@@ -18,6 +18,9 @@ import LocationCompleteness from "@/components/dashboard/modules/LocationComplet
 import ConvertingPages from "@/components/dashboard/modules/ConvertingPages";
 import ContentPerformance from "@/components/dashboard/modules/ContentPerformance";
 import Competitive from "@/components/dashboard/modules/Competitive";
+import Alerts from "@/components/dashboard/modules/Alerts";
+import Targets from "@/components/dashboard/modules/Targets";
+import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
 import { CALENDAR_PRESETS } from "@/lib/date-range";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
 import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
@@ -25,7 +28,9 @@ import type { GA4EcomFunnel, GA4TopProduct } from "@/app/actions/dashboard-ga4";
 import type { GSCBrandedSplit, GSCIntentSplit } from "@/lib/google-search-console";
 import type { ConvertingPageRow, ContentUrlRow } from "@/app/actions/dashboard-leadgen";
 import type { CompetitiveResult } from "@/app/actions/dashboard-competitive";
-import type { Granularity, TrendPoint, InsightCard, DashboardModuleId, ClientType } from "@/lib/dashboard/types";
+import type { MetricTableRow } from "@/app/actions/dashboard-metrics-table";
+import type { PacingRow } from "@/lib/dashboard/pacing";
+import type { Granularity, TrendPoint, InsightCard, DashboardModuleId, ClientType, DashboardAlert } from "@/lib/dashboard/types";
 
 interface ModuleData {
   ecomFunnel: GA4EcomFunnel | null;
@@ -54,6 +59,9 @@ interface Props {
   modules: DashboardModuleId[];
   moduleData: ModuleData;
   insightCards: InsightCard[];
+  alerts: DashboardAlert[];
+  pacing: PacingRow[];
+  metricTableRows: MetricTableRow[];
 }
 
 type Tab = "snapshot" | "website" | "seo" | "full" | "definitions";
@@ -170,6 +178,9 @@ export default function DashboardTabs({
   modules,
   moduleData,
   insightCards,
+  alerts,
+  pacing,
+  metricTableRows,
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -281,8 +292,14 @@ export default function DashboardTabs({
         {/* Snapshot tab */}
         {activeTab === "snapshot" && (
           <div className="p-6 max-w-4xl space-y-6">
+            {/* Alerts (self-hides when nothing is wrong) */}
+            <Alerts alerts={alerts} />
+
             {/* Executive summary band (type-aware hero) */}
             <ExecutiveSummaryBand {...execBand} />
+
+            {/* Goals & pacing (self-hides when no targets are set) */}
+            <Targets pacing={pacing} />
 
             {/* Period-aware traffic trend with prior-period ghost overlay */}
             {sessionsTrend.length >= 2 && (
@@ -319,6 +336,9 @@ export default function DashboardTabs({
                 </div>
               )}
             </div>
+
+            {/* 13-month detail table (admin) */}
+            {isAdmin && <MetricTable13 rows={metricTableRows} />}
 
             {/* KPI strip */}
             <div>

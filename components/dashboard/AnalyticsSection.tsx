@@ -3,10 +3,13 @@ import { getGA4TrendData, getGA4EcomFunnelData, getGA4TopProductsData } from "@/
 import { getGSCTrendAction, getGSCBrandedSplitAction, getGSCIntentSplitAction } from "@/app/actions/dashboard-gsc";
 import { getConvertingPagesData, getContentPerformanceData } from "@/app/actions/dashboard-leadgen";
 import { getCompetitiveData } from "@/app/actions/dashboard-competitive";
+import { get13MonthTable, type MetricTableRow } from "@/app/actions/dashboard-metrics-table";
 import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import { defaultModulesForType } from "@/lib/dashboard/registry";
+import { computePacing, monthElapsedFraction, type PacingRow } from "@/lib/dashboard/pacing";
+import { deriveAlerts, type AlertInput } from "@/lib/dashboard/alerts";
 import { pickGranularity } from "@/lib/date-range";
-import type { ClientType, DashboardModuleId, Granularity, TrendPoint } from "@/lib/dashboard/types";
+import type { ClientType, DashboardModuleId, Granularity, TrendPoint, Targets, DashboardAlert } from "@/lib/dashboard/types";
 import type { ExecutiveSummaryBandProps, ExecKpi, HealthItem, ActivityItem } from "@/components/dashboard/exec/ExecutiveSummaryBand";
 import { createClient } from "@/lib/supabase/server";
 import { BarChart2 } from "lucide-react";
@@ -20,6 +23,7 @@ type AnalyticsSectionProps = {
   period: string;
   compare: string;
   clientType: string | null;
+  targets: Targets | null;
   snapshotInsights: SnapshotInsights | null;
   snapshotUpdatedAt: string | null;
 };
@@ -61,6 +65,7 @@ export default async function AnalyticsSection({
   period,
   compare,
   clientType,
+  targets,
   snapshotInsights,
   snapshotUpdatedAt,
 }: AnalyticsSectionProps) {
@@ -98,6 +103,10 @@ export default async function AnalyticsSection({
   const gbp: DashboardGBPData | null = (gbpRes as DashboardGBPData | null) ?? null;
   const activityItems: ActivityItem[] = Array.isArray(activity) ? activity : [];
 
+  const ga4 = analyticsData.ga4;
+  const gsc = analyticsData.gsc;
+  const hasAnalytics = ga4 !== null || gsc !== null;
+
   // ── Phase B: type-specific module data (gated on the client's module set) ──
   const wants = (id: DashboardModuleId) => modules.includes(id);
   const safe = async <T,>(p: Promise<T> | null): Promise<T | null> => {
@@ -126,9 +135,79 @@ export default async function AnalyticsSection({
   };
   const insightCards = snapshotInsights?.cards ?? [];
 
-  const ga4 = analyticsData.ga4;
-  const gsc = analyticsData.gsc;
-  const hasAnalytics = ga4 !== null || gsc !== null;
+  // ── Phase C: pacing (month-to-date vs goals), alerts, 13-month table ──
+  const targetsMap = targets ?? {};
+  const hasTargets = Object.keys(targetsMap).length > 0;
+
+  let pacing: PacingRow[] = [];
+  if (hasTargets) {
+    // Pacing projects a monthly run-rate, so it needs month-to-date actuals
+    // (not the dashboard's selected range). Cached, so cheap on repeat loads.
+    const [mtdA, mtdR] = await Promise.all([
+      safe(fetchAnalyticsData(clientId, { period: "mtd", compare: "prior" })),
+      safe(fetchDashboardReport(clientId, { period: "mtd", compare: "prior" })),
+    ]);
+    const actuals: Record<string, number> = {};
+    if (mtdA?.ga4) actuals.sessions = mtdA.ga4.sessions;
+    if (mtdA?.gsc) actuals.organic_clicks = mtdA.gsc.clicks;
+    if (mtdR?.ga4) {
+      actuals.revenue = mtdR.ga4.purchaseRevenue;
+      actuals.conversions = mtdR.ga4.transactions;
+    }
+    if (gbp?.configured && gbp.insights) actuals.gbp_calls = gbp.insights.totals["CALL_CLICKS"] ?? 0;
+    pacing = computePacing(actuals, targetsMap);
+  }
+
+  // Alerts from current-period deltas + GBP health + pacing (engine self-ranks).
+  const clicksCur = clicksTrend.reduce((s, p) => s + p.value, 0);
+  const clicksPrev = clicksTrend.reduce((s, p) => s + (p.compareValue ?? 0), 0);
+  const clicksDeltaPct = clicksPrev > 0 ? ((clicksCur - clicksPrev) / clicksPrev) * 100 : undefined;
+  const issueCounts = gbp?.audit?.issueCounts ?? {};
+  const alertInput: AlertInput = {
+    metrics: {
+      sessions: ga4 ? { value: ga4.sessions, delta: ga4.sessionsDelta } : undefined,
+      organicClicks: gsc ? { value: gsc.clicks, delta: clicksDeltaPct } : undefined,
+      conversions: dashboardReport.ga4
+        ? { value: dashboardReport.ga4.transactions, delta: dashboardReport.ga4.transactionsDelta }
+        : undefined,
+      revenue: dashboardReport.ga4
+        ? { value: dashboardReport.ga4.purchaseRevenue, delta: dashboardReport.ga4.purchaseRevenueDelta }
+        : undefined,
+      gbpCalls:
+        gbp?.configured && gbp.insights
+          ? {
+              value: gbp.insights.totals["CALL_CLICKS"] ?? 0,
+              delta: gbp.insights.deltas.find((d) => d.metric === "CALL_CLICKS")?.deltaPct ?? undefined,
+            }
+          : undefined,
+    },
+    gbp:
+      gbp?.configured && gbp.audit
+        ? {
+            avgScore: gbp.audit.avgScore,
+            closedCount: issueCounts["Marked as permanently closed"] ?? 0,
+            missingInfoCount:
+              (issueCounts["No website URL"] ?? 0) +
+              (issueCounts["No business hours set"] ?? 0) +
+              (issueCounts["No business description"] ?? 0),
+          }
+        : undefined,
+    pacing: pacing.map((p) => ({
+      metricId: p.metricId,
+      status: p.status,
+      pctToTarget: p.pctToTarget ?? undefined,
+      label: p.label,
+      monthProgress: monthElapsedFraction(),
+    })),
+  };
+  const alerts: DashboardAlert[] = deriveAlerts(alertInput);
+
+  // 13-month metric table — admin detail view only.
+  let metricTableRows: MetricTableRow[] = [];
+  if (isAdmin) {
+    const mt = await safe(get13MonthTable());
+    metricTableRows = mt?.rows ?? [];
+  }
 
   // ── Assemble the executive summary band ──────────────────────────────────
   const kpis: ExecKpi[] = [];
@@ -206,6 +285,9 @@ export default async function AnalyticsSection({
           modules={modules}
           moduleData={moduleData}
           insightCards={insightCards}
+          alerts={alerts}
+          pacing={pacing}
+          metricTableRows={metricTableRows}
         />
       </div>
     </div>
