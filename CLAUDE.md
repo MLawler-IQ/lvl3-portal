@@ -26,10 +26,12 @@ No ORM. All DB queries are raw Supabase client calls.
 npm run dev          # Start dev server (localhost:3000)
 npm run build        # Production build
 npx tsc --noEmit     # Type-check — run after every set of changes
+npm test             # Vitest unit suite (8 files in tests/unit/)
+npm run test:e2e     # Playwright smoke test (tests/e2e/, needs a running app)
 vercel --prod        # Deploy to production (always follow with git push)
 ```
 
-No test framework. Validate with `npx tsc --noEmit` and `npm run build`. Migrations: `supabase db push --include-all`.
+Validate every change with `npx tsc --noEmit`, `npm test`, and `npm run build`. Migrations: `supabase db push --include-all`.
 
 ## User Roles
 

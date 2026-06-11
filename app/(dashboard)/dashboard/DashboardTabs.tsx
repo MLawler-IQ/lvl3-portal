@@ -3,7 +3,6 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import LookerEmbed from "@/components/dashboard/looker-embed";
-import AnalyticsKpiStrip from "@/components/analytics/AnalyticsKpiStrip";
 import RefreshAnalyticsButton from "@/components/home/RefreshAnalyticsButton";
 import WebsiteTab from "@/components/analytics/website/WebsiteTab";
 import SeoTab from "@/components/analytics/seo/SeoTab";
@@ -70,7 +69,7 @@ interface Props {
   annotations: Annotation[];
 }
 
-type Tab = "snapshot" | "locations" | "detail" | "website" | "seo" | "full" | "definitions";
+type Tab = "snapshot" | "locations" | "detail" | "website" | "seo" | "full";
 
 // Modules that live on the "Detail" tab (kept off the at-a-glance Snapshot).
 const DETAIL_MODULE_IDS: DashboardModuleId[] = [
@@ -240,15 +239,17 @@ export default function DashboardTabs({
     ...(hasAnalytics ? [{ key: "website" as Tab, label: "Website" }] : []),
     ...(hasAnalytics ? [{ key: "seo" as Tab, label: "SEO" }] : []),
     ...(hasLooker ? [{ key: "full" as Tab, label: "Full Dashboard" }] : []),
-    { key: "definitions" as Tab, label: "Definitions & Notes" },
   ];
 
   const showDateSelector =
     ["snapshot", "detail", "locations"].includes(activeTab) ||
     (["website", "seo"].includes(activeTab) && hasAnalytics);
 
-  // Derived chart data.
-  const metricTrend: TrendPoint[] = metricTableRows.map((r) => ({ date: r.yearMonth, value: r.sessions }));
+  // Derived chart data. The 13-month trend ends at the last complete month —
+  // the in-progress MTD row would render as a fabricated cliff.
+  const metricTrend: TrendPoint[] = metricTableRows
+    .filter((r) => !r.isPartial)
+    .map((r) => ({ date: r.yearMonth, value: r.sessions }));
   const gbpLocations = gbp?.insights?.locations ?? [];
   // Chain brands share one title across locations — label bars by city instead.
   const gbpPreferCity = hasDuplicateTitles(gbpLocations.map((l) => l.locationTitle));
@@ -332,10 +333,10 @@ export default function DashboardTabs({
             <Alerts alerts={alerts} />
 
             {/* Executive summary band (type-aware hero) */}
-            <ExecutiveSummaryBand {...execBand} />
+            <ExecutiveSummaryBand {...execBand} updatedAt={snapshotUpdatedAt} />
 
-            {/* Goals & pacing (self-hides when no targets are set) */}
-            <Targets pacing={pacing} />
+            {/* Goals & pacing (self-hides when no targets are set; admins get a setup nudge) */}
+            <Targets pacing={pacing} isAdmin={isAdmin} clientId={clientId} />
 
             {/* Period-aware traffic trend with prior-period ghost overlay */}
             {sessionsTrend.length >= 2 && (
@@ -355,45 +356,15 @@ export default function DashboardTabs({
               <InsightCards cards={insightCards} headline={execBand.headline} />
             )}
 
-            {/* KPI strip */}
-            <div>
-              <p className="text-xs font-medium uppercase tracking-widest text-surface-500 mb-3">
-                Key Metrics
-              </p>
-              {hasAnalytics ? (
-                <AnalyticsKpiStrip
-                  ga4={analyticsData.ga4}
-                  gsc={analyticsData.gsc}
-                />
-              ) : (
-                <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-                  <p className="text-sm text-surface-500 italic">
-                    KPI snapshot cards will appear here once configured.
-                  </p>
-                </div>
-              )}
-            </div>
-
             {/* Context panel */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
                   Context
                 </p>
-                <div className="flex items-center gap-3">
-                  {snapshotUpdatedAt && (
-                    <p className="text-xs text-surface-500">
-                      Updated{" "}
-                      {new Date(snapshotUpdatedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  )}
-                  {isAdmin && (
-                    <RefreshAnalyticsButton clientId={clientId} />
-                  )}
-                </div>
+                {isAdmin && (
+                  <RefreshAnalyticsButton clientId={clientId} />
+                )}
               </div>
 
               <div className="space-y-3">
@@ -509,27 +480,6 @@ export default function DashboardTabs({
                 clientName={clientName}
                 isActive={iframeEverActive}
               />
-            </div>
-          </div>
-        )}
-
-        {/* Definitions tab */}
-        {activeTab === "definitions" && (
-          <div className="p-6 max-w-2xl">
-            <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-surface-100 mb-2">
-                  Metric Definitions & Methodology
-                </p>
-                {isAdmin && (
-                  <button className="text-xs text-surface-500 hover:text-surface-400 transition-colors shrink-0">
-                    Admin: Edit
-                  </button>
-                )}
-              </div>
-              <p className="text-sm text-surface-500 italic">
-                Metric definitions and methodology notes will appear here.
-              </p>
             </div>
           </div>
         )}

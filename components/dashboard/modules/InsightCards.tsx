@@ -6,7 +6,7 @@ interface InsightCardsProps {
   headline?: string
 }
 
-/** Per-severity color tokens, matching the LVL3 dark-theme palette used app-wide. */
+/** Per-severity color tokens. */
 const SEVERITY_STYLES: Record<
   InsightSeverity,
   { border: string; accent: string; chip: string; label: string }
@@ -33,7 +33,7 @@ const SEVERITY_STYLES: Record<
     border: 'border-rose-500/40',
     accent: 'text-rose-400',
     chip: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    label: 'Critical',
+    label: 'Attention',
   },
 }
 

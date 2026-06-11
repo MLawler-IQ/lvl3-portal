@@ -2,9 +2,10 @@
 
 // Workstream C3 — 13-month metric table.
 //
-// Returns one row per calendar month over the trailing 13 months (current month +
-// prior 12) so the latest month has a YoY comparison 12 rows earlier. Merges the
-// GA4 monthly series (sessions / conversions / revenue) and the GSC monthly series
+// Returns one row per calendar month over the trailing 14 months: the in-progress
+// current month (flagged isPartial) plus the prior 13, so the latest COMPLETE
+// month has a YoY comparison 12 rows earlier. Merges the GA4 monthly series
+// (sessions / conversions / revenue) and the GSC monthly series
 // (clicks / impressions) by yearMonth.
 //
 // Mirrors the dashboard-ga4 / dashboard-gsc auth pattern: requireAuth →
@@ -19,7 +20,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { fetchGA4MonthlySeries } from '@/lib/google-analytics'
 import { fetchGSCMonthlySeries } from '@/lib/google-search-console'
 
-const MONTHS = 13
+// 14 buckets = current MTD month + 13 complete months, so the latest complete
+// month still has its YoY peer (12 rows earlier) in the data.
+const MONTHS = 14
 
 export type MetricTableRow = {
   /** Calendar month as YYYY-MM. */
@@ -29,6 +32,8 @@ export type MetricTableRow = {
   impressions: number
   conversions: number
   revenue: number
+  /** True for the in-progress current calendar month (incomplete data — no fair deltas). */
+  isPartial: boolean
 }
 
 export type MetricTableResult = {
@@ -61,9 +66,10 @@ async function resolveSources(): Promise<{ propertyId: string | null; siteUrl: s
 }
 
 /**
- * 13-month metric table for the selected client. Merges GA4 + GSC monthly series
- * by yearMonth into rows sorted ascending (oldest → newest). configured:false when
- * the client has neither a GA4 property nor a GSC site configured.
+ * 13-month metric table for the selected client (13 complete months + the current
+ * MTD month flagged isPartial). Merges GA4 + GSC monthly series by yearMonth into
+ * rows sorted ascending (oldest → newest). configured:false when the client has
+ * neither a GA4 property nor a GSC site configured.
  */
 export async function get13MonthTable(): Promise<MetricTableResult> {
   try {
@@ -81,12 +87,21 @@ export async function get13MonthTable(): Promise<MetricTableResult> {
         : Promise.resolve([]),
     ])
 
-    // Merge by yearMonth.
+    // Merge by yearMonth. UTC current month, matching the repo's date conventions.
+    const currentYm = new Date().toISOString().slice(0, 7)
     const byMonth = new Map<string, MetricTableRow>()
     const ensure = (ym: string): MetricTableRow => {
       let row = byMonth.get(ym)
       if (!row) {
-        row = { yearMonth: ym, sessions: 0, clicks: 0, impressions: 0, conversions: 0, revenue: 0 }
+        row = {
+          yearMonth: ym,
+          sessions: 0,
+          clicks: 0,
+          impressions: 0,
+          conversions: 0,
+          revenue: 0,
+          isPartial: ym === currentYm,
+        }
         byMonth.set(ym, row)
       }
       return row

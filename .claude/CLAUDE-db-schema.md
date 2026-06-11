@@ -25,8 +25,8 @@ clients
   competitors text[]          -- competitor domains for the competitive module
   brand_terms text[]          -- branded-query matchers for the branded split (null = domain-derived)
   brand_match_mode text        -- 'contains' (substring, default) | 'exact' (full-query equality)
+  brand_context text          -- brand/voice context blurb fed into AI prompts (Content Engine, Content Refresh Finder, recommendations)
   targets jsonb               -- monthly goals: { "<metricId>": { value, period: "YYYY-MM" } }
-  semrush_project_id text     -- Semrush Site Audit project id
 
 users
   id uuid PK (= auth.users.id)

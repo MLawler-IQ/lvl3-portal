@@ -11,7 +11,7 @@ export default function DeltaChip({
 }: DeltaChipProps) {
   if (direction === "up") {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-accent-400">
+      <span className="inline-flex items-center gap-1 text-xs text-emerald-500">
         <span aria-hidden="true">↑</span>
         <span>Up {percent}</span>
         {absolute && <span className="text-surface-500">({absolute})</span>}
@@ -20,7 +20,7 @@ export default function DeltaChip({
   }
   if (direction === "down") {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-rose-400">
+      <span className="inline-flex items-center gap-1 text-xs text-rose-500">
         <span aria-hidden="true">↓</span>
         <span>Down {percent}</span>
         {absolute && <span className="text-surface-500">({absolute})</span>}

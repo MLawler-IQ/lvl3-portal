@@ -2,17 +2,29 @@
 
 ```
 /                        → Home (client summary, engagement strip, nav cards)
-/dashboard               → Type-aware dashboard. Tabs: Snapshot / Locations / Detail / Website / SEO / Full / Definitions (shown per clients.client_type + connected data). period/compare via URL params; periods 7d/28d/90d/180d/365d + calendar presets mtd/qtd/last_full_month
+/dashboard               → Type-aware dashboard. Tabs: Snapshot / Locations / Detail / Website / SEO / Full (shown per clients.client_type + connected data). period/compare via URL params; periods 7d/28d/90d/180d/365d + calendar presets mtd/qtd/last_full_month
 /projects                → Google Sheet task tracker
 /deliverables            → Deliverable cards with comments
 /insights                → Blog/insights posts
 /services                → Services page (redirect stub)
-/tools                   → SEO tools hub (admin only)
-/tools/keyword-quick-wins → GSC positions 4-20 opportunity table
-/tools/ai-visibility      → Branded vs non-branded search share
-/tools/content-gaps       → High-impression low-CTR query finder
-/tools/semrush-gap        → Semrush competitor keyword gap analysis
+/tools                   → SEO tools hub (admin only). 19 registry entries in lib/tools/registry.ts: 16 active + 3 coming-soon (hidden)
+/tools/keyword-quick-wins   → GSC positions 4-20 opportunity table
+/tools/ai-visibility        → Branded vs non-branded search share
+/tools/content-gaps         → High-impression low-CTR query finder
+/tools/semrush-gap          → Semrush competitor keyword gap analysis
+/tools/backlink-overview    → Domain authority, backlinks, referring domains (Semrush)
+/tools/seo-content-engine   → Keyword research → brief → draft article → DOCX pipeline
+/tools/tfk-generator        → ACF-ready location page copy for True Food Kitchen stores
 /tools/blog-image-generator → Batch AI blog image generation (OpenAI DALL-E)
+/tools/keyword-research     → Volume / CPC / competition / trends (Keywords Everywhere)
+/tools/core-web-vitals      → CrUX field data + Lighthouse scores for any URL
+/tools/page-seo-audit       → Crawl a page: title, meta, headings, schema, canonical
+/tools/content-quality      → Word count, reading level, alt coverage, internal links
+/tools/content-refresh-finder → Declining-traffic pages + AI refresh briefs → Content Engine
+/tools/landing-page-cro-audit → Score landing pages on friction, CTAs, trust, speed
+/tools/vertical-benchmark   → Best-in-class vertical research + LLM citation probing
+/tools/gbp-audit            → GBP location audit: NAP, hours, category, completeness
+(coming-soon, hidden from hub: schema-generator, service-page-generator, indexation-monitor)
 /ask-lvl3                 → Claude-powered chat with client analytics context
 /clients                  → Client list (admin only)
 /clients/[id]             → Client detail + settings form merged (admin only)
@@ -47,7 +59,7 @@ All files must have `'use server'` at the top. No `'use server'` in `lib/` files
 | `dashboard-gbp.ts` | `fetchDashboardGBP(clientId, opts)` → aggregate + per-location GBP insights + profile-audit rollup |
 | `dashboard-leadgen.ts` | `getConvertingPagesData`, `getContentPerformanceData` (lead-gen modules) |
 | `dashboard-competitive.ts` | `getCompetitiveData` (Semrush comparison vs `clients.competitors`) |
-| `dashboard-metrics-table.ts` | `get13MonthTable` (GA4 + GSC monthly series, 13 months for YoY) |
+| `dashboard-metrics-table.ts` | `get13MonthTable` (GA4 + GSC monthly series; 13 complete months + current MTD month flagged `isPartial`) |
 | `dashboard-pacing.ts` | `getPacingActuals(clientId)` — consistent MTD actuals for goal pacing |
 | `annotations.ts` | `listAnnotations`, `createAnnotation`, `deleteAnnotation` (`client_annotations`; writes require admin) |
 | `projects.ts` | `getSheetData`, `syncSheet` |

@@ -148,7 +148,7 @@ All chart components reference CSS variables — no hardcoded hex values:
 
 ## Known follow-ups (Phase 2)
 
-- **Tool clients** (24 files in `app/(dashboard)/tools/*`) still use inline violet hex (`#A78BFA`, `#8B5CF6`, `#7C3AED`). They look out of place against the light shell. Sweep file-by-file or in one PR after the rebrand soaks.
+- **Tool clients** — DONE. `app/(dashboard)/tools/*` is clean of inline violet hex (`#A78BFA`, `#8B5CF6`, `#7C3AED`); the sweep has shipped.
 - **Aeonik fonts** — currently Inter + JetBrains Mono fallback. Self-host Aeonik Light/Regular/Medium/Bold + Aeonik Fono Light/Medium via `next/font/local` once the .otf files and licensing are sorted (`exports/latest/fonts/` in the IgniteIQ theme repo).
 - **IgniteIQ Q-mark logo** — the brand square is currently a CSS-rendered red square placeholder in `components/nav/TopBar.tsx`. Drop `assets/logo-black.png` (or SVG) into `/public/` and replace the placeholder.
 - **Email signature** in `app/actions/deliverables.ts` still reads `LVL3 Portal <portal@lvl3.com>` — left untouched because it affects sending infrastructure (DNS/SPF/DKIM). Coordinate with deliverability before swapping.
