@@ -48,26 +48,32 @@ export type MetricTableResult = {
 }
 
 /**
- * Resolve the selected client's GA4 property id and GSC site url for the current
- * user, enforcing access. Returns nulls (no throw) when there is no selected
- * client or the user can't access it.
+ * Resolve the selected client's GA4 property id, GSC site url, and configured
+ * key-event names for the current user, enforcing access. Returns nulls/empty
+ * (no throw) when there is no selected client or the user can't access it.
  */
-async function resolveSources(): Promise<{ propertyId: string | null; siteUrl: string | null }> {
+async function resolveSources(): Promise<{
+  propertyId: string | null
+  siteUrl: string | null
+  keyEventNames: string[]
+}> {
   const { user } = await requireAuth()
   const clientId = await resolveSelectedClientId(user)
-  if (!clientId) return { propertyId: null, siteUrl: null }
-  if (!(await userCanAccessClient(user, clientId))) return { propertyId: null, siteUrl: null }
+  if (!clientId) return { propertyId: null, siteUrl: null, keyEventNames: [] }
+  if (!(await userCanAccessClient(user, clientId)))
+    return { propertyId: null, siteUrl: null, keyEventNames: [] }
 
   const service = await createServiceClient()
   const { data: client } = await service
     .from('clients')
-    .select('ga4_property_id, gsc_site_url')
+    .select('ga4_property_id, gsc_site_url, key_event_names')
     .eq('id', clientId)
     .single()
 
   return {
     propertyId: client?.ga4_property_id ?? null,
     siteUrl: client?.gsc_site_url ?? null,
+    keyEventNames: client?.key_event_names ?? [],
   }
 }
 
@@ -79,14 +85,16 @@ async function resolveSources(): Promise<{ propertyId: string | null; siteUrl: s
  */
 export async function get13MonthTable(): Promise<MetricTableResult> {
   try {
-    const { propertyId, siteUrl } = await resolveSources()
+    const { propertyId, siteUrl, keyEventNames } = await resolveSources()
     if (!propertyId && !siteUrl) return { configured: false, rows: [] }
 
     // Fetch whichever sources are configured; tolerate one failing without losing
     // the other (each fetch is cached + falls back to an empty series on error).
+    // Scope the monthly conversions count to the client's configured key events so
+    // a junk high-frequency key event can't inflate the "Conversions" column.
     const [ga4, gsc] = await Promise.all([
       propertyId
-        ? fetchGA4MonthlySeries(propertyId, MONTHS).catch(() => [])
+        ? fetchGA4MonthlySeries(propertyId, MONTHS, keyEventNames).catch(() => [])
         : Promise.resolve([]),
       siteUrl
         ? fetchGSCMonthlySeries(siteUrl, MONTHS).catch(() => [])
