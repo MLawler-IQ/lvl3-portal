@@ -23,6 +23,7 @@ clients
   gbp_location_group text     -- optional GBP location-group / label filter
   key_event_names text[]      -- GA4 key-event (conversion) names (lead-gen)
   competitors text[]          -- competitor domains for the competitive module
+  brand_terms text[]          -- branded-query matchers for the branded split (null = domain-derived)
   targets jsonb               -- monthly goals: { "<metricId>": { value, period: "YYYY-MM" } }
   semrush_project_id text     -- Semrush Site Audit project id
 

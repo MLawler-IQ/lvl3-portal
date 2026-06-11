@@ -45,20 +45,23 @@ const EMPTY_INTENT: GSCIntentSplit = {
  * the user can't access it, or GSC isn't configured — callers map that to the
  * typed empty result.
  */
-async function resolveGscSiteUrl(): Promise<{ siteUrl: string | null }> {
+async function resolveGscSiteUrl(): Promise<{ siteUrl: string | null; brandTerms: string[] }> {
   const { user } = await requireAuth()
   const clientId = await resolveSelectedClientId(user)
-  if (!clientId) return { siteUrl: null }
-  if (!(await userCanAccessClient(user, clientId))) return { siteUrl: null }
+  if (!clientId) return { siteUrl: null, brandTerms: [] }
+  if (!(await userCanAccessClient(user, clientId))) return { siteUrl: null, brandTerms: [] }
 
   const service = await createServiceClient()
   const { data: client } = await service
     .from('clients')
-    .select('gsc_site_url')
+    .select('gsc_site_url, brand_terms')
     .eq('id', clientId)
     .single()
 
-  return { siteUrl: client?.gsc_site_url ?? null }
+  return {
+    siteUrl: client?.gsc_site_url ?? null,
+    brandTerms: (client?.brand_terms as string[] | null) ?? [],
+  }
 }
 
 // ── Actions ────────────────────────────────────────────────────────────────────
@@ -75,17 +78,19 @@ export async function getGSCTrendAction(opts?: Opts): Promise<TrendPoint[]> {
 }
 
 /**
- * Branded vs non-branded clicks/impressions. `brandTerms` is optional; when
- * omitted (or empty) a default brand token is derived from the site domain.
+ * Branded vs non-branded clicks/impressions. `brandTerms` precedence:
+ * explicit opts → the client's saved clients.brand_terms → a default brand
+ * token derived from the site domain (inside fetchGSCBrandedSplit).
  */
 export async function getGSCBrandedSplitAction(
   opts?: Opts & { brandTerms?: string[] },
 ): Promise<GSCBrandedSplit> {
   try {
-    const { siteUrl } = await resolveGscSiteUrl()
+    const { siteUrl, brandTerms } = await resolveGscSiteUrl()
     if (!siteUrl) return EMPTY_BRANDED
     const range = buildDateRange(opts?.period, opts?.compare)
-    return await fetchGSCBrandedSplit(siteUrl, range, opts?.brandTerms ?? [])
+    const terms = opts?.brandTerms?.length ? opts.brandTerms : brandTerms
+    return await fetchGSCBrandedSplit(siteUrl, range, terms)
   } catch {
     return EMPTY_BRANDED
   }

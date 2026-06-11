@@ -14,6 +14,7 @@ import {
   type GSCSiteOption,
 } from '@/app/actions/analytics'
 import { fetchGBPAccounts } from '@/app/actions/tools-extended'
+import { recommendBrandTerms, recommendCompetitors, recommendKeyEvents } from '@/app/actions/recommendations'
 import type { GBPAccount } from '@/lib/connectors/gbp'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { CLIENT_TYPES, CLIENT_TYPE_LABELS, type ClientType, type Targets } from '@/lib/dashboard/types'
@@ -38,6 +39,7 @@ interface ClientData {
   gbp_location_group: string | null
   key_event_names: string[] | null
   competitors: string[] | null
+  brand_terms: string[] | null
   targets: Targets | null
 }
 
@@ -106,9 +108,84 @@ export default function ClientSettingsForm({ client }: Props) {
   const [gbpAccountsLoading, setGbpAccountsLoading] = useState(false)
   const [gbpAccountsError, setGbpAccountsError] = useState<string | null>(null)
 
-  // Key events + competitors (text[] → comma/newline separated)
+  // Key events + competitors + branded terms (text[] → comma/newline separated)
   const [keyEventNames, setKeyEventNames] = useState((client.key_event_names ?? []).join(', '))
   const [competitors, setCompetitors] = useState((client.competitors ?? []).join(', '))
+  const [brandTerms, setBrandTerms] = useState((client.brand_terms ?? []).join(', '))
+
+  // Recommendation buttons (one loading flag + hint per field)
+  const [recLoading, setRecLoading] = useState<'brand' | 'competitors' | 'keyEvents' | null>(null)
+  const [recHints, setRecHints] = useState<Record<string, string>>({})
+
+  async function handleRecommend(kind: 'brand' | 'competitors' | 'keyEvents') {
+    setRecLoading(kind)
+    setRecHints((prev) => ({ ...prev, [kind]: '' }))
+    try {
+      if (kind === 'brand') {
+        const res = await recommendBrandTerms(client.id)
+        if (res.error && res.suggestions.length === 0) {
+          setRecHints((p) => ({ ...p, brand: `Couldn't generate: ${res.error}` }))
+        } else {
+          setBrandTerms(res.suggestions.join(', '))
+          setRecHints((p) => ({
+            ...p,
+            brand:
+              res.source === 'gsc+llm'
+                ? 'Generated from your real GSC queries + AI — review before saving.'
+                : 'Generated from the client name/domain — review before saving.',
+          }))
+        }
+      } else if (kind === 'competitors') {
+        const res = await recommendCompetitors(client.id)
+        if (res.error && res.suggestions.length === 0) {
+          setRecHints((p) => ({ ...p, competitors: `Couldn't generate: ${res.error}` }))
+        } else {
+          setCompetitors(res.suggestions.join(', '))
+          setRecHints((p) => ({
+            ...p,
+            competitors:
+              res.source === 'semrush'
+                ? 'From Semrush organic competitors (real SERP overlap) — review before saving.'
+                : 'AI-suggested — verify these are real direct competitors before saving.',
+          }))
+        }
+      } else {
+        const res = await recommendKeyEvents(client.id)
+        if (res.error && res.suggestions.length === 0) {
+          setRecHints((p) => ({ ...p, keyEvents: `Couldn't generate: ${res.error}` }))
+        } else if (res.suggestions.length === 0) {
+          setRecHints((p) => ({ ...p, keyEvents: 'No key events fired in GA4 in the last 90 days.' }))
+        } else {
+          setKeyEventNames(res.suggestions.map((s) => s.name).join(', '))
+          setRecHints((p) => ({
+            ...p,
+            keyEvents: `From GA4 (90d volume): ${res.suggestions
+              .slice(0, 5)
+              .map((s) => `${s.name} (${s.count.toLocaleString()})`)
+              .join(' · ')}`,
+          }))
+        }
+      }
+    } catch {
+      setRecHints((p) => ({ ...p, [kind]: 'Recommendation failed — try again.' }))
+    } finally {
+      setRecLoading(null)
+    }
+  }
+
+  function RecommendButton({ kind }: { kind: 'brand' | 'competitors' | 'keyEvents' }) {
+    return (
+      <button
+        type="button"
+        onClick={() => handleRecommend(kind)}
+        disabled={recLoading !== null}
+        className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors disabled:opacity-50"
+      >
+        {recLoading === kind ? <RefreshCw size={12} className="animate-spin" /> : <Wand2 size={12} />}
+        {recLoading === kind ? 'Generating…' : 'Recommend'}
+      </button>
+    )
+  }
 
   // Monthly goals (clients.targets jsonb) → metric id → string input value
   const [targets, setTargets] = useState<Record<string, string>>(() => {
@@ -243,6 +320,7 @@ export default function ClientSettingsForm({ client }: Props) {
         fd.set('gbp_location_group', gbpLocationGroup)
         fd.set('key_event_names', keyEventNames)
         fd.set('competitors', competitors)
+        fd.set('brand_terms', brandTerms)
         for (const metricId of TARGET_METRIC_IDS) {
           fd.set(`target_${metricId}`, targets[metricId] ?? '')
         }
@@ -687,12 +765,35 @@ export default function ClientSettingsForm({ client }: Props) {
         </div>
       </div>
 
-      {/* ── Key Events & Competitors ─────────────────────────────────── */}
+      {/* ── Branded Search, Key Events & Competitors ─────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Key Events & Competitors</h2>
+        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">
+          Branded Search, Key Events &amp; Competitors
+        </h2>
 
         <div>
-          <label className="block text-surface-400 text-sm mb-1.5">Key Event Names</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-surface-400 text-sm">Branded Search Terms</label>
+            <RecommendButton kind="brand" />
+          </div>
+          <input
+            type="text"
+            value={brandTerms}
+            onChange={(e) => setBrandTerms(e.target.value)}
+            placeholder="brand name, brandname, brand co"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+          />
+          <p className="text-surface-500 text-xs mt-1.5">
+            {recHints.brand ||
+              'Case-insensitive matchers: any search query containing one of these counts as branded. Comma-separated. Blank = auto-derive from the domain.'}
+          </p>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-surface-400 text-sm">Key Event Names</label>
+            <RecommendButton kind="keyEvents" />
+          </div>
           <input
             type="text"
             value={keyEventNames}
@@ -701,12 +802,16 @@ export default function ClientSettingsForm({ client }: Props) {
             className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
           />
           <p className="text-surface-500 text-xs mt-1.5">
-            GA4 key-event (conversion) names that count as this client&rsquo;s north-star leads. Comma-separated.
+            {recHints.keyEvents ||
+              'GA4 key-event (conversion) names that count as this client’s north-star leads. Comma-separated.'}
           </p>
         </div>
 
         <div>
-          <label className="block text-surface-400 text-sm mb-1.5">Competitors</label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-surface-400 text-sm">Competitors</label>
+            <RecommendButton kind="competitors" />
+          </div>
           <input
             type="text"
             value={competitors}
@@ -715,7 +820,8 @@ export default function ClientSettingsForm({ client }: Props) {
             className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
           />
           <p className="text-surface-500 text-xs mt-1.5">
-            Competitor domains tracked in the competitive module. Comma-separated.
+            {recHints.competitors ||
+              'Competitor domains tracked in the competitive module. Comma-separated.'}
           </p>
         </div>
       </div>

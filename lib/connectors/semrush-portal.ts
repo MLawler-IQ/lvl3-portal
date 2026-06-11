@@ -113,6 +113,49 @@ export async function fetchSemrushBacklinksOverview(
   }
 }
 
+export interface SemrushOrganicCompetitor {
+  domain: string
+  competitionLevel: number
+  commonKeywords: number
+  organicTraffic: number
+}
+
+/** Organic competitors for a domain (Semrush domain_organic_organic report). */
+export async function fetchSemrushOrganicCompetitors(
+  domain: string,
+  apiKey: string,
+  database = 'us',
+  limit = 10,
+): Promise<ConnectorResult<SemrushOrganicCompetitor[]>> {
+  try {
+    const text = await semrushFetch({
+      type: 'domain_organic_organic',
+      key: apiKey,
+      domain,
+      database,
+      display_limit: String(limit),
+      export_columns: 'Dn,Cr,Np,Ot',
+    })
+
+    if (!text.trim()) return connectorOk([])
+
+    const rows = parseCSV(text)
+    return connectorOk(
+      rows
+        .map((row) => ({
+          domain: row['Domain'] ?? row['Dn'] ?? '',
+          competitionLevel: parseFloat(row['Competitor Relevance'] ?? row['Cr'] ?? '0') || 0,
+          commonKeywords: parseInt(row['Common Keywords'] ?? row['Np'] ?? '0', 10) || 0,
+          organicTraffic: parseInt(row['Organic Traffic'] ?? row['Ot'] ?? '0', 10) || 0,
+        }))
+        .filter((r) => r.domain),
+    )
+  } catch (err) {
+    logError('semrush.organic_competitors', `fetch failed for ${domain}`, err)
+    return connectorErr(err)
+  }
+}
+
 export async function fetchSemrushDomainOrganic(
   domain: string,
   apiKey: string,
