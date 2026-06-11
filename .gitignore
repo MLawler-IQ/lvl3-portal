@@ -31,6 +31,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# transient agent worktrees (parallel subagents)
+.claude/worktrees/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
