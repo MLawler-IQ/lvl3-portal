@@ -1,11 +1,16 @@
+import Link from 'next/link'
 import { Target as TargetIcon } from 'lucide-react'
 import type { PacingRow, PacingStatus } from '@/lib/dashboard/pacing'
 
 interface TargetsProps {
   pacing: PacingRow[]
+  /** Admins with no targets configured see a setup nudge instead of nothing. */
+  isAdmin?: boolean
+  /** Client id for the settings deep-link in the admin nudge. */
+  clientId?: string
 }
 
-// Per-status color tokens, matching the LVL3 dark-theme palette used app-wide.
+// Per-status color tokens.
 const STATUS_STYLES: Record<
   Exclude<PacingStatus, 'no_target'>,
   { bar: string; chip: string; label: string }
@@ -86,12 +91,33 @@ function PacingRowItem({ row }: { row: PacingRow }) {
 /**
  * Presentational targets / pacing module. Renders each metric with a monthly
  * goal as a row showing actual vs target, a progress bar (% to target, visually
- * capped at 100%), and a color-coded pace-status chip. Renders nothing when
- * there are no rows or every metric lacks a target.
+ * capped at 100%), and a color-coded pace-status chip. With no targets set,
+ * admins get a minimal "set goals" nudge; everyone else sees nothing.
  */
-export default function Targets({ pacing }: TargetsProps) {
+export default function Targets({ pacing, isAdmin = false, clientId }: TargetsProps) {
   const rows = pacing.filter((r) => r.status !== 'no_target' && r.target !== null)
-  if (rows.length === 0) return null
+  if (rows.length === 0) {
+    if (!isAdmin || !clientId) return null
+    return (
+      <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <TargetIcon className="h-4 w-4 text-surface-500" aria-hidden="true" />
+            <p className="text-sm font-semibold text-surface-100">Monthly Goals</p>
+          </div>
+          <Link
+            href={`/clients/${clientId}`}
+            className="shrink-0 text-xs font-medium text-accent-400 transition-colors hover:text-accent-500"
+          >
+            Set monthly goals →
+          </Link>
+        </div>
+        <p className="mt-2 text-xs text-surface-500">
+          No targets configured for this client yet — goal pacing appears here once monthly goals are set.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">

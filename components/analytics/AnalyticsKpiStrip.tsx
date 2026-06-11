@@ -27,6 +27,9 @@ export default function AnalyticsKpiStrip({
   if (!ga4 && !gsc) return null
 
   if (compact) {
+    // Window copy must match the caller's fetch window. The compact strip's only
+    // render site (Home) uses fetchAnalyticsData's default range: the last 28
+    // days ending yesterday vs the prior 28 days, for both GA4 and GSC.
     return (
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {ga4 && (
@@ -41,7 +44,7 @@ export default function AnalyticsKpiStrip({
                   }
                 : undefined
             }
-            tooltip="Website sessions in the last 30 days vs prior 30 days (GA4)"
+            tooltip="Website sessions in the last 28 days vs the prior 28 days (GA4)"
           />
         )}
         {gsc && (
@@ -55,13 +58,15 @@ export default function AnalyticsKpiStrip({
           <KpiCard
             label="Avg. Position"
             value={gsc.position.toFixed(1)}
-            tooltip="Average search ranking position (Search Console)"
+            tooltip="Average search ranking position over the last 28 days (Search Console)"
           />
         )}
       </div>
     )
   }
 
+  // Full variant: callers may feed any period, so tooltips name the metric and
+  // source without claiming a window.
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {ga4 && (
@@ -73,7 +78,7 @@ export default function AnalyticsKpiStrip({
               direction: deltaDir(ga4.sessionsDelta),
               percent: `${Math.abs(ga4.sessionsDelta)}%`,
             }}
-            tooltip="Website sessions in the last 30 days vs prior 30 days (GA4)"
+            tooltip="Website sessions vs the comparison period (GA4)"
           />
           <KpiCard
             label="Users"
@@ -82,7 +87,7 @@ export default function AnalyticsKpiStrip({
               direction: deltaDir(ga4.usersDelta),
               percent: `${Math.abs(ga4.usersDelta)}%`,
             }}
-            tooltip="Total users in the last 30 days vs prior 30 days (GA4)"
+            tooltip="Total users vs the comparison period (GA4)"
           />
           <KpiCard
             label="Pageviews"
@@ -91,12 +96,12 @@ export default function AnalyticsKpiStrip({
               direction: deltaDir(ga4.pageviewsDelta),
               percent: `${Math.abs(ga4.pageviewsDelta)}%`,
             }}
-            tooltip="Page views in the last 30 days vs prior 30 days (GA4)"
+            tooltip="Page views vs the comparison period (GA4)"
           />
           <KpiCard
             label="Bounce Rate"
             value={`${(ga4.bounceRate * 100).toFixed(1)}%`}
-            tooltip="Bounce rate over the last 30 days (GA4)"
+            tooltip="Share of sessions that left without engaging (GA4)"
           />
         </>
       )}
@@ -105,22 +110,22 @@ export default function AnalyticsKpiStrip({
           <KpiCard
             label="Organic Clicks"
             value={fmtNum(gsc.clicks)}
-            tooltip="Organic search clicks in the last 28 days (Search Console)"
+            tooltip="Clicks from unpaid Google search results (Search Console)"
           />
           <KpiCard
             label="Impressions"
             value={fmtNum(gsc.impressions)}
-            tooltip="Search impressions in the last 28 days (Search Console)"
+            tooltip="How often the site appeared in search results (Search Console)"
           />
           <KpiCard
             label="CTR"
             value={`${gsc.ctr.toFixed(1)}%`}
-            tooltip="Click-through rate from search in the last 28 days (Search Console)"
+            tooltip="Share of search impressions that became clicks (Search Console)"
           />
           <KpiCard
             label="Avg. Position"
             value={gsc.position.toFixed(1)}
-            tooltip="Average search ranking position in the last 28 days (Search Console)"
+            tooltip="Average search ranking position (Search Console)"
           />
         </>
       )}

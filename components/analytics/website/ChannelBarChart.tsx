@@ -36,6 +36,7 @@ export default function ChannelBarChart({ channels }: Props) {
             tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
+            interval={0}
           />
           <Tooltip
             formatter={(v) => [Number(v ?? 0).toLocaleString(), 'Sessions']}

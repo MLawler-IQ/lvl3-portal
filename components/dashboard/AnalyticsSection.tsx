@@ -229,23 +229,46 @@ export default async function AnalyticsSection({
   const annotations: Annotation[] = (await safe(listAnnotations(clientId))) ?? [];
 
   // ── Assemble the executive summary band ──────────────────────────────────
+  // Tooltips are the metric definitions (period-agnostic — the band follows the picker).
   const kpis: ExecKpi[] = [];
   if (ga4) {
-    kpis.push({ label: "Sessions", value: fmtInt(ga4.sessions), delta: ga4.sessionsDelta, sparkline: sessionsTrend });
+    kpis.push({
+      label: "Sessions",
+      value: fmtInt(ga4.sessions),
+      delta: ga4.sessionsDelta,
+      sparkline: sessionsTrend,
+      tooltip: "Visits to the website — one session covers all activity in a single visit (GA4)",
+    });
   }
   if (gsc) {
     const cur = clicksTrend.reduce((s, p) => s + p.value, 0);
     const prev = clicksTrend.reduce((s, p) => s + (p.compareValue ?? 0), 0);
     const clicksDelta = prev > 0 ? ((cur - prev) / prev) * 100 : undefined;
-    kpis.push({ label: "Organic clicks", value: fmtInt(gsc.clicks), delta: clicksDelta, sparkline: clicksTrend });
+    kpis.push({
+      label: "Organic clicks",
+      value: fmtInt(gsc.clicks),
+      delta: clicksDelta,
+      sparkline: clicksTrend,
+      tooltip: "Clicks to the website from unpaid Google search results (Search Console)",
+    });
   }
   if (type === "ecommerce" && dashboardReport.ga4) {
-    kpis.push({ label: "Revenue", value: fmtCurrency(dashboardReport.ga4.purchaseRevenue), delta: dashboardReport.ga4.purchaseRevenueDelta });
+    kpis.push({
+      label: "Revenue",
+      value: fmtCurrency(dashboardReport.ga4.purchaseRevenue),
+      delta: dashboardReport.ga4.purchaseRevenueDelta,
+      tooltip: "Purchase revenue tracked by ecommerce events on the website (GA4)",
+    });
   }
   if (gbp?.configured && gbp.insights) {
     const calls = gbp.insights.totals["CALL_CLICKS"] ?? 0;
     const callsDeltaPct = gbp.insights.deltas.find((d) => d.metric === "CALL_CLICKS")?.deltaPct;
-    kpis.push({ label: "Calls (GBP)", value: fmtInt(calls), delta: callsDeltaPct ?? undefined });
+    kpis.push({
+      label: "Calls (GBP)",
+      value: fmtInt(calls),
+      delta: callsDeltaPct ?? undefined,
+      tooltip: "Calls placed from the Google Business Profile listings on Search and Maps",
+    });
   }
 
   const health: HealthItem[] = [];

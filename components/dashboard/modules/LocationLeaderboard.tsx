@@ -186,7 +186,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
           {insights.errorCount > 0 && (
             <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-widest text-amber-400">
               <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-              {insights.errorCount} failed
+              {insights.errorCount} location{insights.errorCount === 1 ? '' : 's'}: data unavailable
             </span>
           )}
           <span className="text-xs text-surface-500">

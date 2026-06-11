@@ -7,7 +7,7 @@ interface SparklineProps {
   /** Either a bare numeric series or TrendPoint[]; TrendPoint[] is mapped to its `value`. */
   data: number[] | TrendPoint[]
   className?: string
-  /** Stroke color. Defaults to the chart line token (violet in the dark theme). */
+  /** Stroke color. Defaults to the chart line token. */
   stroke?: string
   /** Pixel height of the sparkline. Width is always responsive. */
   height?: number

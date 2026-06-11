@@ -13,6 +13,8 @@ export interface ExecKpi {
   deltaLabel?: string
   /** Inline trend for the KPI, rendered as a sparkline beneath the value. */
   sparkline?: TrendPoint[]
+  /** Plain-English definition (what the metric counts + data source), shown on hover. */
+  tooltip?: string
 }
 
 /** A site/channel health metric. Provide a `grade` OR a 0–100 `score` (grade is derived). */
@@ -40,6 +42,8 @@ export interface ExecutiveSummaryBandProps {
   health?: HealthItem[]
   /** Recent activity feed. Empty/omitted hides the feed. */
   activity?: ActivityItem[]
+  /** ISO timestamp of the last insights refresh, shown as a subtle stamp. */
+  updatedAt?: string | null
 }
 
 /** Build the KpiCard `delta` shape from a signed percent + optional label override. */
@@ -69,24 +73,37 @@ export default function ExecutiveSummaryBand({
   kpis = [],
   health = [],
   activity = [],
+  updatedAt,
 }: ExecutiveSummaryBandProps) {
   const hasContent = Boolean(headline) || kpis.length > 0 || health.length > 0 || activity.length > 0
   if (!hasContent) return null
 
   return (
     <section className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-6">
-      {/* (a) Headline */}
-      {headline && (
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500">
-            Executive Summary
-          </p>
-          <h2
-            className="mt-2 text-lg font-bold leading-snug text-surface-100"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            {headline}
-          </h2>
+      {/* (a) Headline + freshness stamp */}
+      {(headline || updatedAt) && (
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            {headline && (
+              <>
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500">
+                  Executive Summary
+                </p>
+                <h2
+                  className="mt-2 text-lg font-bold leading-snug text-surface-100"
+                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                >
+                  {headline}
+                </h2>
+              </>
+            )}
+          </div>
+          {updatedAt && (
+            <p className="shrink-0 text-xs text-surface-500">
+              Insights refreshed{' '}
+              {new Date(updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+          )}
         </div>
       )}
 
@@ -100,6 +117,7 @@ export default function ExecutiveSummaryBand({
               value={String(kpi.value)}
               delta={toKpiDelta(kpi.delta, kpi.deltaLabel)}
               sparkline={kpi.sparkline}
+              tooltip={kpi.tooltip}
             />
           ))}
         </div>

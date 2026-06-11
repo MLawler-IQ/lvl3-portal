@@ -7,7 +7,7 @@ export interface MetricTable13Props {
   rows: MetricTableRow[]
 }
 
-type MetricKey = keyof Omit<MetricTableRow, 'yearMonth'>
+type MetricKey = keyof Omit<MetricTableRow, 'yearMonth' | 'isPartial'>
 
 const COLUMNS: { key: MetricKey; label: string; format: (n: number) => string }[] = [
   { key: 'sessions', label: 'Sessions', format: (n) => n.toLocaleString() },
@@ -37,6 +37,11 @@ function monthLabel(yearMonth: string): string {
   return new Date(y, m - 1, 1).toLocaleString('en-US', { month: 'short', year: 'numeric' })
 }
 
+/** Month label with an "(MTD)" suffix for the in-progress month. */
+function rowLabel(row: MetricTableRow): string {
+  return row.isPartial ? `${monthLabel(row.yearMonth)} (MTD)` : monthLabel(row.yearMonth)
+}
+
 function DeltaBadge({ pct }: { pct: number | null }) {
   if (pct === null) {
     return <span className="text-xs text-surface-500">—</span>
@@ -44,7 +49,7 @@ function DeltaBadge({ pct }: { pct: number | null }) {
   const up = pct > 0
   const flat = pct === 0
   const Icon = flat ? Minus : up ? ArrowUpRight : ArrowDownRight
-  const color = flat ? 'text-surface-400' : up ? 'text-emerald-400' : 'text-red-400'
+  const color = flat ? 'text-surface-400' : up ? 'text-emerald-500' : 'text-rose-500'
   return (
     <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${color}`}>
       <Icon className="w-3 h-3" aria-hidden="true" />
@@ -56,9 +61,10 @@ function DeltaBadge({ pct }: { pct: number | null }) {
 
 /**
  * 13-month metric table: one row per month (newest first) with Sessions, Clicks,
- * Impressions, Conversions and Revenue. The latest row carries an inline MoM %Δ
- * indicator per metric, and a summary strip above the table shows YoY %Δ (latest
- * month vs 12 months earlier). Horizontally scrollable on small screens.
+ * Impressions, Conversions and Revenue. MoM %Δ indicators and the YoY summary
+ * strip anchor on the latest COMPLETE month; the in-progress month is labeled
+ * "(MTD)" and carries no deltas (a partial month has no fair comparison).
+ * Horizontally scrollable on small screens.
  */
 export default function MetricTable13({ rows }: MetricTable13Props) {
   if (rows.length === 0) {
@@ -75,12 +81,16 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
     )
   }
 
-  // rows arrive ascending (oldest → newest); latest is the last element.
+  // rows arrive ascending (oldest → newest). Comparisons anchor on the latest
+  // COMPLETE month — a trailing isPartial (MTD) row gets no MoM/YoY deltas.
   const ascending = rows
-  const latest = ascending[ascending.length - 1]
-  const prevMonth = ascending.length >= 2 ? ascending[ascending.length - 2] : undefined
-  // YoY peer: 12 months earlier = 13 rows back from the latest (index length-13).
-  const yoyPeer = ascending.length >= 13 ? ascending[ascending.length - 13] : undefined
+  const newest = ascending[ascending.length - 1]
+  const anchorIdx =
+    newest.isPartial && ascending.length >= 2 ? ascending.length - 2 : ascending.length - 1
+  const latest = ascending[anchorIdx]
+  const prevMonth = anchorIdx >= 1 ? ascending[anchorIdx - 1] : undefined
+  // YoY peer: 12 months earlier in the ascending series.
+  const yoyPeer = anchorIdx >= 12 ? ascending[anchorIdx - 12] : undefined
 
   // Newest-first for display.
   const display = [...ascending].reverse()
@@ -89,15 +99,15 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-sm font-semibold text-surface-100">13-Month Metrics</p>
-        <p className="text-xs text-surface-500">Newest first · MoM Δ on latest row</p>
+        <p className="text-xs text-surface-500">Newest first · MoM Δ on latest full month</p>
       </div>
 
-      {/* YoY summary strip — latest month vs 12 months earlier */}
+      {/* YoY summary strip — latest complete month vs 12 months earlier */}
       <div className="mb-4 rounded-lg border border-surface-700 bg-surface-950/40 p-3">
         <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-brand-500">
           {yoyPeer
-            ? `Year over Year · ${monthLabel(latest.yearMonth)} vs ${monthLabel(yoyPeer.yearMonth)}`
-            : `Year over Year · ${monthLabel(latest.yearMonth)} (needs 13 months)`}
+            ? `Year over Year · ${rowLabel(latest)} vs ${monthLabel(yoyPeer.yearMonth)}`
+            : `Year over Year · ${rowLabel(latest)} (needs 13 full months)`}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {COLUMNS.map((col) => (
@@ -130,25 +140,25 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
             </tr>
           </thead>
           <tbody>
-            {display.map((row, i) => {
-              const isLatest = i === 0
+            {display.map((row) => {
+              const isAnchor = !row.isPartial && row.yearMonth === latest.yearMonth
               return (
                 <tr
                   key={row.yearMonth}
                   className={`border-b border-surface-700/50 transition-colors hover:bg-surface-800/30 ${
-                    isLatest ? 'bg-surface-800/20' : ''
+                    isAnchor ? 'bg-surface-800/20' : ''
                   }`}
                 >
                   <td className="py-2 pr-4 text-left">
-                    <span className={isLatest ? 'font-medium text-surface-100' : 'text-surface-300'}>
-                      {monthLabel(row.yearMonth)}
+                    <span className={isAnchor ? 'font-medium text-surface-100' : 'text-surface-300'}>
+                      {rowLabel(row)}
                     </span>
                   </td>
                   {COLUMNS.map((col) => (
                     <td key={col.key} className="py-2 pl-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <span className="font-mono text-surface-300">{col.format(row[col.key])}</span>
-                        {isLatest && (
+                        {isAnchor && (
                           <DeltaBadge pct={pctChange(row[col.key], prevMonth?.[col.key])} />
                         )}
                       </div>

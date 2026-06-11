@@ -34,12 +34,11 @@ All underlying GA4/GSC/GBP/Semrush lib fetches are `cachedFetch`-wrapped.
 
 | Tab | Content |
 |-----|---------|
-| **Snapshot** | Alerts banner, executive summary band (KPIs + sparklines + health + activity), goals & pacing, traffic trend (ghost overlay), channel mix, key insights, KPI strip, context (takeaways/anomalies/opportunities + annotations) |
+| **Snapshot** | Alerts banner, executive summary band (KPIs + sparklines + health + activity + freshness stamp), goals & pacing (admin nudge when no targets), traffic trend (ghost overlay), channel mix, key insights, context (takeaways/anomalies/opportunities + annotations) |
 | **Locations** | GBP overview tiles, top-locations chart, location leaderboard, profile completeness (when `gbp.configured`) |
 | **Detail** | 13-month sessions trend, per-vertical modules (ecom funnel/products, converting pages, content performance, branded split, competitive), 13-month metric table (admin) |
 | Website / SEO | Existing GA4 / GSC tabs (when analytics connected) |
 | Full Dashboard | Looker embed (when `looker_embed_url`) |
-| Definitions & Notes | Methodology |
 
 ## Date ranges
 
