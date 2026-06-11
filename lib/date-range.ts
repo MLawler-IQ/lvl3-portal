@@ -69,3 +69,51 @@ export function buildDateRange(period = '28d', compare = 'prior'): DateRange {
     compare,
   }
 }
+
+// ── Period-aware trends (Phase A) ───────────────────────────────────────────
+// Replaces the legacy hardcoded 6-month trend: the trend window follows the
+// selected KPI period, with a bucket size chosen by pickGranularity.
+
+export type Granularity = 'daily' | 'weekly' | 'monthly'
+
+/** Choose a sensible trend bucket size for a KPI period. */
+export function pickGranularity(period = '28d'): Granularity {
+  switch (period) {
+    case '7d':
+    case '28d':
+      return 'daily'
+    case '90d':
+    case '180d':
+      return 'weekly'
+    case '365d':
+      return 'monthly'
+    default:
+      return (PERIOD_DAYS[period] ?? 28) > 120 ? 'monthly' : 'daily'
+  }
+}
+
+export type TrendRange = {
+  startDate: string
+  endDate: string
+  granularity: Granularity
+  /** Comparison window aligned to the trend, for the ghost-overlay series. */
+  compareStart: string
+  compareEnd: string
+}
+
+/**
+ * Window to query for a period-aware trend chart. Covers the selected `period`
+ * ending yesterday at the granularity from pickGranularity, plus an aligned
+ * prior/YoY window for the ghost-overlay comparison series. Date math is reused
+ * from buildDateRange so the trend and KPI windows always agree.
+ */
+export function buildTrendRange(period = '28d', compare = 'prior'): TrendRange {
+  const base = buildDateRange(period, compare)
+  return {
+    startDate: base.startDate,
+    endDate: base.endDate,
+    granularity: pickGranularity(period),
+    compareStart: base.compareStart,
+    compareEnd: base.compareEnd,
+  }
+}
