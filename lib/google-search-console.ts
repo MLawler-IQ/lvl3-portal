@@ -464,6 +464,57 @@ export async function fetchGSCTrend(
   )
 }
 
+// ── Lead-gen: content performance (WS-B4) ───────────────────────────────────────
+// Top content URLs by clicks, with impressions, CTR (as a percentage) and average
+// position. Mirrors the per-URL data shape of the main GSC report (UrlRow) but
+// carries ctr too, since content performance is judged on click-through. Uses the
+// GSC Search Analytics API `page` dimension. No prior-window join here — this is a
+// single-window leaderboard, so there is no clicksDelta.
+
+export type ContentUrlRow = {
+  page: string
+  clicks: number
+  impressions: number
+  /** Click-through rate as a percentage (e.g. 3.4 for 3.4%). */
+  ctr: number
+  position: number
+}
+
+export async function fetchGSCContentPerformance(
+  siteUrl: string,
+  range?: DateRange,
+  topN = 25,
+): Promise<ContentUrlRow[]> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  return cachedFetch(
+    `gsc:contentPerf:${normalizedUrl}:${gscRangeKey(range)}:${topN}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const startDate = range?.startDate ?? fmt(new Date(today.getTime() - 29 * 86400000))
+      const endDate = range?.endDate ?? fmt(new Date(today.getTime() - 86400000))
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['page'], rowLimit: topN },
+      })
+
+      // GSC returns pages ordered by clicks desc by default; keep that order.
+      return (data.rows ?? []).map((row) => ({
+        page: row.keys?.[0] ?? '',
+        clicks: row.clicks ?? 0,
+        impressions: row.impressions ?? 0,
+        ctr: (row.ctr ?? 0) * 100,
+        position: row.position ?? 0,
+      }))
+    },
+  )
+}
+
 // ── Geo / search intent split (lightweight heuristic) ──────────────────────────
 
 export type GSCIntentQuery = { query: string; clicks: number; impressions: number; position: number }

@@ -699,3 +699,120 @@ async function _fetchGA4TopProductsUncached(propertyId: string, range?: DateRang
     itemsPurchased: parseInt(row.metricValues?.[1]?.value ?? '0'),
   }))
 }
+
+// ── Lead-gen: converting landing pages (WS-B4) ──────────────────────────────────
+// Top landing pages ranked by GA4 KEY EVENTS (the conversion-event successor to
+// "conversions" in GA4). When the client configures specific key_event_names we
+// scope the keyEvents metric to those events via an eventName IN_LIST filter;
+// with no names configured we count ALL key events. Per page we also pull
+// sessions and derive a conversion rate (keyEvents / sessions) in JS — robust and
+// consistent with how the rest of this module computes rates.
+//
+// GA4 Data API v1beta apiNames used:
+//   dimension: landingPagePlusQueryString  (matches the organic landing-page report)
+//   dimension: eventName                   (only when scoping to specific events)
+//   metric:    keyEvents                    (count of key events = conversions)
+//   metric:    sessions
+
+export type ConvertingPageRow = {
+  page: string
+  conversions: number
+  sessions: number
+  /** keyEvents / sessions, as a percentage (e.g. 4.2 for 4.2%). 0 when sessions = 0. */
+  conversionRate: number
+}
+
+export async function fetchGA4ConvertingPages(
+  propertyId: string,
+  keyEventNames: string[],
+  range?: DateRange,
+): Promise<ConvertingPageRow[]> {
+  // Normalize + sort the event names so the cache key is stable regardless of
+  // the order they were configured in; every varying input (property, range,
+  // events) participates in the key.
+  const names = Array.from(new Set(keyEventNames.map((n) => n.trim()).filter(Boolean))).sort()
+  const namesKey = names.length > 0 ? names.join(',') : 'all'
+  return cachedFetch(
+    `ga4:convertingPages:${propertyId}:${rangeKey(range)}:${namesKey}`,
+    GA4_TTL_SECONDS,
+    () => _fetchGA4ConvertingPagesUncached(propertyId, names, range),
+  )
+}
+
+async function _fetchGA4ConvertingPagesUncached(
+  propertyId: string,
+  keyEventNames: string[],
+  range?: DateRange,
+): Promise<ConvertingPageRow[]> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const today = new Date()
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+  let startDate: string, endDate: string
+  if (range) {
+    startDate = range.startDate
+    endDate = range.endDate
+  } else {
+    endDate = fmt(new Date(today.getTime() - 86400000))
+    startDate = fmt(new Date(today.getTime() - 29 * 86400000))
+  }
+
+  // Scope key events to the configured event names when present; otherwise count
+  // all key events on the property.
+  const dimensionFilter =
+    keyEventNames.length > 0
+      ? { filter: { fieldName: 'eventName', inListFilter: { values: keyEventNames } } }
+      : undefined
+
+  // 1: conversions (keyEvents) per landing page — ranked by keyEvents.
+  // 2: sessions per landing page (unfiltered) — joined in JS for the conv-rate.
+  const [convRes, sessRes] = await Promise.allSettled([
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'landingPagePlusQueryString' }],
+        metrics: [{ name: 'keyEvents' }],
+        ...(dimensionFilter ? { dimensionFilter } : {}),
+        orderBys: [{ metric: { metricName: 'keyEvents' }, desc: true }],
+        limit: '25',
+      },
+    }),
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: {
+        dateRanges: [{ startDate, endDate }],
+        dimensions: [{ name: 'landingPagePlusQueryString' }],
+        metrics: [{ name: 'sessions' }],
+        limit: '1000',
+      },
+    }),
+  ])
+
+  // The primary (conversions) report must succeed — otherwise surface the error
+  // so a degraded empty result isn't cached.
+  if (convRes.status !== 'fulfilled') throw convRes.reason
+
+  const sessionsByPage = new Map<string, number>()
+  if (sessRes.status === 'fulfilled') {
+    for (const row of sessRes.value.data.rows ?? []) {
+      sessionsByPage.set(
+        row.dimensionValues?.[0]?.value ?? '',
+        parseInt(row.metricValues?.[0]?.value ?? '0'),
+      )
+    }
+  }
+
+  const rows: ConvertingPageRow[] = []
+  for (const row of convRes.value.data.rows ?? []) {
+    const page = row.dimensionValues?.[0]?.value ?? '(not set)'
+    const conversions = parseInt(row.metricValues?.[0]?.value ?? '0')
+    const sessions = sessionsByPage.get(page) ?? 0
+    const conversionRate = sessions > 0 ? Math.round((conversions / sessions) * 1000) / 10 : 0
+    rows.push({ page, conversions, sessions, conversionRate })
+  }
+  return rows
+}
