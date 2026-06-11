@@ -9,6 +9,8 @@ import WebsiteTab from "@/components/analytics/website/WebsiteTab";
 import SeoTab from "@/components/analytics/seo/SeoTab";
 import ExecutiveSummaryBand, { type ExecutiveSummaryBandProps } from "@/components/dashboard/exec/ExecutiveSummaryBand";
 import TrendChart from "@/components/analytics/shared/TrendChart";
+import RankedBarChart from "@/components/analytics/shared/RankedBarChart";
+import ChannelBarChart from "@/components/analytics/website/ChannelBarChart";
 import InsightCards from "@/components/dashboard/modules/InsightCards";
 import EcomFunnel from "@/components/dashboard/modules/EcomFunnel";
 import TopProducts from "@/components/dashboard/modules/TopProducts";
@@ -67,7 +69,17 @@ interface Props {
   annotations: Annotation[];
 }
 
-type Tab = "snapshot" | "website" | "seo" | "full" | "definitions";
+type Tab = "snapshot" | "locations" | "detail" | "website" | "seo" | "full" | "definitions";
+
+// Modules that live on the "Detail" tab (kept off the at-a-glance Snapshot).
+const DETAIL_MODULE_IDS: DashboardModuleId[] = [
+  "ecom_funnel",
+  "top_products",
+  "converting_pages",
+  "content_performance",
+  "branded_split",
+  "competitive",
+];
 
 const PERIOD_OPTIONS: { value: string; label: string }[] = [
   { value: "7d", label: "7D" },
@@ -214,16 +226,31 @@ export default function DashboardTabs({
   const hasLooker = !!lookerUrl;
   const hasAnalytics =
     analyticsData.ga4 !== null || analyticsData.gsc !== null;
+  const hasLocations = !!gbp?.configured;
+  const hasDetail =
+    DETAIL_MODULE_IDS.some((id) => modules.includes(id)) ||
+    (isAdmin && metricTableRows.length > 0);
 
   const TABS: { key: Tab; label: string }[] = [
     { key: "snapshot" as Tab, label: "Snapshot" },
+    ...(hasLocations ? [{ key: "locations" as Tab, label: "Locations" }] : []),
+    ...(hasDetail ? [{ key: "detail" as Tab, label: "Detail" }] : []),
     ...(hasAnalytics ? [{ key: "website" as Tab, label: "Website" }] : []),
     ...(hasAnalytics ? [{ key: "seo" as Tab, label: "SEO" }] : []),
     ...(hasLooker ? [{ key: "full" as Tab, label: "Full Dashboard" }] : []),
     { key: "definitions" as Tab, label: "Definitions & Notes" },
   ];
 
-  const showDateSelector = ["snapshot", "website", "seo"].includes(activeTab) && hasAnalytics;
+  const showDateSelector =
+    ["snapshot", "detail", "locations"].includes(activeTab) ||
+    (["website", "seo"].includes(activeTab) && hasAnalytics);
+
+  // Derived chart data.
+  const metricTrend: TrendPoint[] = metricTableRows.map((r) => ({ date: r.yearMonth, value: r.sessions }));
+  const locationBars = (gbp?.insights?.locations ?? []).map((l) => ({
+    label: l.locationTitle || l.locationName,
+    value: GBP_IMPRESSION_METRICS.reduce((s, k) => s + (l.metrics[k] ?? 0), 0),
+  }));
 
   return (
     <div className="flex flex-col h-full">
@@ -313,36 +340,15 @@ export default function DashboardTabs({
               </div>
             )}
 
-            {/* Google Business Profile overview (local_service / multi_location) */}
-            {gbp?.configured && <GbpOverview gbp={gbp} />}
+            {/* Channel mix — where sessions (and revenue) come from */}
+            {dashboardReport.ga4 && dashboardReport.ga4.topChannels.length > 0 && (
+              <ChannelBarChart channels={dashboardReport.ga4.topChannels} />
+            )}
 
-            {/* Type-specific modules (registry-driven by client_type) */}
+            {/* Key insights (narrative; richer modules live on Locations / Detail) */}
             {modules.includes("insight_cards") && insightCards.length > 0 && (
               <InsightCards cards={insightCards} headline={execBand.headline} />
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {modules.includes("ecom_funnel") && <EcomFunnel funnel={moduleData.ecomFunnel} />}
-              {modules.includes("top_products") && <TopProducts products={moduleData.topProducts} />}
-              {modules.includes("converting_pages") && <ConvertingPages rows={moduleData.convertingPages} />}
-              {modules.includes("content_performance") && <ContentPerformance rows={moduleData.contentPerformance} />}
-              {modules.includes("location_leaderboard") && (
-                <div className="lg:col-span-2">
-                  <LocationLeaderboard data={gbp} />
-                </div>
-              )}
-              {modules.includes("location_completeness") && <LocationCompleteness data={gbp} />}
-              {modules.includes("branded_split") && (
-                <BrandedSplit branded={moduleData.branded} intent={moduleData.intent} />
-              )}
-              {modules.includes("competitive") && moduleData.competitive && (
-                <div className="lg:col-span-2">
-                  <Competitive data={moduleData.competitive} />
-                </div>
-              )}
-            </div>
-
-            {/* 13-month detail table (admin) */}
-            {isAdmin && <MetricTable13 rows={metricTableRows} />}
 
             {/* KPI strip */}
             <div>
@@ -413,6 +419,53 @@ export default function DashboardTabs({
                 <Annotations annotations={annotations} isAdmin={isAdmin} clientId={clientId} />
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Locations tab (GBP) */}
+        {activeTab === "locations" && (
+          <div className="p-6 max-w-4xl space-y-6">
+            {gbp?.configured ? (
+              <>
+                <GbpOverview gbp={gbp} />
+                <RankedBarChart title="Top locations by impressions" rows={locationBars} valueLabel="Impressions" />
+                {modules.includes("location_leaderboard") && <LocationLeaderboard data={gbp} />}
+                {modules.includes("location_completeness") && <LocationCompleteness data={gbp} />}
+              </>
+            ) : (
+              <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
+                <p className="text-sm text-surface-500 italic">
+                  Connect a Google Business Profile account in client settings to see location performance.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Detail tab — richer per-vertical modules + long-range trends */}
+        {activeTab === "detail" && (
+          <div className="p-6 max-w-4xl space-y-6">
+            {metricTrend.length >= 2 && (
+              <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
+                <p className="text-sm font-semibold text-surface-100 mb-3">13-month sessions trend</p>
+                <TrendChart data={metricTrend} label="Sessions" granularity="monthly" />
+              </div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {modules.includes("ecom_funnel") && <EcomFunnel funnel={moduleData.ecomFunnel} />}
+              {modules.includes("top_products") && <TopProducts products={moduleData.topProducts} />}
+              {modules.includes("converting_pages") && <ConvertingPages rows={moduleData.convertingPages} />}
+              {modules.includes("content_performance") && <ContentPerformance rows={moduleData.contentPerformance} />}
+              {modules.includes("branded_split") && (
+                <BrandedSplit branded={moduleData.branded} intent={moduleData.intent} />
+              )}
+              {modules.includes("competitive") && moduleData.competitive && (
+                <div className="lg:col-span-2">
+                  <Competitive data={moduleData.competitive} />
+                </div>
+              )}
+            </div>
+            {isAdmin && <MetricTable13 rows={metricTableRows} />}
           </div>
         )}
 

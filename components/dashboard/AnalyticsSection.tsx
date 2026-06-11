@@ -5,6 +5,7 @@ import { getConvertingPagesData, getContentPerformanceData } from "@/app/actions
 import { getCompetitiveData } from "@/app/actions/dashboard-competitive";
 import { get13MonthTable, type MetricTableRow } from "@/app/actions/dashboard-metrics-table";
 import { listAnnotations, type Annotation } from "@/app/actions/annotations";
+import { getPacingActuals } from "@/app/actions/dashboard-pacing";
 import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import { defaultModulesForType } from "@/lib/dashboard/registry";
 import { computePacing, monthElapsedFraction, type PacingRow } from "@/lib/dashboard/pacing";
@@ -158,20 +159,9 @@ export default async function AnalyticsSection({
 
   let pacing: PacingRow[] = [];
   if (hasTargets) {
-    // Pacing projects a monthly run-rate, so it needs month-to-date actuals
-    // (not the dashboard's selected range). Cached, so cheap on repeat loads.
-    const [mtdA, mtdR] = await Promise.all([
-      safe(fetchAnalyticsData(clientId, { period: "mtd", compare: "prior" })),
-      safe(fetchDashboardReport(clientId, { period: "mtd", compare: "prior" })),
-    ]);
-    const actuals: Record<string, number> = {};
-    if (mtdA?.ga4) actuals.sessions = mtdA.ga4.sessions;
-    if (mtdA?.gsc) actuals.organic_clicks = mtdA.gsc.clicks;
-    if (mtdR?.ga4) {
-      actuals.revenue = mtdR.ga4.purchaseRevenue;
-      actuals.conversions = mtdR.ga4.transactions;
-    }
-    if (gbp?.configured && gbp.insights) actuals.gbp_calls = gbp.insights.totals["CALL_CLICKS"] ?? 0;
+    // One consistent month-to-date actuals snapshot (GA4 sessions/key-events/
+    // revenue, GSC clicks, GBP calls) so the run-rate projection is sound.
+    const actuals = (await safe(getPacingActuals(clientId))) ?? {};
     pacing = computePacing(actuals, targetsMap, pacingAsOf);
   }
 

@@ -145,6 +145,37 @@ export async function fetchGA4Report(propertyId: string, range?: DateRange): Pro
   )
 }
 
+export type GA4PacingTotals = { sessions: number; conversions: number; revenue: number }
+
+/**
+ * Compact totals for goal pacing over a window: sessions, key-events
+ * (conversions — works for lead-gen, not just ecommerce), and purchase revenue.
+ * One runReport, cached.
+ */
+export async function fetchGA4PacingTotals(propertyId: string, range?: DateRange): Promise<GA4PacingTotals> {
+  return cachedFetch(`ga4:pacingTotals:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, async () => {
+    const auth = await getAdminOAuthClient()
+    const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+    const today = new Date()
+    const fmt = (d: Date) => d.toISOString().slice(0, 10)
+    const startDate = range?.startDate ?? fmt(new Date(today.getTime() - 29 * 86400000))
+    const endDate = range?.endDate ?? fmt(new Date(today.getTime() - 86400000))
+    const res = await analyticsdata.properties.runReport({
+      property: `properties/${propertyId}`,
+      requestBody: {
+        dateRanges: [{ startDate, endDate }],
+        metrics: [{ name: 'sessions' }, { name: 'keyEvents' }, { name: 'purchaseRevenue' }],
+      },
+    })
+    const m = res.data.rows?.[0]?.metricValues ?? []
+    return {
+      sessions: parseInt(m[0]?.value ?? '0'),
+      conversions: parseFloat(m[1]?.value ?? '0'),
+      revenue: parseFloat(m[2]?.value ?? '0'),
+    }
+  })
+}
+
 async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): Promise<GA4Report> {
   const auth = await getAdminOAuthClient()
   const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
