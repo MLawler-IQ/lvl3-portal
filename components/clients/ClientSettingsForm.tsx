@@ -209,6 +209,7 @@ export default function ClientSettingsForm({ client }: Props) {
   const [headersError, setHeadersError] = useState<string | null>(null)
   const [analyticsRefreshing, setAnalyticsRefreshing] = useState(false)
   const [analyticsError, setAnalyticsError] = useState<string | null>(null)
+  const [analyticsNotice, setAnalyticsNotice] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
 
   async function handleFetchLogo() {
@@ -292,10 +293,12 @@ export default function ClientSettingsForm({ client }: Props) {
   async function handleRefreshAnalytics() {
     setAnalyticsRefreshing(true)
     setAnalyticsError(null)
+    setAnalyticsNotice(null)
     const result = await generateAnalyticsInsights(client.id)
     if (result.error) {
       setAnalyticsError(result.error)
     } else {
+      setAnalyticsNotice('Draft generated — review and approve it on the Dashboard before clients can see it.')
       router.refresh()
     }
     setAnalyticsRefreshing(false)
@@ -704,8 +707,11 @@ export default function ClientSettingsForm({ client }: Props) {
             className="flex items-center gap-2 bg-surface-800 border border-surface-600 text-surface-300 rounded-lg px-4 py-2 text-sm hover:bg-surface-700 hover:text-surface-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw size={13} className={analyticsRefreshing ? 'animate-spin' : ''} />
-            {analyticsRefreshing ? 'Refreshing…' : 'Refresh Analytics Insights'}
+            {analyticsRefreshing ? 'Generating…' : 'Generate Analytics Insights'}
           </button>
+          {analyticsNotice && (
+            <p className="text-surface-400 text-xs mt-2 max-w-md">{analyticsNotice}</p>
+          )}
           {analyticsError && (
             <p className="text-red-400 text-xs mt-2 max-w-md">{analyticsError}</p>
           )}

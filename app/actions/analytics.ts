@@ -2,7 +2,7 @@
 
 import { google } from 'googleapis'
 import { getAdminOAuthClient } from '@/lib/google-auth'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireAuth, userCanAccessClient } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { parseSheetId, fetchSheetHeaders } from '@/lib/google-sheets'
 import { fetchGA4Metrics, GA4Metrics, fetchGA4Report, GA4Report, ChannelRow, SourceMediumRow, LandingPageRow } from '@/lib/google-analytics'
@@ -24,6 +24,14 @@ export type SnapshotInsights = {
   cards?: InsightCard[]
   generatedAt?: string
 }
+
+/**
+ * Unapproved LLM draft stored in `clients.snapshot_insights_draft`. Same shape as
+ * the published `SnapshotInsights` plus the narrative `summary` (which publishes
+ * to `analytics_summary`). NEVER exposed to client-role users — read only behind
+ * admin checks; published to the client-facing columns by approveSnapshotInsightsDraft.
+ */
+export type SnapshotInsightsDraft = SnapshotInsights & { summary: string }
 
 // ── Logo ──────────────────────────────────────────────────────────────────────
 
@@ -290,7 +298,15 @@ export async function generateAnalyticsInsights(
   opts?: { period?: string; compare?: string }
 ): Promise<{ error?: string }> {
   try {
-    await requireAdmin()
+    // Generation is admin- or member-triggered (clients may NOT generate), and a
+    // member must have access to the target client. The result is written to the
+    // draft column only — never published — so generating does not expose anything
+    // to client-role users (approval is a separate admin-only step).
+    const { user } = await requireAuth()
+    if (user.role === 'client') return { error: 'Not authorized to generate insights' }
+    if (!(await userCanAccessClient(user, clientId))) {
+      return { error: 'Not authorized for this client' }
+    }
 
     // Generation frame. Defaults match the dashboard's default view
     // (app/(dashboard)/dashboard/page.tsx: last full month vs prior year) so the
@@ -393,7 +409,11 @@ ${parts.join('\n\n')}`,
       deriveHeadline(cards) ||
       undefined
 
-    const snapshot_insights: SnapshotInsights = {
+    // Write the full LLM output to the DRAFT column only. Nothing here touches
+    // analytics_summary / analytics_summary_updated_at / snapshot_insights — those
+    // client-facing columns are published exclusively by approveSnapshotInsightsDraft.
+    const draft: SnapshotInsightsDraft = {
+      summary,
       takeaways: parsed.takeaways ?? '',
       anomalies: parsed.anomalies ?? '',
       opportunities: parsed.opportunities ?? '',
@@ -405,11 +425,7 @@ ${parts.join('\n\n')}`,
     const service = await createServiceClient()
     const { error: dbError } = await service
       .from('clients')
-      .update({
-        analytics_summary: summary,
-        analytics_summary_updated_at: new Date().toISOString(),
-        snapshot_insights,
-      })
+      .update({ snapshot_insights_draft: draft })
       .eq('id', clientId)
 
     if (dbError) return { error: dbError.message }
@@ -417,5 +433,100 @@ ${parts.join('\n\n')}`,
     return {}
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'An unexpected error occurred' }
+  }
+}
+
+// ── Approve / discard draft ────────────────────────────────────────────────────
+
+/**
+ * Admin-only. Publishes the pending draft to the client-facing columns, applying
+ * any inline edits (an edited save counts as approval). Reads the draft behind a
+ * requireAdmin() gate, so draft content is never exposed to client-role users.
+ * Publishes atomically in a single update and clears the draft.
+ */
+export async function approveSnapshotInsightsDraft(
+  clientId: string,
+  edits?: {
+    headline?: string
+    summary?: string
+    takeaways?: string
+    anomalies?: string
+    opportunities?: string
+  }
+): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+
+    const { data: row, error: loadError } = await service
+      .from('clients')
+      .select('snapshot_insights_draft')
+      .eq('id', clientId)
+      .single()
+
+    if (loadError) return { error: loadError.message }
+    if (!row?.snapshot_insights_draft) return { error: 'No draft to approve' }
+
+    const draft = row.snapshot_insights_draft as SnapshotInsightsDraft
+
+    // Merge edits over the draft's text fields; an edited (non-undefined) value wins.
+    const pick = (edited: string | undefined, fallback: string | undefined): string =>
+      typeof edited === 'string' ? edited : fallback ?? ''
+
+    const summary = pick(edits?.summary, draft.summary)
+    const takeaways = pick(edits?.takeaways, draft.takeaways)
+    const anomalies = pick(edits?.anomalies, draft.anomalies)
+    const opportunities = pick(edits?.opportunities, draft.opportunities)
+    const headline =
+      typeof edits?.headline === 'string'
+        ? edits.headline.trim() || undefined
+        : draft.headline
+
+    // Published shape consumed by the dashboard (no `summary` — that lives in
+    // analytics_summary). Preserve the draft's deterministic cards + frame stamp.
+    const snapshot_insights: SnapshotInsights = {
+      takeaways,
+      anomalies,
+      opportunities,
+      headline,
+      cards: draft.cards,
+      generatedAt: draft.generatedAt,
+    }
+
+    const { error: dbError } = await service
+      .from('clients')
+      .update({
+        snapshot_insights,
+        analytics_summary: summary,
+        analytics_summary_updated_at: new Date().toISOString(),
+        snapshot_insights_draft: null,
+      })
+      .eq('id', clientId)
+
+    if (dbError) return { error: dbError.message }
+
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to approve draft' }
+  }
+}
+
+/** Admin-only. Discards the pending draft without publishing anything. */
+export async function discardSnapshotInsightsDraft(
+  clientId: string
+): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+    const { error: dbError } = await service
+      .from('clients')
+      .update({ snapshot_insights_draft: null })
+      .eq('id', clientId)
+
+    if (dbError) return { error: dbError.message }
+
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to discard draft' }
   }
 }

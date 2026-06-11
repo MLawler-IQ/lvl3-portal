@@ -179,6 +179,7 @@ export type Database = {
           sheet_header_row: number | null
           slug: string
           snapshot_insights: Json | null
+          snapshot_insights_draft: Json | null
         }
         Insert: {
           ai_summary?: string | null
@@ -199,6 +200,7 @@ export type Database = {
           sheet_header_row?: number | null
           slug: string
           snapshot_insights?: Json | null
+          snapshot_insights_draft?: Json | null
         }
         Update: {
           ai_summary?: string | null
@@ -219,6 +221,7 @@ export type Database = {
           sheet_header_row?: number | null
           slug?: string
           snapshot_insights?: Json | null
+          snapshot_insights_draft?: Json | null
         }
         Relationships: []
       }
