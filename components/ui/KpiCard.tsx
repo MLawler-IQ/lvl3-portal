@@ -9,6 +9,9 @@ interface KpiCardProps {
     direction: "up" | "down" | "flat";
     percent: string;
     absolute?: string;
+    /** See DeltaChip: pass "down" for inverted metrics (e.g. Avg Position). */
+    goodDirection?: "up" | "down";
+    wording?: { up: string; down: string };
   };
   tooltip?: string;
   icon?: React.ElementType;
@@ -57,6 +60,8 @@ export default function KpiCard({
           direction={delta.direction}
           percent={delta.percent}
           absolute={delta.absolute}
+          goodDirection={delta.goodDirection}
+          wording={delta.wording}
         />
       )}
       {sparkline && sparkline.length >= 2 && (
