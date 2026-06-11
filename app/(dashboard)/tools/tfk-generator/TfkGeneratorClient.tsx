@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import * as XLSX from 'xlsx'
 import {
-  Upload, FileSpreadsheet, CheckCircle2, AlertCircle,
+  Upload, CheckCircle2, AlertCircle,
   Loader2, Circle, Download, ChevronDown
 } from 'lucide-react'
 import { buildPreviewHtml } from '@/lib/tfk/preview'
@@ -579,17 +579,6 @@ export default function TfkGeneratorClient() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 pb-8 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <FileSpreadsheet className="w-5 h-5 text-surface-400" />
-        <div>
-          <h1 className="text-xl font-semibold text-surface-100">TFK Page Generator</h1>
-          <p className="mt-0.5 text-sm text-surface-400">
-            Generate ACF-ready location page copy for all True Food Kitchen stores via Google Places + Claude.
-          </p>
-        </div>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-1 bg-surface-900 border border-surface-700 rounded-xl p-1 w-fit">
         {TABS.map(tab => (

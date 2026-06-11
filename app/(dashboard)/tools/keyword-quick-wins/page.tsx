@@ -2,7 +2,6 @@ import { requireAdmin } from '@/lib/auth'
 import { resolveSelectedClientId, getClientById } from '@/lib/client-resolution'
 import { fetchQuickWins } from '@/app/actions/tools'
 import { listToolRuns } from '@/app/actions/tool-runs'
-import { TrendingUp } from 'lucide-react'
 import QuickWinsTable from './QuickWinsTable'
 
 export default async function KeywordQuickWinsPage() {
@@ -29,15 +28,9 @@ export default async function KeywordQuickWinsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="w-5 h-5 text-surface-400" />
-        <div>
-          <h1 className="text-xl font-semibold text-surface-100">Keyword Quick Wins</h1>
-          <p className="mt-0.5 text-sm text-surface-400">
-            {client?.name} — keywords ranking 4-20 with 100+ impressions in the last 90 days
-          </p>
-        </div>
-      </div>
+      <p className="text-sm text-surface-400">
+        {client?.name} — keywords ranking 4-20 with 100+ impressions in the last 90 days
+      </p>
 
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">

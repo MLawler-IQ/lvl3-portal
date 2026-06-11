@@ -2,7 +2,7 @@
 
 ```
 /                        → Home (client summary, engagement strip, nav cards)
-/dashboard               → Type-aware dashboard. Tabs: Snapshot / Locations / Detail / Website / SEO / Full (shown per clients.client_type + connected data). period/compare via URL params; periods 7d/28d/90d/180d/365d + calendar presets mtd/qtd/last_full_month
+/dashboard               → Type-aware dashboard. Tabs: Snapshot / Locations / Detail / SEO / Full (shown per clients.client_type + connected data). period/compare via URL params; periods 7d/28d/90d/180d/365d + calendar presets mtd/qtd/last_full_month
 /projects                → Google Sheet task tracker
 /deliverables            → Deliverable cards with comments
 /insights                → Blog/insights posts

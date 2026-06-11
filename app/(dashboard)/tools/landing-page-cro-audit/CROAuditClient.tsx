@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { MousePointerClick } from 'lucide-react'
 import UrlInputTool from '@/components/tools/primitives/UrlInputTool'
 import BackgroundJobTool, { type JobStatus } from '@/components/tools/primitives/BackgroundJobTool'
 import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
@@ -297,17 +296,6 @@ export default function CROAuditClient({ recentRuns }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <MousePointerClick className="w-5 h-5 text-surface-400" />
-        <div>
-          <h1 className="text-xl font-semibold text-surface-100">Landing Page CRO Audit</h1>
-          <p className="mt-0.5 text-sm text-surface-400">
-            Score any landing page on form friction, CTA clarity, trust signals, and page speed.
-          </p>
-        </div>
-      </div>
-
       {/* Tab bar */}
       <div className="flex gap-1 border-b border-surface-700">
         {tabs.map(tab => (
@@ -340,21 +328,13 @@ export default function CROAuditClient({ recentRuns }: Props) {
           renderResult={audit ? () => <AuditResult audit={audit} /> : undefined}
           resultLabel="CRO Audit"
         >
-          <div className="space-y-4">
-            <p
-              className="text-xs uppercase tracking-widest font-medium"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              Landing Page CRO Audit
-            </p>
-            <UrlInputTool
-              onSubmit={handleSubmit}
-              isRunning={jobStatus === 'running'}
-              placeholder="https://example.com/landing-page"
-              label="Landing page URL"
-              description="Enter the full URL of the landing page you want to audit. The tool will crawl the page, fetch performance data, and score it across 5 CRO dimensions."
-            />
-          </div>
+          <UrlInputTool
+            onSubmit={handleSubmit}
+            isRunning={jobStatus === 'running'}
+            placeholder="https://example.com/landing-page"
+            label="Landing page URL"
+            description="Enter the full URL of the landing page you want to audit. The tool will crawl the page, fetch performance data, and score it across 5 CRO dimensions."
+          />
         </BackgroundJobTool>
       )}
 
