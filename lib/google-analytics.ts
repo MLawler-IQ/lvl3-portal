@@ -137,8 +137,22 @@ export type GA4Report = {
   organicLandingPages: LandingPageRow[]
 }
 
+/**
+ * Shopify web-pixel sandbox paths (`/wpm@…`, `/web-pixels@…`, `web-pixels-manager`)
+ * show up as GA4 landing pages but are tracking infrastructure, not real pages.
+ * Kept deliberately tight so real pages are never blocked.
+ */
+export function isJunkLandingPage(page: string): boolean {
+  return (
+    page.includes('/wpm@') ||
+    page.includes('/web-pixels@') ||
+    page.includes('web-pixels-manager')
+  )
+}
+
 export async function fetchGA4Report(propertyId: string, range?: DateRange): Promise<GA4Report> {
-  return cachedFetch(`ga4:report:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+  // v2: junk landing-page filtering — invalidates caches that still carry pixel paths.
+  return cachedFetch(`ga4:report:v2:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
     _fetchGA4ReportUncached(propertyId, range),
   )
 }
@@ -278,7 +292,8 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
         dimensionFilter: organicFilter,
       },
     }),
-    // 8cur: organic landing pages current
+    // 8cur: organic landing pages current — over-fetch 50 so 25 clean rows
+    // survive the junk-page filter below.
     analyticsdata.properties.runReport({
       property: prop,
       requestBody: {
@@ -287,7 +302,7 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
         metrics: [{ name: 'sessions' }],
         dimensionFilter: organicFilter,
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: '25',
+        limit: '50',
       },
     }),
     // 8pri: organic landing pages prior (for delta)
@@ -298,7 +313,7 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
         dimensions: [{ name: 'landingPagePlusQueryString' }],
         metrics: [{ name: 'sessions' }],
         dimensionFilter: organicFilter,
-        limit: '50',
+        limit: '100',
       },
     }),
   ])
@@ -395,7 +410,9 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
   const organicLandingPages: LandingPageRow[] = []
   if (r8cur.status === 'fulfilled') {
     for (const row of r8cur.value.data.rows ?? []) {
+      if (organicLandingPages.length >= 25) break
       const page = row.dimensionValues?.[0]?.value ?? ''
+      if (isJunkLandingPage(page)) continue // Shopify pixel paths, not real pages
       const s = parseInt(row.metricValues?.[0]?.value ?? '0')
       organicLandingPages.push({ page, sessions: s, sessionsDelta: pct(s, lpPriorMap.get(page) ?? 0) })
     }
@@ -705,8 +722,17 @@ async function _fetchGA4TopProductsUncached(propertyId: string, range?: DateRang
 // month + prior 12), so the latest month has a YoY comparison 12 rows earlier.
 // Aggregated server-side by GA4 via the `yearMonth` dimension.
 //
+// When the client configures specific key_event_names, the keyEvents metric is
+// scoped to those events (matching fetchGA4ConvertingPages) so a junk
+// high-frequency key event can't inflate "conversions". Because an eventName
+// dimensionFilter would also corrupt sessions/purchaseRevenue, the scoped path
+// runs TWO reports — one unfiltered for sessions/revenue, one filtered for
+// keyEvents — joined by month in JS. With no names configured we count ALL key
+// events in a single report, as before.
+//
 // GA4 Data API v1beta apiNames used:
 //   dimension: yearMonth          (YYYYMM bucket)
+//   dimension: eventName          (only as a filter, when scoping to specific events)
 //   metric:    sessions
 //   metric:    keyEvents           (count of key events = "conversions" in GA4)
 //   metric:    purchaseRevenue     (ecommerce revenue)
@@ -724,15 +750,22 @@ export type GA4MonthlyPoint = {
 export async function fetchGA4MonthlySeries(
   propertyId: string,
   months = 13,
+  keyEventNames: string[] = [],
 ): Promise<GA4MonthlyPoint[]> {
-  return cachedFetch(`ga4:monthlySeries:${propertyId}:${months}`, GA4_TTL_SECONDS, () =>
-    _fetchGA4MonthlySeriesUncached(propertyId, months),
+  // Normalize + sort the event names so the cache key is stable regardless of
+  // the order they were configured in (same convention as fetchGA4ConvertingPages).
+  const names = Array.from(new Set(keyEventNames.map((n) => n.trim()).filter(Boolean))).sort()
+  const namesKey = names.length > 0 ? names.join(',') : 'all'
+  // v2: key-event scoping — invalidates caches built from unscoped keyEvents.
+  return cachedFetch(`ga4:monthlySeries:v2:${propertyId}:${months}:${namesKey}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4MonthlySeriesUncached(propertyId, months, names),
   )
 }
 
 async function _fetchGA4MonthlySeriesUncached(
   propertyId: string,
   months: number,
+  keyEventNames: string[],
 ): Promise<GA4MonthlyPoint[]> {
   const auth = await getAdminOAuthClient()
   const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
@@ -745,6 +778,53 @@ async function _fetchGA4MonthlySeriesUncached(
   const span = Math.max(1, months)
   const startDate = fmt(new Date(today.getFullYear(), today.getMonth() - (span - 1), 1))
   const endDate = fmt(today)
+
+  if (keyEventNames.length > 0) {
+    // Scoped path: an eventName filter on the sessions/revenue report would
+    // corrupt those metrics, so keyEvents is measured separately and joined
+    // by yearMonth. Both reports must succeed — a half-joined series is wrong.
+    const [baseRes, keyRes] = await Promise.all([
+      analyticsdata.properties.runReport({
+        property: prop,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'yearMonth' }],
+          metrics: [{ name: 'sessions' }, { name: 'purchaseRevenue' }],
+          orderBys: [{ dimension: { dimensionName: 'yearMonth' }, desc: false }],
+        },
+      }),
+      analyticsdata.properties.runReport({
+        property: prop,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'yearMonth' }],
+          metrics: [{ name: 'keyEvents' }],
+          dimensionFilter: { filter: { fieldName: 'eventName', inListFilter: { values: keyEventNames } } },
+          orderBys: [{ dimension: { dimensionName: 'yearMonth' }, desc: false }],
+        },
+      }),
+    ])
+
+    const keyEventsByMonth = new Map<string, number>()
+    for (const row of keyRes.data.rows ?? []) {
+      const ym = row.dimensionValues?.[0]?.value ?? '' // YYYYMM
+      if (ym.length !== 6) continue
+      keyEventsByMonth.set(ym, parseInt(row.metricValues?.[0]?.value ?? '0'))
+    }
+
+    const points: GA4MonthlyPoint[] = []
+    for (const row of baseRes.data.rows ?? []) {
+      const ym = row.dimensionValues?.[0]?.value ?? '' // YYYYMM
+      if (ym.length !== 6) continue
+      points.push({
+        yearMonth: `${ym.slice(0, 4)}-${ym.slice(4, 6)}`,
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        conversions: keyEventsByMonth.get(ym) ?? 0,
+        revenue: parseFloat(row.metricValues?.[1]?.value ?? '0'),
+      })
+    }
+    return points.sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))
+  }
 
   const res = await analyticsdata.properties.runReport({
     property: prop,
@@ -802,8 +882,9 @@ export async function fetchGA4ConvertingPages(
   // events) participates in the key.
   const names = Array.from(new Set(keyEventNames.map((n) => n.trim()).filter(Boolean))).sort()
   const namesKey = names.length > 0 ? names.join(',') : 'all'
+  // v2: junk landing-page filtering — invalidates caches that still carry pixel paths.
   return cachedFetch(
-    `ga4:convertingPages:${propertyId}:${rangeKey(range)}:${namesKey}`,
+    `ga4:convertingPages:v2:${propertyId}:${rangeKey(range)}:${namesKey}`,
     GA4_TTL_SECONDS,
     () => _fetchGA4ConvertingPagesUncached(propertyId, names, range),
   )
@@ -838,6 +919,7 @@ async function _fetchGA4ConvertingPagesUncached(
       : undefined
 
   // 1: conversions (keyEvents) per landing page — ranked by keyEvents.
+  //    Over-fetch 50 so 25 clean rows survive the junk-page filter below.
   // 2: sessions per landing page (unfiltered) — joined in JS for the conv-rate.
   const [convRes, sessRes] = await Promise.allSettled([
     analyticsdata.properties.runReport({
@@ -848,7 +930,7 @@ async function _fetchGA4ConvertingPagesUncached(
         metrics: [{ name: 'keyEvents' }],
         ...(dimensionFilter ? { dimensionFilter } : {}),
         orderBys: [{ metric: { metricName: 'keyEvents' }, desc: true }],
-        limit: '25',
+        limit: '50',
       },
     }),
     analyticsdata.properties.runReport({
@@ -880,11 +962,123 @@ async function _fetchGA4ConvertingPagesUncached(
 
   const rows: ConvertingPageRow[] = []
   for (const row of convRes.value.data.rows ?? []) {
+    if (rows.length >= 25) break
     const page = row.dimensionValues?.[0]?.value ?? '(not set)'
+    if (isJunkLandingPage(page)) continue // Shopify pixel paths, not real pages
     const conversions = parseInt(row.metricValues?.[0]?.value ?? '0')
     const sessions = sessionsByPage.get(page) ?? 0
     const conversionRate = sessions > 0 ? Math.round((conversions / sessions) * 1000) / 10 : 0
     rows.push({ page, conversions, sessions, conversionRate })
   }
   return rows
+}
+
+// ── New vs returning revenue (revenue split by customer recency) ────────────────
+// Purchase revenue split by GA4's newVsReturning dimension, for the current window
+// AND the comparison window, so a module can show the SHARE of revenue coming from
+// new customers and how that share moved (never absolute dollars). GA4 returns
+// dimension values 'new' / 'returning' and occasionally '(not set)' or '' (no
+// recency signal); anything that isn't exactly new/returning is bucketed as
+// unknown, and shares are computed over the total INCLUDING that bucket so
+// newShare + returningShare + (unknown share) always sums to ~100%.
+//
+// GA4 Data API v1beta apiNames used:
+//   dimension: newVsReturning
+//   metric:    purchaseRevenue
+
+export type NewVsReturningPeriod = {
+  newRevenue: number
+  returningRevenue: number
+  /** Revenue with no recency signal ('(not set)' / '' / any non-new/returning bucket). */
+  unknownRevenue: number
+  /** newRevenue + returningRevenue + unknownRevenue. */
+  totalRevenue: number
+  /** new/total and returning/total as 0–100 percentages; null when totalRevenue is 0. */
+  newShare: number | null
+  returningShare: number | null
+}
+
+export type GA4NewVsReturningRevenue = {
+  current: NewVsReturningPeriod
+  prior: NewVsReturningPeriod
+}
+
+export async function fetchGA4NewVsReturningRevenue(
+  propertyId: string,
+  range?: DateRange,
+): Promise<GA4NewVsReturningRevenue> {
+  return cachedFetch(`ga4:newVsReturning:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4NewVsReturningRevenueUncached(propertyId, range),
+  )
+}
+
+async function _fetchGA4NewVsReturningRevenueUncached(
+  propertyId: string,
+  range?: DateRange,
+): Promise<GA4NewVsReturningRevenue> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const today = new Date()
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+  let startDate: string, endDate: string, priorStart: string, priorEnd: string
+  if (range) {
+    startDate = range.startDate
+    endDate = range.endDate
+    priorStart = range.compareStart
+    priorEnd = range.compareEnd
+  } else {
+    endDate = fmt(new Date(today.getTime() - 86400000))
+    startDate = fmt(new Date(today.getTime() - 29 * 86400000))
+    priorEnd = fmt(new Date(today.getTime() - 30 * 86400000))
+    priorStart = fmt(new Date(today.getTime() - 57 * 86400000))
+  }
+
+  const report = (sd: string, ed: string) =>
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: {
+        dateRanges: [{ startDate: sd, endDate: ed }],
+        dimensions: [{ name: 'newVsReturning' }],
+        metrics: [{ name: 'purchaseRevenue' }],
+      },
+    })
+
+  const [curRes, priRes] = await Promise.allSettled([
+    report(startDate, endDate),
+    report(priorStart, priorEnd),
+  ])
+
+  // The current window must succeed — otherwise surface the error so a degraded
+  // (empty) split isn't cached. A failed prior window just degrades to zeros.
+  if (curRes.status !== 'fulfilled') throw curRes.reason
+
+  const tally = (res: PromiseSettledResult<Awaited<ReturnType<typeof report>>>): NewVsReturningPeriod => {
+    let newRevenue = 0
+    let returningRevenue = 0
+    let unknownRevenue = 0
+    if (res.status === 'fulfilled') {
+      for (const row of res.value.data.rows ?? []) {
+        const bucket = (row.dimensionValues?.[0]?.value ?? '').trim().toLowerCase()
+        const rev = parseFloat(row.metricValues?.[0]?.value ?? '0')
+        if (bucket === 'new') newRevenue += rev
+        else if (bucket === 'returning') returningRevenue += rev
+        else unknownRevenue += rev
+      }
+    }
+    const totalRevenue = newRevenue + returningRevenue + unknownRevenue
+    const share = (x: number) => (totalRevenue > 0 ? Math.round((x / totalRevenue) * 1000) / 10 : null)
+    return {
+      newRevenue,
+      returningRevenue,
+      unknownRevenue,
+      totalRevenue,
+      newShare: share(newRevenue),
+      returningShare: share(returningRevenue),
+    }
+  }
+
+  return { current: tally(curRes), prior: tally(priRes) }
 }
