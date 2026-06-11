@@ -116,8 +116,13 @@ function normalizeSiteUrl(raw: string): string {
 }
 
 export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promise<GSCReport> {
-  return cachedFetch(`gsc:report:${normalizeSiteUrl(siteUrl)}:${gscRangeKey(range)}`, GSC_TTL_SECONDS, () =>
-    _fetchGSCReportUncached(siteUrl, range),
+  // Cache key includes the comparison window: the report's clicksDelta / per-query
+  // / per-URL deltas depend on compareStart/compareEnd, so 'prior' vs 'yoy' at the
+  // same period must NOT share a cache entry.
+  return cachedFetch(
+    `gsc:report:${normalizeSiteUrl(siteUrl)}:${gscRangeKey(range)}:${range?.compareStart ?? 'def'}:${range?.compareEnd ?? 'def'}`,
+    GSC_TTL_SECONDS,
+    () => _fetchGSCReportUncached(siteUrl, range),
   )
 }
 
@@ -369,12 +374,23 @@ function bucketKey(dateStr: string, granularity: Granularity): string {
   return dateStr // daily
 }
 
+function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+function daysBetweenIso(fromIso: string, toIso: string): number {
+  return Math.round((Date.parse(toIso + 'T00:00:00Z') - Date.parse(fromIso + 'T00:00:00Z')) / 86400000)
+}
+
 /**
  * Period-aware GSC clicks trend. Returns one TrendPoint per bucket over the
  * selected period (bucket size from buildTrendRange granularity), with
- * compareValue carried from the aligned comparison window. The comparison
- * series is aligned positionally: the i-th current bucket pairs with the i-th
- * comparison bucket, so the ghost overlay lines up regardless of calendar drift.
+ * compareValue carried from the comparison window. The comparison series is
+ * aligned by shifting its dates forward onto the current window's calendar and
+ * bucketing with the same keys, so the ghost overlay lines up correctly even at
+ * weekly/monthly granularity where the windows aren't week/month aligned.
  */
 export async function fetchGSCTrend(
   siteUrl: string,
@@ -417,16 +433,31 @@ export async function fetchGSCTrend(
           .map(([key, clicks]) => ({ key, clicks }))
       }
 
-      const current = curRes.status === 'fulfilled' ? aggregate(curRes.value.data.rows ?? []) : []
-      const comparison = cmpRes.status === 'fulfilled' ? aggregate(cmpRes.value.data.rows ?? []) : []
+      // Don't cache a degraded (empty) trend if the primary window failed — let it retry.
+      if (curRes.status !== 'fulfilled') throw curRes.reason
 
-      // Positional alignment: i-th current bucket ↔ i-th comparison bucket.
-      return current.map((point, i) => {
-        const cmp = comparison[i]
+      const current = aggregate(curRes.value.data.rows ?? [])
+
+      // Shift the comparison dates forward by the window offset onto the current
+      // calendar, then bucket with the same keys → robust alignment for weekly /
+      // monthly granularity (index pairing would mismatch partial edge buckets).
+      const offsetDays = daysBetweenIso(trend.compareStart, trend.startDate)
+      const cmpByKey = new Map<string, number>()
+      if (cmpRes.status === 'fulfilled') {
+        for (const row of cmpRes.value.data.rows ?? []) {
+          const dateStr = row.keys?.[0] ?? ''
+          if (!dateStr) continue
+          const key = bucketKey(addDaysIso(dateStr, offsetDays), trend.granularity)
+          cmpByKey.set(key, (cmpByKey.get(key) ?? 0) + (row.clicks ?? 0))
+        }
+      }
+
+      return current.map((point) => {
+        const cmp = cmpByKey.get(point.key)
         return {
           date: point.key,
           value: point.clicks,
-          ...(cmp ? { compareValue: cmp.clicks } : {}),
+          ...(cmp !== undefined ? { compareValue: cmp } : {}),
         }
       })
     },

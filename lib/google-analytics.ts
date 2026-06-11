@@ -6,7 +6,8 @@ import { getAdminOAuthClient } from '@/lib/google-auth'
 import { cachedFetch } from '@/lib/api-cache'
 
 const GA4_TTL_SECONDS = 6 * 3600 // GA4 data is ~24h stale; 6h cache is safe.
-const rangeKey = (range?: DateRange) => `${range?.startDate ?? 'def'}:${range?.endDate ?? 'def'}`
+const rangeKey = (range?: DateRange) =>
+  `${range?.startDate ?? 'def'}:${range?.endDate ?? 'def'}:${range?.compareStart ?? 'def'}:${range?.compareEnd ?? 'def'}`
 
 export type GA4Metrics = {
   sessions: number
@@ -443,6 +444,31 @@ type Granularity = 'daily' | 'weekly' | 'monthly'
  * Returns buckets sorted ascending by their natural key; each bucket carries the
  * date label used as TrendPoint.date and the summed sessions.
  */
+/** Bucket key for an ISO (YYYY-MM-DD) date at the given granularity. */
+function bucketKeyForIso(iso: string, granularity: Granularity): string {
+  if (granularity === 'monthly') return iso.slice(0, 7) // YYYY-MM
+  if (granularity === 'weekly') return isoWeekKey(iso)
+  return iso // daily
+}
+
+/** Monday (UTC) of the week containing `iso`, as YYYY-MM-DD — the weekly chart label. */
+function weekMondayIso(iso: string): string {
+  const dt = new Date(`${iso}T00:00:00Z`)
+  const day = (dt.getUTCDay() + 6) % 7
+  dt.setUTCDate(dt.getUTCDate() - day)
+  return dt.toISOString().slice(0, 10)
+}
+
+function addDaysIso(iso: string, n: number): string {
+  const dt = new Date(`${iso}T00:00:00Z`)
+  dt.setUTCDate(dt.getUTCDate() + n)
+  return dt.toISOString().slice(0, 10)
+}
+
+function daysBetweenIso(fromIso: string, toIso: string): number {
+  return Math.round((Date.parse(`${toIso}T00:00:00Z`) - Date.parse(`${fromIso}T00:00:00Z`)) / 86400000)
+}
+
 function bucketSessions(
   rows: Array<{ date: string; sessions: number }>,
   granularity: Granularity,
@@ -450,22 +476,9 @@ function bucketSessions(
   const map = new Map<string, { date: string; value: number }>()
   for (const r of rows) {
     const iso = ga4DateToIso(r.date)
-    let key: string
-    let label: string
-    if (granularity === 'monthly') {
-      key = iso.slice(0, 7) // YYYY-MM
-      label = key
-    } else if (granularity === 'weekly') {
-      key = isoWeekKey(iso)
-      // Use the week's Monday as the chart date label.
-      const dt = new Date(`${iso}T00:00:00Z`)
-      const day = (dt.getUTCDay() + 6) % 7
-      dt.setUTCDate(dt.getUTCDate() - day)
-      label = dt.toISOString().slice(0, 10)
-    } else {
-      key = iso
-      label = iso
-    }
+    const key = bucketKeyForIso(iso, granularity)
+    const label =
+      granularity === 'weekly' ? weekMondayIso(iso) : granularity === 'monthly' ? key : iso
     const existing = map.get(key)
     if (existing) {
       existing.value += r.sessions
@@ -520,6 +533,9 @@ async function _fetchGA4TrendUncached(
     dateReport(compareStart, compareEnd),
   ])
 
+  // Don't cache a degraded (empty) trend if the primary window failed — let it retry.
+  if (curRes.status !== 'fulfilled') throw curRes.reason
+
   const toRows = (res: typeof curRes) => {
     if (res.status !== 'fulfilled') return [] as Array<{ date: string; sessions: number }>
     return (res.value.data.rows ?? []).map((row) => ({
@@ -529,13 +545,23 @@ async function _fetchGA4TrendUncached(
   }
 
   const curBuckets = bucketSessions(toRows(curRes), granularity)
-  const cmpBuckets = bucketSessions(toRows(cmpRes), granularity)
 
-  // Align by bucket index: bucket[0] of current ↔ bucket[0] of compare, etc.
-  return curBuckets.map((b, i) => {
-    const cmp = cmpBuckets[i]
+  // Align the comparison series by shifting its dates forward onto the current
+  // window's calendar, then bucketing with the SAME keys — robust for weekly /
+  // monthly granularity where the two windows aren't week/month aligned.
+  const offsetDays = daysBetweenIso(compareStart, startDate)
+  const cmpByKey = new Map<string, number>()
+  if (cmpRes.status === 'fulfilled') {
+    for (const r of toRows(cmpRes)) {
+      const key = bucketKeyForIso(addDaysIso(ga4DateToIso(r.date), offsetDays), granularity)
+      cmpByKey.set(key, (cmpByKey.get(key) ?? 0) + r.sessions)
+    }
+  }
+
+  return curBuckets.map((b) => {
+    const cmp = cmpByKey.get(b.key)
     const point: TrendPoint = { date: b.date, value: b.value }
-    if (cmp) point.compareValue = cmp.value
+    if (cmp !== undefined) point.compareValue = cmp
     return point
   })
 }
