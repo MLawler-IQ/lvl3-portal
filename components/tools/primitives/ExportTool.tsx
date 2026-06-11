@@ -27,7 +27,8 @@ interface Props {
   /** Heading used in the DOCX export. Defaults to the filename. */
   title?: string
   /** Save the run to tool_runs on export (default true). Pass false for
-      download-only surfaces that shouldn't write history. */
+      download-only surfaces that shouldn't write history — note onSaved
+      never fires in that mode. */
   persist?: boolean
   /** Notify the parent when the run is saved (e.g. to refresh RunHistory). */
   onSaved?: (runId: string) => void

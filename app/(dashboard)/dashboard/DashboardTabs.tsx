@@ -451,7 +451,18 @@ export default function DashboardTabs({
                     headers: ["Month", "Sessions", "Clicks", "Impressions", "Conversions", "Revenue"],
                     rows: [...metricTableRows]
                       .reverse()
-                      .map((r) => [r.yearMonth, r.sessions, r.clicks, r.impressions, r.conversions, r.revenue]),
+                      .map((r) => [
+                        // The in-progress month exports with an explicit marker —
+                        // its totals aren't comparable to complete months.
+                        r.yearMonth === new Date().toISOString().slice(0, 7)
+                          ? `${r.yearMonth} (MTD)`
+                          : r.yearMonth,
+                        r.sessions,
+                        r.clicks,
+                        r.impressions,
+                        r.conversions,
+                        r.revenue,
+                      ]),
                   }}
                 />
               </div>
