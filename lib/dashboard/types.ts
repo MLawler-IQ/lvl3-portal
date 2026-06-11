@@ -103,3 +103,30 @@ export interface StructuredInsights {
   cards?: InsightCard[]
   generatedAt?: string
 }
+
+// ── Targets & pacing (Phase C) ────────────────────────────────────────────────
+
+export interface MetricTarget {
+  /** Goal value for the metric (monthly cadence). */
+  value: number
+  /** Month the target applies to, YYYY-MM. */
+  period: string
+}
+
+/** clients.targets jsonb shape: metric id → monthly target. */
+export type Targets = Record<string, MetricTarget>
+
+// ── Alerts (Phase C) ──────────────────────────────────────────────────────────
+
+export type AlertSeverity = 'critical' | 'warning' | 'info'
+
+export interface DashboardAlert {
+  id: string
+  severity: AlertSeverity
+  title: string
+  detail: string
+  /** Metric id the alert is about, if any. */
+  metric?: string
+  /** Module to deep-link to for context. */
+  chartRef?: DashboardModuleId
+}
