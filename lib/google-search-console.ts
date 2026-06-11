@@ -1,6 +1,14 @@
 import { google } from 'googleapis'
-import type { DateRange } from './date-range'
+import type { DateRange, Granularity } from './date-range'
+import { buildTrendRange } from './date-range'
 import { getAdminOAuthClient } from '@/lib/google-auth'
+import { cachedFetch } from '@/lib/api-cache'
+import { normalizeDomain } from '@/lib/normalize-domain'
+import type { TrendPoint } from '@/lib/dashboard/types'
+
+// GSC data lags ~2-3 days; a 6h cache matches the GA4 TTL and is safe.
+const GSC_TTL_SECONDS = 6 * 3600
+const gscRangeKey = (range?: DateRange) => `${range?.startDate ?? 'def'}:${range?.endDate ?? 'def'}`
 
 export type GSCMetrics = {
   clicks: number
@@ -108,6 +116,17 @@ function normalizeSiteUrl(raw: string): string {
 }
 
 export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promise<GSCReport> {
+  // Cache key includes the comparison window: the report's clicksDelta / per-query
+  // / per-URL deltas depend on compareStart/compareEnd, so 'prior' vs 'yoy' at the
+  // same period must NOT share a cache entry.
+  return cachedFetch(
+    `gsc:report:${normalizeSiteUrl(siteUrl)}:${gscRangeKey(range)}:${range?.compareStart ?? 'def'}:${range?.compareEnd ?? 'def'}`,
+    GSC_TTL_SECONDS,
+    () => _fetchGSCReportUncached(siteUrl, range),
+  )
+}
+
+async function _fetchGSCReportUncached(siteUrl: string, range?: DateRange): Promise<GSCReport> {
   const normalizedUrl = normalizeSiteUrl(siteUrl)
   const auth = await getAdminOAuthClient()
   const searchconsole = google.searchconsole({ version: 'v1', auth })
@@ -140,7 +159,7 @@ export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promis
   const monthlyEnd = fmt(new Date(firstOfCurrentMonth.getTime() - 86400000))
   const monthlyStart = fmt(new Date(today.getFullYear(), today.getMonth() - 6, 1))
 
-  const [r1, r2, r3, r4, r5, r6] = await Promise.allSettled([
+  const [r1, r2, r3, r4, r5, r6, r7] = await Promise.allSettled([
     // 1: current overall
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate, endDate } }),
     // 2: prior/compare overall
@@ -153,6 +172,8 @@ export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promis
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate: priorStart, endDate: priorEnd, dimensions: ['query'], rowLimit: 100 } }),
     // 6: top pages current
     searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate, endDate, dimensions: ['page'], rowLimit: 25 } }),
+    // 7: top pages prior (for per-URL clicksDelta) — restored; was dropped, causing clicksDelta = 0
+    searchconsole.searchanalytics.query({ siteUrl: normalizedUrl, requestBody: { startDate: priorStart, endDate: priorEnd, dimensions: ['page'], rowLimit: 100 } }),
   ])
 
   // If the primary call failed, throw so the caller gets the actual error
@@ -234,16 +255,24 @@ export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promis
     })
   }
 
-  // URLs — we removed the prior pages call; no delta available without it, use prior query map approach
-  // Fetch top pages prior for delta separately if needed — for now keep topUrls without prior delta
+  // URLs — match each current page against its prior-period clicks (r7) so the
+  // per-URL clicksDelta is a real current−prior figure, not a hardcoded 0.
+  const priorPageClicks = new Map<string, number>()
+  if (r7.status === 'fulfilled') {
+    for (const row of r7.value.data.rows ?? []) {
+      priorPageClicks.set(row.keys?.[0] ?? '', row.clicks ?? 0)
+    }
+  }
   const topUrls: UrlRow[] = []
   if (r6.status === 'fulfilled') {
     for (const row of r6.value.data.rows ?? []) {
       const page = row.keys?.[0] ?? ''
+      const currentClicks = row.clicks ?? 0
+      const priorClicksForPage = priorPageClicks.get(page) ?? 0
       topUrls.push({
         page,
-        clicks: row.clicks ?? 0,
-        clicksDelta: 0,
+        clicks: currentClicks,
+        clicksDelta: currentClicks - priorClicksForPage,
         impressions: row.impressions ?? 0,
         position: row.position ?? 0,
       })
@@ -257,4 +286,376 @@ export async function fetchGSCReport(siteUrl: string, range?: DateRange): Promis
     ctr, compareLabel,
     monthlyTrend, topQueries, topUrls, serpDistribution,
   }
+}
+
+// ── Branded vs non-branded split ───────────────────────────────────────────────
+
+export type GSCBrandedSplit = {
+  branded: { clicks: number; impressions: number }
+  nonBranded: { clicks: number; impressions: number }
+}
+
+/**
+ * Derive a default brand token from a site domain when no brand terms are
+ * supplied. Strips the TLD and any separators so "tappselectric.com" → "tappselectric".
+ * Returns the registrable label most likely to appear inside branded queries.
+ */
+function defaultBrandToken(siteUrl: string): string {
+  const host = normalizeDomain(siteUrl) // e.g. "tappselectric.com" / "shop.brand.co.uk"
+  const labels = host.split('.').filter(Boolean)
+  // Drop the TLD (last label); for multi-part hosts the second-to-last label is
+  // the registrable name in the common case (brand.com, sub.brand.com).
+  const candidate = labels.length >= 2 ? labels[labels.length - 2] : labels[0] ?? host
+  return candidate.toLowerCase()
+}
+
+/**
+ * Split GSC clicks/impressions into branded vs non-branded by partitioning the
+ * query dimension. A query is "branded" if it contains any of `brandTerms`
+ * (case-insensitive substring match). When `brandTerms` is empty a sensible
+ * default token is derived from the site domain.
+ */
+export async function fetchGSCBrandedSplit(
+  siteUrl: string,
+  range: DateRange | undefined,
+  brandTerms: string[],
+): Promise<GSCBrandedSplit> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  const terms = (brandTerms.length > 0 ? brandTerms : [defaultBrandToken(siteUrl)])
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+  const termsKey = terms.join(',') || 'none'
+
+  return cachedFetch(
+    `gsc:branded:${normalizedUrl}:${gscRangeKey(range)}:${termsKey}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const startDate = range?.startDate ?? fmt(new Date(today.getTime() - 29 * 86400000))
+      const endDate = range?.endDate ?? fmt(new Date(today.getTime() - 86400000))
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['query'], rowLimit: 25000 },
+      })
+
+      const split: GSCBrandedSplit = {
+        branded: { clicks: 0, impressions: 0 },
+        nonBranded: { clicks: 0, impressions: 0 },
+      }
+      for (const row of data.rows ?? []) {
+        const query = (row.keys?.[0] ?? '').toLowerCase()
+        const isBranded = terms.some((t) => query.includes(t))
+        const bucket = isBranded ? split.branded : split.nonBranded
+        bucket.clicks += row.clicks ?? 0
+        bucket.impressions += row.impressions ?? 0
+      }
+      return split
+    },
+  )
+}
+
+// ── Period-aware clicks trend ──────────────────────────────────────────────────
+
+/** Bucket a YYYY-MM-DD date string to its bucket key for the given granularity. */
+function bucketKey(dateStr: string, granularity: Granularity): string {
+  if (granularity === 'monthly') return dateStr.slice(0, 7) // YYYY-MM
+  if (granularity === 'weekly') {
+    // Anchor each week to the Monday on/before the date (UTC) so buckets are stable.
+    const d = new Date(dateStr + 'T00:00:00Z')
+    const dow = (d.getUTCDay() + 6) % 7 // 0 = Monday
+    d.setUTCDate(d.getUTCDate() - dow)
+    return d.toISOString().slice(0, 10)
+  }
+  return dateStr // daily
+}
+
+function addDaysIso(iso: string, n: number): string {
+  const d = new Date(iso + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+function daysBetweenIso(fromIso: string, toIso: string): number {
+  return Math.round((Date.parse(toIso + 'T00:00:00Z') - Date.parse(fromIso + 'T00:00:00Z')) / 86400000)
+}
+
+/**
+ * Period-aware GSC clicks trend. Returns one TrendPoint per bucket over the
+ * selected period (bucket size from buildTrendRange granularity), with
+ * compareValue carried from the comparison window. The comparison series is
+ * aligned by shifting its dates forward onto the current window's calendar and
+ * bucketing with the same keys, so the ghost overlay lines up correctly even at
+ * weekly/monthly granularity where the windows aren't week/month aligned.
+ */
+export async function fetchGSCTrend(
+  siteUrl: string,
+  period = '28d',
+  compare = 'prior',
+): Promise<TrendPoint[]> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  const trend = buildTrendRange(period, compare)
+
+  return cachedFetch(
+    `gsc:trend:${normalizedUrl}:${period}:${compare}:${trend.startDate}:${trend.endDate}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const queryDaily = (startDate: string, endDate: string) =>
+        searchconsole.searchanalytics.query({
+          siteUrl: normalizedUrl,
+          requestBody: { startDate, endDate, dimensions: ['date'], rowLimit: 25000 },
+        })
+
+      const [curRes, cmpRes] = await Promise.allSettled([
+        queryDaily(trend.startDate, trend.endDate),
+        queryDaily(trend.compareStart, trend.compareEnd),
+      ])
+
+      const aggregate = (
+        rows: { keys?: (string | null)[] | null; clicks?: number | null }[],
+      ): { key: string; clicks: number }[] => {
+        const map = new Map<string, number>()
+        for (const row of rows) {
+          const dateStr = row.keys?.[0] ?? ''
+          if (!dateStr) continue
+          const key = bucketKey(dateStr, trend.granularity)
+          map.set(key, (map.get(key) ?? 0) + (row.clicks ?? 0))
+        }
+        return Array.from(map.entries())
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([key, clicks]) => ({ key, clicks }))
+      }
+
+      // Don't cache a degraded (empty) trend if the primary window failed — let it retry.
+      if (curRes.status !== 'fulfilled') throw curRes.reason
+
+      const current = aggregate(curRes.value.data.rows ?? [])
+
+      // Shift the comparison dates forward by the window offset onto the current
+      // calendar, then bucket with the same keys → robust alignment for weekly /
+      // monthly granularity (index pairing would mismatch partial edge buckets).
+      const offsetDays = daysBetweenIso(trend.compareStart, trend.startDate)
+      const cmpByKey = new Map<string, number>()
+      if (cmpRes.status === 'fulfilled') {
+        for (const row of cmpRes.value.data.rows ?? []) {
+          const dateStr = row.keys?.[0] ?? ''
+          if (!dateStr) continue
+          const key = bucketKey(addDaysIso(dateStr, offsetDays), trend.granularity)
+          cmpByKey.set(key, (cmpByKey.get(key) ?? 0) + (row.clicks ?? 0))
+        }
+      }
+
+      return current.map((point) => {
+        const cmp = cmpByKey.get(point.key)
+        return {
+          date: point.key,
+          value: point.clicks,
+          ...(cmp !== undefined ? { compareValue: cmp } : {}),
+        }
+      })
+    },
+  )
+}
+
+// ── 13-month metric series (WS-C3) ─────────────────────────────────────────────
+// One row per calendar month over a trailing window (default 13 months), so the
+// latest month has a YoY peer 12 rows earlier. GSC has no month dimension, so we
+// query the daily `date` dimension and bucket to month in JS — reusing the same
+// YYYY-MM-DD → YYYYMM bucketing as the main GSC report's monthly trend, then emit
+// the canonical YYYY-MM form.
+//
+// GSC Search Analytics API used: dimension `date`; metrics clicks, impressions.
+
+export type GSCMonthlyMetricPoint = {
+  /** Calendar month as YYYY-MM. */
+  yearMonth: string
+  clicks: number
+  impressions: number
+}
+
+export async function fetchGSCMonthlySeries(
+  siteUrl: string,
+  months = 13,
+): Promise<GSCMonthlyMetricPoint[]> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  return cachedFetch(
+    `gsc:monthlySeries:${normalizedUrl}:${months}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const today = new Date()
+      const span = Math.max(1, months)
+      // First day of the month (span-1) ago, through today (current month is the
+      // last bucket; GSC's ~2-3 day lag just means the latest day or two is empty).
+      const startDate = fmt(new Date(today.getFullYear(), today.getMonth() - (span - 1), 1))
+      const endDate = fmt(today)
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['date'], rowLimit: 25000 },
+      })
+
+      // Aggregate daily rows by yearMonth — same bucketing the main report uses.
+      const monthlyMap = new Map<string, { clicks: number; impressions: number }>()
+      for (const row of data.rows ?? []) {
+        const dateStr = row.keys?.[0] ?? ''
+        const ym = dateStr.slice(0, 7).replace('-', '') // "2025-01" -> "202501"
+        if (ym.length !== 6) continue
+        const prev = monthlyMap.get(ym) ?? { clicks: 0, impressions: 0 }
+        monthlyMap.set(ym, {
+          clicks: prev.clicks + (row.clicks ?? 0),
+          impressions: prev.impressions + (row.impressions ?? 0),
+        })
+      }
+
+      return Array.from(monthlyMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([ym, data]) => ({
+          yearMonth: `${ym.slice(0, 4)}-${ym.slice(4, 6)}`,
+          clicks: data.clicks,
+          impressions: data.impressions,
+        }))
+    },
+  )
+}
+
+// ── Lead-gen: content performance (WS-B4) ───────────────────────────────────────
+// Top content URLs by clicks, with impressions, CTR (as a percentage) and average
+// position. Mirrors the per-URL data shape of the main GSC report (UrlRow) but
+// carries ctr too, since content performance is judged on click-through. Uses the
+// GSC Search Analytics API `page` dimension. No prior-window join here — this is a
+// single-window leaderboard, so there is no clicksDelta.
+
+export type ContentUrlRow = {
+  page: string
+  clicks: number
+  impressions: number
+  /** Click-through rate as a percentage (e.g. 3.4 for 3.4%). */
+  ctr: number
+  position: number
+}
+
+export async function fetchGSCContentPerformance(
+  siteUrl: string,
+  range?: DateRange,
+  topN = 25,
+): Promise<ContentUrlRow[]> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  return cachedFetch(
+    `gsc:contentPerf:${normalizedUrl}:${gscRangeKey(range)}:${topN}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const startDate = range?.startDate ?? fmt(new Date(today.getTime() - 29 * 86400000))
+      const endDate = range?.endDate ?? fmt(new Date(today.getTime() - 86400000))
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['page'], rowLimit: topN },
+      })
+
+      // GSC returns pages ordered by clicks desc by default; keep that order.
+      return (data.rows ?? []).map((row) => ({
+        page: row.keys?.[0] ?? '',
+        clicks: row.clicks ?? 0,
+        impressions: row.impressions ?? 0,
+        ctr: (row.ctr ?? 0) * 100,
+        position: row.position ?? 0,
+      }))
+    },
+  )
+}
+
+// ── Geo / search intent split (lightweight heuristic) ──────────────────────────
+
+export type GSCIntentQuery = { query: string; clicks: number; impressions: number; position: number }
+export type GSCIntentSplit = {
+  local: GSCIntentQuery[]
+  general: GSCIntentQuery[]
+  localClicks: number
+  generalClicks: number
+}
+
+// "near me", "nearby", "in <place>", "<place> area", and common locality words.
+const LOCAL_INTENT_RE =
+  /\b(near\s*me|nearby|near\s+by|close\s+to\s+me|in\s+my\s+area|around\s+me|local|in\s+town|directions|open\s+now|\d{5}|near\b)\b/i
+// Light geo markers that suggest a place qualifier without a full gazetteer.
+const GEO_HINT_RE = /\b(city|county|near|street|avenue|downtown|zip|county| on|st\.?|ave\.?|blvd)\b/i
+
+function isLocalIntent(query: string): boolean {
+  const q = query.toLowerCase()
+  if (LOCAL_INTENT_RE.test(q)) return true
+  // "service in springfield" style: a leading service phrase + an "in <token>" tail.
+  if (/\bin\s+[a-z]/.test(q) && GEO_HINT_RE.test(q)) return true
+  return false
+}
+
+/**
+ * Split top queries into local-intent (near me / nearby / locality heuristics)
+ * vs general. Deliberately modest — a substring/regex heuristic, not a gazetteer.
+ */
+export async function fetchGSCIntentSplit(
+  siteUrl: string,
+  range?: DateRange,
+  topN = 25,
+): Promise<GSCIntentSplit> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+
+  return cachedFetch(
+    `gsc:intent:${normalizedUrl}:${gscRangeKey(range)}:${topN}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const today = new Date()
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const startDate = range?.startDate ?? fmt(new Date(today.getTime() - 29 * 86400000))
+      const endDate = range?.endDate ?? fmt(new Date(today.getTime() - 86400000))
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['query'], rowLimit: 25000 },
+      })
+
+      const split: GSCIntentSplit = { local: [], general: [], localClicks: 0, generalClicks: 0 }
+      for (const row of data.rows ?? []) {
+        const query = row.keys?.[0] ?? ''
+        const entry: GSCIntentQuery = {
+          query,
+          clicks: row.clicks ?? 0,
+          impressions: row.impressions ?? 0,
+          position: row.position ?? 0,
+        }
+        if (isLocalIntent(query)) {
+          split.local.push(entry)
+          split.localClicks += entry.clicks
+        } else {
+          split.general.push(entry)
+          split.generalClicks += entry.clicks
+        }
+      }
+
+      const byClicks = (a: GSCIntentQuery, b: GSCIntentQuery) => b.clicks - a.clicks
+      split.local.sort(byClicks)
+      split.general.sort(byClicks)
+      split.local = split.local.slice(0, topN)
+      split.general = split.general.slice(0, topN)
+      return split
+    },
+  )
 }

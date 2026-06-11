@@ -1,4 +1,6 @@
 import DeltaChip from "./DeltaChip";
+import Sparkline from "./Sparkline";
+import type { TrendPoint } from "@/lib/dashboard/types";
 
 interface KpiCardProps {
   label: string;
@@ -11,6 +13,8 @@ interface KpiCardProps {
   tooltip?: string;
   icon?: React.ElementType;
   iconColor?: string;
+  /** Optional inline trend rendered beneath the value (numeric series or TrendPoint[]). */
+  sparkline?: number[] | TrendPoint[];
 }
 
 export default function KpiCard({
@@ -19,6 +23,7 @@ export default function KpiCard({
   delta,
   tooltip,
   icon: Icon,
+  sparkline,
 }: KpiCardProps) {
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-[10px] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
@@ -53,6 +58,11 @@ export default function KpiCard({
           percent={delta.percent}
           absolute={delta.absolute}
         />
+      )}
+      {sparkline && sparkline.length >= 2 && (
+        <div className="mt-3 -mb-1">
+          <Sparkline data={sparkline} height={36} />
+        </div>
       )}
     </div>
   );

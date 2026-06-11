@@ -15,8 +15,16 @@ clients
   gsc_site_url text           -- e.g. "https://example.com/" or "sc-domain:example.com"
   analytics_summary text      -- AI-generated narrative (updated by generateAnalyticsInsights)
   analytics_summary_updated_at timestamptz
-  snapshot_insights jsonb     -- { takeaways, anomalies, opportunities }
+  snapshot_insights jsonb     -- { takeaways, anomalies, opportunities } + structured { headline, cards: InsightCard[] } (Phase B)
   ai_summary text             -- project AI summary (updated by generateClientSummary)
+  -- Dashboard metadata (additive, nullable; null client_type = generic dashboard):
+  client_type text            -- local_service | multi_location | ecommerce | lead_gen
+  gbp_account_id text         -- GBP account resource name "accounts/123" for dashboard insights
+  gbp_location_group text     -- optional GBP location-group / label filter
+  key_event_names text[]      -- GA4 key-event (conversion) names (lead-gen)
+  competitors text[]          -- competitor domains for the competitive module
+  targets jsonb               -- monthly goals: { "<metricId>": { value, period: "YYYY-MM" } }
+  semrush_project_id text     -- Semrush Site Audit project id
 
 users
   id uuid PK (= auth.users.id)
@@ -29,6 +37,12 @@ deliverables
 
 comments
   id, deliverable_id, user_id, body, resolved, created_at
+
+client_annotations          -- dated "what we changed" notes shown on the dashboard
+  id uuid PK, client_id uuid FK → clients (on delete cascade)
+  annotation_date date, title text, body text, module text (optional DashboardModuleId)
+  created_by uuid → auth.users, created_at timestamptz
+  -- RLS: admin/member manage all rows; client-role reads its own client only
 
 admin_google_token          -- single row (id=1)
   id int PK CHECK (id = 1)

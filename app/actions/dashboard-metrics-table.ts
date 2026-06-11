@@ -1,0 +1,112 @@
+'use server'
+
+// Workstream C3 — 13-month metric table.
+//
+// Returns one row per calendar month over the trailing 13 months (current month +
+// prior 12) so the latest month has a YoY comparison 12 rows earlier. Merges the
+// GA4 monthly series (sessions / conversions / revenue) and the GSC monthly series
+// (clicks / impressions) by yearMonth.
+//
+// Mirrors the dashboard-ga4 / dashboard-gsc auth pattern: requireAuth →
+// resolveSelectedClientId → load the selected client's ga4_property_id and
+// gsc_site_url behind a service client. Never throws — on missing config or a
+// failed fetch it degrades to whatever data it could gather, and reports
+// configured:false only when NEITHER GA4 nor GSC is configured for the client.
+
+import { requireAuth, userCanAccessClient } from '@/lib/auth'
+import { resolveSelectedClientId } from '@/lib/client-resolution'
+import { createServiceClient } from '@/lib/supabase/server'
+import { fetchGA4MonthlySeries } from '@/lib/google-analytics'
+import { fetchGSCMonthlySeries } from '@/lib/google-search-console'
+
+const MONTHS = 13
+
+export type MetricTableRow = {
+  /** Calendar month as YYYY-MM. */
+  yearMonth: string
+  sessions: number
+  clicks: number
+  impressions: number
+  conversions: number
+  revenue: number
+}
+
+export type MetricTableResult = {
+  configured: boolean
+  rows: MetricTableRow[]
+}
+
+/**
+ * Resolve the selected client's GA4 property id and GSC site url for the current
+ * user, enforcing access. Returns nulls (no throw) when there is no selected
+ * client or the user can't access it.
+ */
+async function resolveSources(): Promise<{ propertyId: string | null; siteUrl: string | null }> {
+  const { user } = await requireAuth()
+  const clientId = await resolveSelectedClientId(user)
+  if (!clientId) return { propertyId: null, siteUrl: null }
+  if (!(await userCanAccessClient(user, clientId))) return { propertyId: null, siteUrl: null }
+
+  const service = await createServiceClient()
+  const { data: client } = await service
+    .from('clients')
+    .select('ga4_property_id, gsc_site_url')
+    .eq('id', clientId)
+    .single()
+
+  return {
+    propertyId: client?.ga4_property_id ?? null,
+    siteUrl: client?.gsc_site_url ?? null,
+  }
+}
+
+/**
+ * 13-month metric table for the selected client. Merges GA4 + GSC monthly series
+ * by yearMonth into rows sorted ascending (oldest → newest). configured:false when
+ * the client has neither a GA4 property nor a GSC site configured.
+ */
+export async function get13MonthTable(): Promise<MetricTableResult> {
+  try {
+    const { propertyId, siteUrl } = await resolveSources()
+    if (!propertyId && !siteUrl) return { configured: false, rows: [] }
+
+    // Fetch whichever sources are configured; tolerate one failing without losing
+    // the other (each fetch is cached + falls back to an empty series on error).
+    const [ga4, gsc] = await Promise.all([
+      propertyId
+        ? fetchGA4MonthlySeries(propertyId, MONTHS).catch(() => [])
+        : Promise.resolve([]),
+      siteUrl
+        ? fetchGSCMonthlySeries(siteUrl, MONTHS).catch(() => [])
+        : Promise.resolve([]),
+    ])
+
+    // Merge by yearMonth.
+    const byMonth = new Map<string, MetricTableRow>()
+    const ensure = (ym: string): MetricTableRow => {
+      let row = byMonth.get(ym)
+      if (!row) {
+        row = { yearMonth: ym, sessions: 0, clicks: 0, impressions: 0, conversions: 0, revenue: 0 }
+        byMonth.set(ym, row)
+      }
+      return row
+    }
+
+    for (const p of ga4) {
+      const row = ensure(p.yearMonth)
+      row.sessions = p.sessions
+      row.conversions = p.conversions
+      row.revenue = p.revenue
+    }
+    for (const p of gsc) {
+      const row = ensure(p.yearMonth)
+      row.clicks = p.clicks
+      row.impressions = p.impressions
+    }
+
+    const rows = Array.from(byMonth.values()).sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))
+    return { configured: true, rows }
+  } catch {
+    return { configured: false, rows: [] }
+  }
+}

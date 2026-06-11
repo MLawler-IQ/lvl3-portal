@@ -1,5 +1,7 @@
 import { google } from 'googleapis'
 import type { OAuth2Client } from 'google-auth-library'
+import { cachedFetch } from '@/lib/api-cache'
+import { getAdminGBPOAuthClient } from '@/lib/gbp-auth'
 
 const GBP_PERF_BASE = 'https://businessprofileperformance.googleapis.com/v1'
 
@@ -366,4 +368,246 @@ export function auditLocation(loc: GBPLocation): LocationAudit {
     issues,
     addressFormatted,
   }
+}
+
+// ── Dashboard aggregate insights (WS-A3) ────────────────────────────────────────
+
+// Key GBP performance metrics surfaced on the dashboard GBP overview. Order is
+// intentional: actions first, then the four impression breakdowns.
+export const GBP_DASHBOARD_METRICS: GBPPerfMetric[] = [
+  'CALL_CLICKS',
+  'WEBSITE_CLICKS',
+  'BUSINESS_DIRECTION_REQUESTS',
+  'BUSINESS_CONVERSATIONS',
+  'BUSINESS_BOOKINGS',
+  'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
+  'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH',
+  'BUSINESS_IMPRESSIONS_MOBILE_MAPS',
+  'BUSINESS_IMPRESSIONS_MOBILE_SEARCH',
+]
+
+/** Minimal date-range shape consumed here — structurally satisfied by DateRange. */
+export interface GBPDateRange {
+  startDate: string
+  endDate: string
+  compareStart: string
+  compareEnd: string
+}
+
+export interface GBPMetricDelta {
+  metric: string
+  current: number
+  previous: number
+  /** Absolute change current − previous. */
+  delta: number
+  /** Percent change vs previous; null when previous is 0 (undefined growth). */
+  deltaPct: number | null
+}
+
+export interface GBPLocationInsight {
+  locationName: string // "locations/123"
+  locationTitle: string
+  /** Current-window totals per metric. */
+  metrics: Record<string, number>
+  /** true if the per-location insights fetch failed (counts as zero). */
+  error?: string
+}
+
+export interface GBPClientInsights {
+  accountName: string
+  locationCount: number
+  /** Number of locations whose insights fetch failed. */
+  errorCount: number
+  /** Summed current-window totals across all locations. */
+  totals: Record<string, number>
+  /** Summed comparison-window totals across all locations. */
+  compareTotals: Record<string, number>
+  /** Per-metric deltas (current vs comparison), in GBP_DASHBOARD_METRICS order. */
+  deltas: GBPMetricDelta[]
+  /** Per-location current-window rows, sorted by total impressions desc. */
+  locations: GBPLocationInsight[]
+  range: GBPDateRange
+}
+
+function sumImpressions(metrics: Record<string, number>): number {
+  return (
+    (metrics.BUSINESS_IMPRESSIONS_DESKTOP_MAPS ?? 0) +
+    (metrics.BUSINESS_IMPRESSIONS_DESKTOP_SEARCH ?? 0) +
+    (metrics.BUSINESS_IMPRESSIONS_MOBILE_MAPS ?? 0) +
+    (metrics.BUSINESS_IMPRESSIONS_MOBILE_SEARCH ?? 0)
+  )
+}
+
+function emptyMetricTotals(metrics: GBPPerfMetric[]): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const m of metrics) out[m] = 0
+  return out
+}
+
+function addInto(target: Record<string, number>, src: Record<string, number>): void {
+  for (const [k, v] of Array.from(Object.entries(src))) {
+    target[k] = (target[k] ?? 0) + v
+  }
+}
+
+/**
+ * Aggregate GBP Performance insights for one account across all of its locations.
+ *
+ * Lists locations for `accountName`, then for each location fetches the key
+ * dashboard metrics over both the current window (range.startDate..endDate) and
+ * the comparison window (range.compareStart..compareEnd). Returns summed account
+ * totals + per-metric deltas + per-location rows.
+ *
+ * The whole computation is cached via cachedFetch with a long TTL since the GBP
+ * Performance API is heavily rate-limited and data only updates daily. Failed
+ * per-location fetches degrade gracefully (counted as zero, flagged in errorCount).
+ *
+ * accountName: "accounts/123456"
+ */
+export async function fetchGBPClientInsights(
+  accountName: string,
+  range: GBPDateRange,
+  opts: { granularity?: GBPInsightsGranularity; ttlSeconds?: number } = {},
+): Promise<GBPClientInsights> {
+  const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h — within the 12–24h band
+  const cacheKey = [
+    'gbp:client-insights',
+    accountName,
+    range.startDate,
+    range.endDate,
+    range.compareStart,
+    range.compareEnd,
+  ].join(':')
+
+  return cachedFetch(cacheKey, ttlSeconds, async () => {
+    const auth = await getAdminGBPOAuthClient()
+    const locations = await listGBPLocations(accountName, auth)
+
+    const totals = emptyMetricTotals(GBP_DASHBOARD_METRICS)
+    const compareTotals = emptyMetricTotals(GBP_DASHBOARD_METRICS)
+    const locationRows: GBPLocationInsight[] = []
+    let errorCount = 0
+
+    // Per-location, fetch current + comparison windows. Sequential across
+    // locations keeps us within GBP Performance API rate limits; the two
+    // windows for a single location run in parallel.
+    for (const loc of locations) {
+      try {
+        const [cur, prev] = await Promise.all([
+          fetchGBPLocationInsights(
+            loc.name,
+            GBP_DASHBOARD_METRICS,
+            range.startDate,
+            range.endDate,
+            auth,
+            { granularity: opts.granularity ?? 'total' },
+          ),
+          fetchGBPLocationInsights(
+            loc.name,
+            GBP_DASHBOARD_METRICS,
+            range.compareStart,
+            range.compareEnd,
+            auth,
+            { granularity: 'total' },
+          ),
+        ])
+
+        addInto(totals, cur.metrics)
+        addInto(compareTotals, prev.metrics)
+        locationRows.push({
+          locationName: loc.name,
+          locationTitle: loc.title || loc.name,
+          metrics: cur.metrics,
+        })
+      } catch (err) {
+        errorCount += 1
+        locationRows.push({
+          locationName: loc.name,
+          locationTitle: loc.title || loc.name,
+          metrics: emptyMetricTotals(GBP_DASHBOARD_METRICS),
+          error: err instanceof Error ? err.message : 'Insights fetch failed',
+        })
+      }
+    }
+
+    const deltas: GBPMetricDelta[] = GBP_DASHBOARD_METRICS.map((metric) => {
+      const current = totals[metric] ?? 0
+      const previous = compareTotals[metric] ?? 0
+      const delta = current - previous
+      const deltaPct = previous === 0 ? null : (delta / previous) * 100
+      return { metric, current, previous, delta, deltaPct }
+    })
+
+    locationRows.sort(
+      (a, b) => sumImpressions(b.metrics) - sumImpressions(a.metrics),
+    )
+
+    return {
+      accountName,
+      locationCount: locations.length,
+      errorCount,
+      totals,
+      compareTotals,
+      deltas,
+      locations: locationRows,
+      range,
+    }
+  })
+}
+
+// ── Audit rollup (WS-A3) ────────────────────────────────────────────────────────
+
+export interface GBPAccountAudit {
+  accountName: string
+  locationCount: number
+  /** Mean completeness score across locations (0–100), 0 when no locations. */
+  avgScore: number
+  /** Per-location audits, sorted by score ascending (worst first). */
+  locations: LocationAudit[]
+  /** issue text -> number of locations exhibiting it. */
+  issueCounts: Record<string, number>
+}
+
+/**
+ * Run auditLocation across every location in an account and roll the results up
+ * into an account-level completeness summary. Cached with a long TTL — location
+ * profile data changes infrequently.
+ *
+ * accountName: "accounts/123456"
+ */
+export async function auditGBPAccount(
+  accountName: string,
+  opts: { ttlSeconds?: number } = {},
+): Promise<GBPAccountAudit> {
+  const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h
+  const cacheKey = `gbp:account-audit:${accountName}`
+
+  return cachedFetch(cacheKey, ttlSeconds, async () => {
+    const auth = await getAdminGBPOAuthClient()
+    const locations = await listGBPLocations(accountName, auth)
+
+    const audits = locations.map(auditLocation)
+
+    const issueCounts: Record<string, number> = {}
+    for (const a of audits) {
+      for (const issue of a.issues) {
+        issueCounts[issue] = (issueCounts[issue] ?? 0) + 1
+      }
+    }
+
+    const avgScore =
+      audits.length === 0
+        ? 0
+        : Math.round(audits.reduce((sum, a) => sum + a.score, 0) / audits.length)
+
+    audits.sort((a, b) => a.score - b.score)
+
+    return {
+      accountName,
+      locationCount: audits.length,
+      avgScore,
+      locations: audits,
+      issueCounts,
+    }
+  })
 }
