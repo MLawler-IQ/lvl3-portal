@@ -33,7 +33,143 @@ const PERIOD_SHORT: Record<string, string> = {
   '365d': '12 months',
 }
 
+// ── Calendar presets (Phase B6) ─────────────────────────────────────────────
+// Calendar-aligned windows (month/quarter boundaries) that live alongside the
+// rolling periods above. They are *not* in PERIOD_DAYS — buildDateRange branches
+// on these keys first, then falls back to the rolling-period path.
+
+export const CALENDAR_PERIODS = ['last_full_month', 'mtd', 'qtd'] as const
+export type CalendarPeriod = (typeof CALENDAR_PERIODS)[number]
+
+const CALENDAR_LABELS: Record<CalendarPeriod, string> = {
+  last_full_month: 'Last full month',
+  mtd: 'Month to date',
+  qtd: 'Quarter to date',
+}
+
+const CALENDAR_SHORT: Record<CalendarPeriod, string> = {
+  last_full_month: 'month',
+  mtd: 'month to date',
+  qtd: 'quarter to date',
+}
+
+/** Iterable list for the UI period selector. */
+export const CALENDAR_PRESETS: { value: CalendarPeriod; label: string }[] =
+  CALENDAR_PERIODS.map((value) => ({ value, label: CALENDAR_LABELS[value] }))
+
+function isCalendarPeriod(period: string): period is CalendarPeriod {
+  return (CALENDAR_PERIODS as readonly string[]).includes(period)
+}
+
+// UTC date helpers — formatting elsewhere uses toISOString().slice(0,10), so all
+// calendar math is done in UTC to stay consistent and DST-safe.
+const fmtUTC = (d: Date) => d.toISOString().slice(0, 10)
+const utc = (y: number, m: number, day: number) => new Date(Date.UTC(y, m, day))
+/** Whole days between two UTC midnights (b − a), inclusive count = +1. */
+const dayDiff = (a: Date, b: Date) =>
+  Math.round((b.getTime() - a.getTime()) / 86400000)
+/** Quarter index (0–3) for a 0-based month. */
+const quarterOf = (month: number) => Math.floor(month / 3)
+
+/**
+ * Compute a calendar-aligned DateRange. `now` is the current instant; the public
+ * endDate convention is "yesterday", so windows are anchored to yesterday (in UTC).
+ */
+function buildCalendarRange(period: CalendarPeriod, compare: string, now: Date): DateRange {
+  // Yesterday (UTC) — the inclusive upper bound for any "to date" window.
+  const y = new Date(now.getTime() - 86400000)
+  const yYear = y.getUTCFullYear()
+  const yMonth = y.getUTCMonth()
+  const yDay = y.getUTCDate()
+
+  let startDate: string
+  let endDate: string
+  let compareStart: string
+  let compareEnd: string
+  let label = CALENDAR_LABELS[period]
+  let compareLabel: string
+
+  if (period === 'last_full_month') {
+    // The most recent fully-completed calendar month, relative to *today*.
+    const tYear = now.getUTCFullYear()
+    const tMonth = now.getUTCMonth()
+    // First day of current month; the prior month is the last full month.
+    const start = utc(tYear, tMonth - 1, 1) // normalizes Jan→Dec of prior year
+    const sYear = start.getUTCFullYear()
+    const sMonth = start.getUTCMonth()
+    const end = utc(sYear, sMonth + 1, 0) // last day of that month
+    startDate = fmtUTC(start)
+    endDate = fmtUTC(end)
+
+    if (compare === 'yoy') {
+      const cStart = utc(sYear - 1, sMonth, 1)
+      const cEnd = utc(sYear - 1, sMonth + 1, 0)
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior year'
+    } else {
+      const cStart = utc(sYear, sMonth - 1, 1)
+      const cEnd = utc(sYear, sMonth, 0) // last day of the month before
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior month'
+    }
+  } else if (period === 'mtd') {
+    // Month-to-date: 1st of yesterday's month → yesterday.
+    const start = utc(yYear, yMonth, 1)
+    const end = utc(yYear, yMonth, yDay)
+    startDate = fmtUTC(start)
+    endDate = fmtUTC(end)
+    const len = dayDiff(start, end) // inclusive length − 1; same offset reused below
+
+    if (compare === 'yoy') {
+      const cStart = utc(yYear - 1, yMonth, 1)
+      const cEnd = utc(yYear - 1, yMonth, 1 + len)
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior year'
+    } else {
+      // Same-length window in the prior month, anchored to its 1st.
+      const cStart = utc(yYear, yMonth - 1, 1)
+      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior month to date'
+    }
+  } else {
+    // qtd — Quarter-to-date: 1st of yesterday's quarter → yesterday.
+    const q = quarterOf(yMonth)
+    const qStartMonth = q * 3
+    const start = utc(yYear, qStartMonth, 1)
+    const end = utc(yYear, yMonth, yDay)
+    startDate = fmtUTC(start)
+    endDate = fmtUTC(end)
+    const len = dayDiff(start, end)
+
+    if (compare === 'yoy') {
+      const cStart = utc(yYear - 1, qStartMonth, 1)
+      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior year'
+    } else {
+      // Same-length window in the prior quarter, anchored to its 1st.
+      const cStart = utc(yYear, qStartMonth - 3, 1)
+      const cEnd = utc(cStart.getUTCFullYear(), cStart.getUTCMonth(), 1 + len)
+      compareStart = fmtUTC(cStart)
+      compareEnd = fmtUTC(cEnd)
+      compareLabel = 'vs. prior quarter to date'
+    }
+  }
+
+  return { startDate, endDate, compareStart, compareEnd, label, compareLabel, period, compare }
+}
+
 export function buildDateRange(period = '28d', compare = 'prior'): DateRange {
+  if (isCalendarPeriod(period)) {
+    return buildCalendarRange(period, compare, new Date())
+  }
+
   const days = PERIOD_DAYS[period] ?? 28
   const fmt = (d: Date) => d.toISOString().slice(0, 10)
 
@@ -87,6 +223,12 @@ export function pickGranularity(period = '28d'): Granularity {
       return 'weekly'
     case '365d':
       return 'monthly'
+    // Calendar presets:
+    case 'last_full_month':
+    case 'mtd':
+      return 'daily'
+    case 'qtd':
+      return 'weekly'
     default:
       return (PERIOD_DAYS[period] ?? 28) > 120 ? 'monthly' : 'daily'
   }
