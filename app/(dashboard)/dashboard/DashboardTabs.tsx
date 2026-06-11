@@ -22,15 +22,17 @@ import Competitive from "@/components/dashboard/modules/Competitive";
 import Alerts from "@/components/dashboard/modules/Alerts";
 import Targets from "@/components/dashboard/modules/Targets";
 import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
+import NewVsReturningRevenue from "@/components/dashboard/modules/NewVsReturningRevenue";
 import Annotations from "@/components/dashboard/modules/Annotations";
+import InsightDraftReview from "@/components/dashboard/InsightDraftReview";
 import ExportTool from "@/components/tools/primitives/ExportTool";
 import { Printer } from "lucide-react";
 import { buildDateRange, CALENDAR_PRESETS } from "@/lib/date-range";
 import { gbpLocationLabel, hasDuplicateTitles } from "@/lib/dashboard/gbp-labels";
 import type { Annotation } from "@/app/actions/annotations";
-import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
+import type { AnalyticsData, SnapshotInsights, SnapshotInsightsDraft, DashboardReport } from "@/app/actions/analytics";
 import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
-import type { GA4EcomFunnel, GA4TopProduct } from "@/app/actions/dashboard-ga4";
+import type { GA4EcomFunnel, GA4TopProduct, GA4NewVsReturningRevenue } from "@/app/actions/dashboard-ga4";
 import type { GSCBrandedSplit, GSCIntentSplit } from "@/lib/google-search-console";
 import type { ConvertingPageRow, ContentUrlRow } from "@/app/actions/dashboard-leadgen";
 import type { CompetitiveResult } from "@/app/actions/dashboard-competitive";
@@ -69,6 +71,10 @@ interface Props {
   pacing: PacingRow[];
   metricTableRows: MetricTableRow[];
   annotations: Annotation[];
+  /** Admin-only, ecommerce-only; null for everyone else (gated in AnalyticsSection). */
+  newVsReturning: GA4NewVsReturningRevenue | null;
+  /** Admin-only unapproved LLM draft; null for member/client viewers (gated in AnalyticsSection). */
+  insightDraft: SnapshotInsightsDraft | null;
 }
 
 type Tab = "snapshot" | "locations" | "detail" | "seo" | "full";
@@ -180,6 +186,8 @@ export default function DashboardTabs({
   pacing,
   metricTableRows,
   annotations,
+  newVsReturning,
+  insightDraft,
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -359,6 +367,12 @@ export default function DashboardTabs({
               <InsightCards cards={insightCards} />
             )}
 
+            {/* Admin-only: review & approve the pending LLM insight draft before
+                it's published to the client. insightDraft is null for non-admins. */}
+            {isAdmin && insightDraft && (
+              <InsightDraftReview clientId={clientId} draft={insightDraft} />
+            )}
+
             {/* Context panel */}
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -423,6 +437,8 @@ export default function DashboardTabs({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {modules.includes("ecom_funnel") && <EcomFunnel funnel={moduleData.ecomFunnel} />}
               {modules.includes("top_products") && <TopProducts products={moduleData.topProducts} />}
+              {/* Admin-only, ecommerce-only; null for everyone else (gated in AnalyticsSection). */}
+              {isAdmin && newVsReturning && <NewVsReturningRevenue data={newVsReturning} />}
               {modules.includes("converting_pages") && <ConvertingPages rows={moduleData.convertingPages} />}
               {modules.includes("content_performance") && <ContentPerformance rows={moduleData.contentPerformance} />}
               {dashboardReport.ga4 && dashboardReport.ga4.topSourceMediums.length > 0 && (

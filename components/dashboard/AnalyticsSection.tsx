@@ -1,5 +1,5 @@
-import { fetchAnalyticsData, fetchDashboardReport, type AnalyticsData, type DashboardReport, type SnapshotInsights } from "@/app/actions/analytics";
-import { getGA4TrendData, getGA4EcomFunnelData, getGA4TopProductsData } from "@/app/actions/dashboard-ga4";
+import { fetchAnalyticsData, fetchDashboardReport, type AnalyticsData, type DashboardReport, type SnapshotInsights, type SnapshotInsightsDraft } from "@/app/actions/analytics";
+import { getGA4TrendData, getGA4EcomFunnelData, getGA4TopProductsData, getGA4NewVsReturningData, type GA4NewVsReturningRevenue } from "@/app/actions/dashboard-ga4";
 import { getGSCTrendAction, getGSCBrandedSplitAction, getGSCIntentSplitAction } from "@/app/actions/dashboard-gsc";
 import { getConvertingPagesData, getContentPerformanceData } from "@/app/actions/dashboard-leadgen";
 import { getCompetitiveData } from "@/app/actions/dashboard-competitive";
@@ -30,6 +30,7 @@ type AnalyticsSectionProps = {
   hasCompetitors: boolean;
   hasKeyEvents: boolean;
   snapshotInsights: SnapshotInsights | null;
+  snapshotInsightsDraft: SnapshotInsightsDraft | null;
   snapshotUpdatedAt: string | null;
 };
 
@@ -105,6 +106,7 @@ export default async function AnalyticsSection({
   hasCompetitors,
   hasKeyEvents,
   snapshotInsights,
+  snapshotInsightsDraft,
   snapshotUpdatedAt,
 }: AnalyticsSectionProps) {
   const type = (clientType as ClientType | null) ?? null;
@@ -256,6 +258,21 @@ export default async function AnalyticsSection({
     const mt = await safe(get13MonthTable());
     metricTableRows = mt?.rows ?? [];
   }
+
+  // New-vs-returning revenue — admin-only, ecommerce-only for now (gated here so
+  // the data is never fetched or serialized for other viewers). Making it
+  // client-visible is a deliberate later change.
+  let newVsReturning: GA4NewVsReturningRevenue | null = null;
+  if (isAdmin && type === "ecommerce") {
+    const nvr = await safe(getGA4NewVsReturningData({ period, compare }));
+    newVsReturning = nvr?.data ?? null;
+  }
+
+  // LLM insight draft is admin-only. Gating it here means a client- or
+  // member-role viewer's browser never receives the unapproved draft text —
+  // the prop is literally null for them. Until an admin approves, the
+  // client-visible Snapshot keeps using the deterministic headline/takeaways.
+  const insightDraft: SnapshotInsightsDraft | null = isAdmin ? (snapshotInsightsDraft ?? null) : null;
 
   // "What we changed" annotations timeline (best-effort).
   const annotations: Annotation[] = (await safe(listAnnotations(clientId))) ?? [];
@@ -415,6 +432,8 @@ export default async function AnalyticsSection({
           pacing={pacing}
           metricTableRows={metricTableRows}
           annotations={annotations}
+          newVsReturning={newVsReturning}
+          insightDraft={insightDraft}
         />
       </div>
     </div>
