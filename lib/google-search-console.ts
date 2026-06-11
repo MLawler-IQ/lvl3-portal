@@ -464,6 +464,71 @@ export async function fetchGSCTrend(
   )
 }
 
+// ── 13-month metric series (WS-C3) ─────────────────────────────────────────────
+// One row per calendar month over a trailing window (default 13 months), so the
+// latest month has a YoY peer 12 rows earlier. GSC has no month dimension, so we
+// query the daily `date` dimension and bucket to month in JS — reusing the same
+// YYYY-MM-DD → YYYYMM bucketing as the main GSC report's monthly trend, then emit
+// the canonical YYYY-MM form.
+//
+// GSC Search Analytics API used: dimension `date`; metrics clicks, impressions.
+
+export type GSCMonthlyMetricPoint = {
+  /** Calendar month as YYYY-MM. */
+  yearMonth: string
+  clicks: number
+  impressions: number
+}
+
+export async function fetchGSCMonthlySeries(
+  siteUrl: string,
+  months = 13,
+): Promise<GSCMonthlyMetricPoint[]> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl)
+  return cachedFetch(
+    `gsc:monthlySeries:${normalizedUrl}:${months}`,
+    GSC_TTL_SECONDS,
+    async () => {
+      const auth = await getAdminOAuthClient()
+      const searchconsole = google.searchconsole({ version: 'v1', auth })
+
+      const fmt = (d: Date) => d.toISOString().slice(0, 10)
+      const today = new Date()
+      const span = Math.max(1, months)
+      // First day of the month (span-1) ago, through today (current month is the
+      // last bucket; GSC's ~2-3 day lag just means the latest day or two is empty).
+      const startDate = fmt(new Date(today.getFullYear(), today.getMonth() - (span - 1), 1))
+      const endDate = fmt(today)
+
+      const { data } = await searchconsole.searchanalytics.query({
+        siteUrl: normalizedUrl,
+        requestBody: { startDate, endDate, dimensions: ['date'], rowLimit: 25000 },
+      })
+
+      // Aggregate daily rows by yearMonth — same bucketing the main report uses.
+      const monthlyMap = new Map<string, { clicks: number; impressions: number }>()
+      for (const row of data.rows ?? []) {
+        const dateStr = row.keys?.[0] ?? ''
+        const ym = dateStr.slice(0, 7).replace('-', '') // "2025-01" -> "202501"
+        if (ym.length !== 6) continue
+        const prev = monthlyMap.get(ym) ?? { clicks: 0, impressions: 0 }
+        monthlyMap.set(ym, {
+          clicks: prev.clicks + (row.clicks ?? 0),
+          impressions: prev.impressions + (row.impressions ?? 0),
+        })
+      }
+
+      return Array.from(monthlyMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([ym, data]) => ({
+          yearMonth: `${ym.slice(0, 4)}-${ym.slice(4, 6)}`,
+          clicks: data.clicks,
+          impressions: data.impressions,
+        }))
+    },
+  )
+}
+
 // ── Lead-gen: content performance (WS-B4) ───────────────────────────────────────
 // Top content URLs by clicks, with impressions, CTR (as a percentage) and average
 // position. Mirrors the per-URL data shape of the main GSC report (UrlRow) but

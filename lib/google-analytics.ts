@@ -700,6 +700,76 @@ async function _fetchGA4TopProductsUncached(propertyId: string, range?: DateRang
   }))
 }
 
+// ── 13-month metric series (WS-C3) ─────────────────────────────────────────────
+// One row per calendar month over a trailing window (default 13 months = current
+// month + prior 12), so the latest month has a YoY comparison 12 rows earlier.
+// Aggregated server-side by GA4 via the `yearMonth` dimension.
+//
+// GA4 Data API v1beta apiNames used:
+//   dimension: yearMonth          (YYYYMM bucket)
+//   metric:    sessions
+//   metric:    keyEvents           (count of key events = "conversions" in GA4)
+//   metric:    purchaseRevenue     (ecommerce revenue)
+
+export type GA4MonthlyPoint = {
+  /** Calendar month as YYYY-MM. */
+  yearMonth: string
+  sessions: number
+  /** GA4 keyEvents — the conversion-event successor to "conversions". */
+  conversions: number
+  /** GA4 purchaseRevenue. */
+  revenue: number
+}
+
+export async function fetchGA4MonthlySeries(
+  propertyId: string,
+  months = 13,
+): Promise<GA4MonthlyPoint[]> {
+  return cachedFetch(`ga4:monthlySeries:${propertyId}:${months}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4MonthlySeriesUncached(propertyId, months),
+  )
+}
+
+async function _fetchGA4MonthlySeriesUncached(
+  propertyId: string,
+  months: number,
+): Promise<GA4MonthlyPoint[]> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  const today = new Date()
+  // Window: first day of the month (months-1) ago, through today (so the current,
+  // still-accruing month is the last bucket and has a YoY peer 12 rows earlier).
+  const span = Math.max(1, months)
+  const startDate = fmt(new Date(today.getFullYear(), today.getMonth() - (span - 1), 1))
+  const endDate = fmt(today)
+
+  const res = await analyticsdata.properties.runReport({
+    property: prop,
+    requestBody: {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'yearMonth' }],
+      metrics: [{ name: 'sessions' }, { name: 'keyEvents' }, { name: 'purchaseRevenue' }],
+      orderBys: [{ dimension: { dimensionName: 'yearMonth' }, desc: false }],
+    },
+  })
+
+  const points: GA4MonthlyPoint[] = []
+  for (const row of res.data.rows ?? []) {
+    const ym = row.dimensionValues?.[0]?.value ?? '' // YYYYMM
+    if (ym.length !== 6) continue
+    points.push({
+      yearMonth: `${ym.slice(0, 4)}-${ym.slice(4, 6)}`,
+      sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+      conversions: parseInt(row.metricValues?.[1]?.value ?? '0'),
+      revenue: parseFloat(row.metricValues?.[2]?.value ?? '0'),
+    })
+  }
+  return points.sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))
+}
+
 // ── Lead-gen: converting landing pages (WS-B4) ──────────────────────────────────
 // Top landing pages ranked by GA4 KEY EVENTS (the conversion-event successor to
 // "conversions" in GA4). When the client configures specific key_event_names we
