@@ -15,6 +15,9 @@ interface Props {
 
 export default function ChannelBarChart({ channels }: Props) {
   const data = channels.slice(0, 10)
+  // GA4 labels traffic it can't attribute to a channel as "Unassigned" — usually a
+  // tracking-parameter problem, not a real marketing channel. Footnote it when shown.
+  const hasUnassigned = data.some((c) => c.channel?.toLowerCase() === 'unassigned')
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
@@ -78,6 +81,13 @@ export default function ChannelBarChart({ channels }: Props) {
           </tbody>
         </table>
       </div>
+
+      {hasUnassigned && (
+        <p className="mt-3 text-xs text-surface-500">
+          &ldquo;Unassigned&rdquo; is traffic GA4 couldn&rsquo;t attribute to a channel &mdash;
+          usually missing or stripped tracking parameters, not a real marketing channel.
+        </p>
+      )}
     </div>
   )
 }

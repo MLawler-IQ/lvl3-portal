@@ -112,7 +112,9 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: LocationLeaderboardProps) {
-  const [sortKey, setSortKey] = useState<SortKey>('IMPRESSIONS')
+  // Default to Calls (CALL_CLICKS) descending — the highest-intent GBP action.
+  // Impressions stays an available, sortable column.
+  const [sortKey, setSortKey] = useState<SortKey>('CALL_CLICKS')
 
   const insights: GBPClientInsights | undefined = data?.insights
 
