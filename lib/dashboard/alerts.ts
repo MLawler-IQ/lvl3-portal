@@ -42,12 +42,19 @@ export interface AlertMetrics {
   sessions?: AlertMetricSignal
   /** GSC organic clicks. North-star organic metric. */
   organicClicks?: AlertMetricSignal
-  /** GA4 key-event conversions. North-star outcome metric. */
+  /**
+   * GA4 ecommerce purchase transactions. North-star outcome metric. Key kept as
+   * `conversions` for stability, but it is LABELED "Purchases" (it is backed by
+   * GA4 `transactions`, not keyEvents — the word "Conversions" is reserved for
+   * keyEvents-backed numbers such as the pacing/goal-miss rows).
+   */
   conversions?: AlertMetricSignal
   /** GA4 ecommerce revenue. North-star outcome metric. */
   revenue?: AlertMetricSignal
   /** Google Business Profile phone calls. North-star local metric. */
   gbpCalls?: AlertMetricSignal
+  /** Google Business Profile booking actions. North-star local metric. */
+  gbpBookings?: AlertMetricSignal
 }
 
 /** Aggregate Google Business Profile health, used for GBP health alerts. */
@@ -99,8 +106,11 @@ interface AlertMetricMeta {
 
 const METRIC_META: AlertMetricMeta[] = [
   { key: 'revenue', label: 'Revenue', chartRef: 'ecom_funnel' },
-  { key: 'conversions', label: 'Conversions', chartRef: 'converting_pages' },
+  // `conversions` key, but LABELED "Purchases" — backed by GA4 transactions.
+  // "Conversions" stays reserved for keyEvents-backed pacing/goal-miss alerts.
+  { key: 'conversions', label: 'Purchases', chartRef: 'converting_pages' },
   { key: 'gbpCalls', label: 'GBP calls', chartRef: 'gbp_overview' },
+  { key: 'gbpBookings', label: 'GBP bookings', chartRef: 'gbp_overview' },
   { key: 'organicClicks', label: 'Organic clicks', chartRef: 'search_queries' },
   { key: 'sessions', label: 'Sessions', chartRef: 'traffic_trend' },
 ]
@@ -198,6 +208,10 @@ function goalMissAlerts(pacing: PacingRow[]): DashboardAlert[] {
       continue
     }
 
+    // Goal-miss alerts label from the pacing row's OWN label. This is where the
+    // two `conversions` meanings meet: pacing's `conversions` is keyEvents-backed
+    // and its row.label is "Conversions", so it stays "Conversions" here — only
+    // the transactions-backed metric-DROP alert (METRIC_META) reads "Purchases".
     const label = row.label ?? METRIC_LABELS[row.metricId] ?? row.metricId
     const attained = formatPercentMagnitude(Math.max(0, pct) * 100)
     const knownMetric = (row.metricId in METRIC_LABELS ? row.metricId : undefined)

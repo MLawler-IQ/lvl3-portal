@@ -9,7 +9,7 @@ import { getPacingActuals } from "@/app/actions/dashboard-pacing";
 import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import { defaultModulesForType } from "@/lib/dashboard/registry";
 import { computePacing, monthElapsedFraction, type PacingRow } from "@/lib/dashboard/pacing";
-import { deriveAlerts, type AlertInput } from "@/lib/dashboard/alerts";
+import { deriveAlerts, type AlertInput, type AlertMetricSignal } from "@/lib/dashboard/alerts";
 import { deriveInsightCards, deriveHeadline, type InsightSignals, type MetricSignal } from "@/lib/dashboard/insights";
 import { buildDateRange, pickGranularity } from "@/lib/date-range";
 import type { ClientType, DashboardModuleId, Granularity, TrendPoint, Targets, DashboardAlert } from "@/lib/dashboard/types";
@@ -49,18 +49,24 @@ const PACING_TO_ALERT_KEY: Record<string, string> = {
 };
 
 // Alert-engine metric keys → the human labels used in alert titles and insight
-// cards (mirrors lib/dashboard/alerts.ts METRIC_META).
+// cards (mirrors lib/dashboard/alerts.ts METRIC_META). NOTE: the `conversions`
+// key is LABELED "Purchases" (GA4 transactions-backed); "Conversions" stays
+// reserved for keyEvents-backed pacing/goal-miss alerts (labeled off the
+// pacing row, not this map).
 const ALERT_METRIC_LABELS: Record<string, string> = {
   sessions: "Sessions",
   organicClicks: "Organic clicks",
-  conversions: "Conversions",
+  conversions: "Purchases",
   revenue: "Revenue",
   gbpCalls: "GBP calls",
+  gbpBookings: "GBP bookings",
 };
 
 // Decline phrasings (or a signed-minus magnitude, U+2212) used to detect a
-// down-reading headline for the dedup-vs-top-alert check below.
-const HEADLINE_DECLINE_RE = /\b(down|fell|behind|declin\w*|drop\w*|decreas\w*)\b|−\s?\d/i;
+// down-reading headline for the dedup-vs-top-alert check below. Keep in sync
+// with deriveHeadline's decline vocabulary in lib/dashboard/insights.ts
+// ("fell", "slipped", plus the legacy down/behind/decline/drop/decrease set).
+const HEADLINE_DECLINE_RE = /\b(down|fell|behind|slipp\w*|declin\w*|drop\w*|decreas\w*)\b|−\s?\d/i;
 
 /** Recent deliverables for the exec-band activity feed. Best-effort; empty on any failure. */
 async function fetchActivity(clientId: string): Promise<ActivityItem[]> {
@@ -193,6 +199,15 @@ export default async function AnalyticsSection({
   const clicksPrev = clicksTrend.reduce((s, p) => s + (p.compareValue ?? 0), 0);
   const clicksDeltaPct = clicksPrev > 0 ? ((clicksCur - clicksPrev) / clicksPrev) * 100 : undefined;
   const issueCounts = gbp?.audit?.issueCounts ?? {};
+  // GBP bookings alert signal (BUSINESS_BOOKINGS), mirroring calls. Only built
+  // when GBP insights exist AND the metric is actually live (non-zero value or
+  // a real delta) so a structurally-absent bookings metric stays silent.
+  const bookingsSignal: AlertMetricSignal | undefined = (() => {
+    if (!gbp?.configured || !gbp.insights) return undefined;
+    const value = gbp.insights.totals["BUSINESS_BOOKINGS"] ?? 0;
+    const delta = gbp.insights.deltas.find((d) => d.metric === "BUSINESS_BOOKINGS")?.deltaPct ?? undefined;
+    return value > 0 || (typeof delta === "number" && delta !== 0) ? { value, delta } : undefined;
+  })();
   const alertInput: AlertInput = {
     metrics: {
       sessions: ga4 ? { value: ga4.sessions, delta: ga4.sessionsDelta } : undefined,
@@ -210,6 +225,9 @@ export default async function AnalyticsSection({
               delta: gbp.insights.deltas.find((d) => d.metric === "CALL_CLICKS")?.deltaPct ?? undefined,
             }
           : undefined,
+      // GBP booking actions — same shape as calls. Guarded so a structurally
+      // absent bookings metric (0 value, no delta) doesn't fire a noise alert.
+      gbpBookings: bookingsSignal,
     },
     gbp:
       gbp?.configured && gbp.audit
@@ -243,30 +261,13 @@ export default async function AnalyticsSection({
   const annotations: Annotation[] = (await safe(listAnnotations(clientId))) ?? [];
 
   // ── Assemble the executive summary band ──────────────────────────────────
-  // Tooltips are the metric definitions (period-agnostic — the band follows the picker).
+  // Tooltips are the metric definitions (period-agnostic — the band follows the
+  // picker). Order is OUTCOMES-FIRST: business results clients care about
+  // (revenue, calls, purchases) lead, then the traffic that drives them
+  // (organic clicks, sessions). Each tile self-hides when its data is absent.
   const kpis: ExecKpi[] = [];
-  if (ga4) {
-    kpis.push({
-      label: "Sessions",
-      value: fmtInt(ga4.sessions),
-      delta: ga4.sessionsDelta,
-      sparkline: sessionsTrend,
-      tooltip: "Visits to the website — one session covers all activity in a single visit (GA4)",
-    });
-  }
-  if (gsc) {
-    const cur = clicksTrend.reduce((s, p) => s + p.value, 0);
-    const prev = clicksTrend.reduce((s, p) => s + (p.compareValue ?? 0), 0);
-    const clicksDelta = prev > 0 ? ((cur - prev) / prev) * 100 : undefined;
-    kpis.push({
-      label: "Organic clicks",
-      value: fmtInt(gsc.clicks),
-      delta: clicksDelta,
-      sparkline: clicksTrend,
-      tooltip: "Clicks to the website from unpaid Google search results (Search Console)",
-    });
-  }
-  if (type === "ecommerce" && dashboardReport.ga4) {
+  // Revenue — shown for ANY client type whenever there's tracked revenue.
+  if (dashboardReport.ga4 && dashboardReport.ga4.purchaseRevenue > 0) {
     kpis.push({
       label: "Revenue",
       value: fmtCurrency(dashboardReport.ga4.purchaseRevenue),
@@ -282,6 +283,34 @@ export default async function AnalyticsSection({
       value: fmtInt(calls),
       delta: callsDeltaPct ?? undefined,
       tooltip: "Calls placed from the Google Business Profile listings on Search and Maps",
+    });
+  }
+  // Purchases — GA4 ecommerce purchase transactions. Labeled "Purchases" (not
+  // "Conversions", which is reserved for keyEvents-backed numbers).
+  if (dashboardReport.ga4 && dashboardReport.ga4.transactions > 0) {
+    kpis.push({
+      label: "Purchases",
+      value: fmtInt(dashboardReport.ga4.transactions),
+      delta: dashboardReport.ga4.transactionsDelta,
+      tooltip: "Completed ecommerce purchase transactions on the website (GA4)",
+    });
+  }
+  if (gsc) {
+    kpis.push({
+      label: "Organic clicks",
+      value: fmtInt(gsc.clicks),
+      delta: clicksDeltaPct,
+      sparkline: clicksTrend,
+      tooltip: "Clicks to the website from unpaid Google search results (Search Console)",
+    });
+  }
+  if (ga4) {
+    kpis.push({
+      label: "Sessions",
+      value: fmtInt(ga4.sessions),
+      delta: ga4.sessionsDelta,
+      sparkline: sessionsTrend,
+      tooltip: "Visits to the website — one session covers all activity in a single visit (GA4)",
     });
   }
 

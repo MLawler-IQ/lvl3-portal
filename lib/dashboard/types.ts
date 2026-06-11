@@ -94,6 +94,8 @@ export interface InsightCard {
   period: string // e.g. "vs prior 28 days"
   statement: string // one-sentence what-happened
   whyItMatters: string // business implication
+  /** One imperative next-step sentence (the action layer). Optional. */
+  action?: string
   severity: InsightSeverity
   chartRef?: DashboardModuleId // deep-link target module
 }

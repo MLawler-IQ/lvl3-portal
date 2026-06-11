@@ -74,14 +74,23 @@ function InsightCardTile({ card }: { card: InsightCard }) {
 
       <p className="text-sm text-surface-200 leading-relaxed mb-2">{card.statement}</p>
       <p className="text-xs text-surface-400 leading-relaxed">{card.whyItMatters}</p>
+      {card.action && (
+        <p className="mt-2 pt-2 border-t border-surface-800 text-xs text-surface-500 leading-relaxed">
+          <span className="font-medium uppercase tracking-[0.1em] text-[10px] text-surface-400 mr-1.5">
+            Next
+          </span>
+          {card.action}
+        </p>
+      )}
     </div>
   )
 }
 
 /**
  * Presentational insight-cards module. Renders a responsive grid of
- * severity-colored insight cards, each showing the direction arrow, magnitude,
- * period, the what-happened statement, and the business implication. The
+ * severity-colored insight cards, each reading observation → so-what →
+ * next-step: the chip (metric + direction arrow + magnitude), the quantified
+ * statement, the business implication, and a subtle next-step action. The
  * narrative headline lives in the exec band, not here. Renders nothing when
  * there are no cards.
  */
