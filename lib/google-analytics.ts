@@ -1,5 +1,7 @@
 import { google } from 'googleapis'
 import type { DateRange } from './date-range'
+import { buildTrendRange } from './date-range'
+import type { TrendPoint } from '@/lib/dashboard/types'
 import { getAdminOAuthClient } from '@/lib/google-auth'
 import { cachedFetch } from '@/lib/api-cache'
 
@@ -117,7 +119,7 @@ async function _fetchGA4MetricsUncached(propertyId: string, range?: DateRange): 
 
 // ── Dashboard report types ────────────────────────────────────────────────────
 
-export type ChannelRow = { channel: string; sessions: number; sessionsDelta: number }
+export type ChannelRow = { channel: string; sessions: number; sessionsDelta: number; purchaseRevenue: number }
 export type MonthlySessionPoint = { month: string; yearMonth: string; sessions: number }
 export type SourceMediumRow = { sourceMedium: string; sessions: number; users: number }
 export type LandingPageRow = { page: string; sessions: number; sessionsDelta: number }
@@ -204,7 +206,7 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
       requestBody: {
         dateRanges: [{ startDate, endDate }],
         dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [{ name: 'sessions' }],
+        metrics: [{ name: 'sessions' }, { name: 'purchaseRevenue' }],
         orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
         limit: '20',
       },
@@ -314,7 +316,13 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     for (const row of r4cur.value.data.rows ?? []) {
       const channel = row.dimensionValues?.[0]?.value ?? ''
       const s = parseInt(row.metricValues?.[0]?.value ?? '0')
-      topChannels.push({ channel, sessions: s, sessionsDelta: pct(s, channelPriorMap.get(channel) ?? 0) })
+      const rev = parseFloat(row.metricValues?.[1]?.value ?? '0')
+      topChannels.push({
+        channel,
+        sessions: s,
+        sessionsDelta: pct(s, channelPriorMap.get(channel) ?? 0),
+        purchaseRevenue: rev,
+      })
     }
   }
 
@@ -401,4 +409,267 @@ async function _fetchGA4ReportUncached(propertyId: string, range?: DateRange): P
     organicTransactions, organicTransactionsDelta: pct(organicTransactions, priorOrganicTransactions),
     deviceBreakdown, organicLandingPages,
   }
+}
+
+// ── Period-aware traffic trend ────────────────────────────────────────────────
+// Replaces the legacy hardcoded 6-month monthlyTrend for chart consumers that
+// want a trend that follows the selected KPI period. Buckets sessions at the
+// granularity chosen by buildTrendRange, and aligns the comparison window by
+// bucket index so the ghost-overlay series lines up 1:1 with the current series.
+
+/** Convert YYYYMMDD (GA4 `date` dimension) → YYYY-MM-DD. */
+function ga4DateToIso(d: string): string {
+  return d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d
+}
+
+/** ISO-week key (YYYY-Www) for a YYYY-MM-DD date string, in UTC. */
+function isoWeekKey(iso: string): string {
+  const dt = new Date(`${iso}T00:00:00Z`)
+  // Shift to Thursday of the current week (ISO weeks belong to the year of their Thursday).
+  const day = (dt.getUTCDay() + 6) % 7 // Mon=0..Sun=6
+  dt.setUTCDate(dt.getUTCDate() - day + 3)
+  const thursday = new Date(dt.getTime())
+  const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4))
+  const firstDay = (firstThursday.getUTCDay() + 6) % 7
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDay + 3)
+  const week = 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / (7 * 86400000))
+  return `${thursday.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
+}
+
+type Granularity = 'daily' | 'weekly' | 'monthly'
+
+/**
+ * Roll the GA4 `date`-dimension rows of one window into ordered buckets.
+ * Returns buckets sorted ascending by their natural key; each bucket carries the
+ * date label used as TrendPoint.date and the summed sessions.
+ */
+function bucketSessions(
+  rows: Array<{ date: string; sessions: number }>,
+  granularity: Granularity,
+): Array<{ key: string; date: string; value: number }> {
+  const map = new Map<string, { date: string; value: number }>()
+  for (const r of rows) {
+    const iso = ga4DateToIso(r.date)
+    let key: string
+    let label: string
+    if (granularity === 'monthly') {
+      key = iso.slice(0, 7) // YYYY-MM
+      label = key
+    } else if (granularity === 'weekly') {
+      key = isoWeekKey(iso)
+      // Use the week's Monday as the chart date label.
+      const dt = new Date(`${iso}T00:00:00Z`)
+      const day = (dt.getUTCDay() + 6) % 7
+      dt.setUTCDate(dt.getUTCDate() - day)
+      label = dt.toISOString().slice(0, 10)
+    } else {
+      key = iso
+      label = iso
+    }
+    const existing = map.get(key)
+    if (existing) {
+      existing.value += r.sessions
+    } else {
+      map.set(key, { date: label, value: r.sessions })
+    }
+  }
+  return Array.from(map.entries())
+    .map(([key, v]) => ({ key, date: v.date, value: v.value }))
+    .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+}
+
+export async function fetchGA4Trend(
+  propertyId: string,
+  period = '28d',
+  compare = 'prior',
+): Promise<TrendPoint[]> {
+  return cachedFetch(
+    `ga4:trend:${propertyId}:${period}:${compare}`,
+    GA4_TTL_SECONDS,
+    () => _fetchGA4TrendUncached(propertyId, period, compare),
+  )
+}
+
+async function _fetchGA4TrendUncached(
+  propertyId: string,
+  period: string,
+  compare: string,
+): Promise<TrendPoint[]> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const { startDate, endDate, granularity, compareStart, compareEnd } = buildTrendRange(period, compare)
+
+  // Always query the `date` dimension and bucket in JS — this keeps weekly ISO
+  // bucketing consistent and lets us align current vs. compare by bucket index.
+  const dateReport = (sd: string, ed: string) =>
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: {
+        dateRanges: [{ startDate: sd, endDate: ed }],
+        dimensions: [{ name: 'date' }],
+        metrics: [{ name: 'sessions' }],
+        orderBys: [{ dimension: { dimensionName: 'date' }, desc: false }],
+        limit: '1000',
+      },
+    })
+
+  const [curRes, cmpRes] = await Promise.allSettled([
+    dateReport(startDate, endDate),
+    dateReport(compareStart, compareEnd),
+  ])
+
+  const toRows = (res: typeof curRes) => {
+    if (res.status !== 'fulfilled') return [] as Array<{ date: string; sessions: number }>
+    return (res.value.data.rows ?? []).map((row) => ({
+      date: row.dimensionValues?.[0]?.value ?? '',
+      sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+    }))
+  }
+
+  const curBuckets = bucketSessions(toRows(curRes), granularity)
+  const cmpBuckets = bucketSessions(toRows(cmpRes), granularity)
+
+  // Align by bucket index: bucket[0] of current ↔ bucket[0] of compare, etc.
+  return curBuckets.map((b, i) => {
+    const cmp = cmpBuckets[i]
+    const point: TrendPoint = { date: b.date, value: b.value }
+    if (cmp) point.compareValue = cmp.value
+    return point
+  })
+}
+
+// ── Ecommerce funnel ──────────────────────────────────────────────────────────
+// itemsViewed → addToCarts → checkouts → ecommercePurchases, with period-over-
+// period deltas. Metric apiNames match GA4 Data API v1beta exactly.
+
+export type GA4EcomFunnel = {
+  itemsViewed: number
+  addToCarts: number
+  checkouts: number
+  purchases: number
+  itemsViewedDelta: number
+  addToCartsDelta: number
+  checkoutsDelta: number
+  purchasesDelta: number
+}
+
+export async function fetchGA4EcomFunnel(propertyId: string, range?: DateRange): Promise<GA4EcomFunnel> {
+  return cachedFetch(`ga4:ecomFunnel:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4EcomFunnelUncached(propertyId, range),
+  )
+}
+
+async function _fetchGA4EcomFunnelUncached(propertyId: string, range?: DateRange): Promise<GA4EcomFunnel> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const today = new Date()
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+  let startDate: string, endDate: string, priorStart: string, priorEnd: string
+  if (range) {
+    startDate = range.startDate
+    endDate = range.endDate
+    priorStart = range.compareStart
+    priorEnd = range.compareEnd
+  } else {
+    endDate = fmt(new Date(today.getTime() - 86400000))
+    startDate = fmt(new Date(today.getTime() - 29 * 86400000))
+    priorEnd = fmt(new Date(today.getTime() - 30 * 86400000))
+    priorStart = fmt(new Date(today.getTime() - 57 * 86400000))
+  }
+
+  const funnelMetrics = [
+    { name: 'itemsViewed' },
+    { name: 'addToCarts' },
+    { name: 'checkouts' },
+    { name: 'ecommercePurchases' },
+  ]
+
+  const [curRes, priRes] = await Promise.allSettled([
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: { dateRanges: [{ startDate, endDate }], metrics: funnelMetrics },
+    }),
+    analyticsdata.properties.runReport({
+      property: prop,
+      requestBody: { dateRanges: [{ startDate: priorStart, endDate: priorEnd }], metrics: funnelMetrics },
+    }),
+  ])
+
+  const cur = curRes.status === 'fulfilled' ? (curRes.value.data.rows?.[0]?.metricValues ?? []) : []
+  const pri = priRes.status === 'fulfilled' ? (priRes.value.data.rows?.[0]?.metricValues ?? []) : []
+
+  const num = (vals: typeof cur, i: number) => parseInt(vals[i]?.value ?? '0')
+  const pct = (curr: number, prior: number) =>
+    prior === 0 ? 0 : Math.round(((curr - prior) / prior) * 100)
+
+  const itemsViewed = num(cur, 0)
+  const addToCarts = num(cur, 1)
+  const checkouts = num(cur, 2)
+  const purchases = num(cur, 3)
+
+  return {
+    itemsViewed,
+    addToCarts,
+    checkouts,
+    purchases,
+    itemsViewedDelta: pct(itemsViewed, num(pri, 0)),
+    addToCartsDelta: pct(addToCarts, num(pri, 1)),
+    checkoutsDelta: pct(checkouts, num(pri, 2)),
+    purchasesDelta: pct(purchases, num(pri, 3)),
+  }
+}
+
+// ── Top products ──────────────────────────────────────────────────────────────
+// Top 10 products by item revenue (dimension itemName).
+
+export type GA4TopProduct = {
+  itemName: string
+  itemRevenue: number
+  itemsPurchased: number
+}
+
+export async function fetchGA4TopProducts(propertyId: string, range?: DateRange): Promise<GA4TopProduct[]> {
+  return cachedFetch(`ga4:topProducts:${propertyId}:${rangeKey(range)}`, GA4_TTL_SECONDS, () =>
+    _fetchGA4TopProductsUncached(propertyId, range),
+  )
+}
+
+async function _fetchGA4TopProductsUncached(propertyId: string, range?: DateRange): Promise<GA4TopProduct[]> {
+  const auth = await getAdminOAuthClient()
+  const analyticsdata = google.analyticsdata({ version: 'v1beta', auth })
+  const prop = `properties/${propertyId}`
+
+  const today = new Date()
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+
+  let startDate: string, endDate: string
+  if (range) {
+    startDate = range.startDate
+    endDate = range.endDate
+  } else {
+    endDate = fmt(new Date(today.getTime() - 86400000))
+    startDate = fmt(new Date(today.getTime() - 29 * 86400000))
+  }
+
+  const res = await analyticsdata.properties.runReport({
+    property: prop,
+    requestBody: {
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'itemName' }],
+      metrics: [{ name: 'itemRevenue' }, { name: 'itemsPurchased' }],
+      orderBys: [{ metric: { metricName: 'itemRevenue' }, desc: true }],
+      limit: '10',
+    },
+  })
+
+  return (res.data.rows ?? []).map((row) => ({
+    itemName: row.dimensionValues?.[0]?.value ?? '(not set)',
+    itemRevenue: parseFloat(row.metricValues?.[0]?.value ?? '0'),
+    itemsPurchased: parseInt(row.metricValues?.[1]?.value ?? '0'),
+  }))
 }
