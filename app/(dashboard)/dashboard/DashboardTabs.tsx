@@ -25,6 +25,7 @@ import Targets from "@/components/dashboard/modules/Targets";
 import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
 import Annotations from "@/components/dashboard/modules/Annotations";
 import { CALENDAR_PRESETS } from "@/lib/date-range";
+import { gbpLocationLabel, hasDuplicateTitles } from "@/lib/dashboard/gbp-labels";
 import type { Annotation } from "@/app/actions/annotations";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
 import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
@@ -204,8 +205,9 @@ export default function DashboardTabs({
   const [iframeTimedOut, setIframeTimedOut] = useState(false);
 
   const activeTab = (searchParams.get("tab") ?? "snapshot") as Tab;
-  const period = searchParams.get("period") ?? "28d";
-  const compare = searchParams.get("compare") ?? "prior";
+  // Defaults must match page.tsx: last full month vs same month prior year.
+  const period = searchParams.get("period") ?? "last_full_month";
+  const compare = searchParams.get("compare") ?? "yoy";
 
   function navigate(updates: Record<string, string>) {
     const p = new URLSearchParams(searchParams.toString());
@@ -247,8 +249,11 @@ export default function DashboardTabs({
 
   // Derived chart data.
   const metricTrend: TrendPoint[] = metricTableRows.map((r) => ({ date: r.yearMonth, value: r.sessions }));
-  const locationBars = (gbp?.insights?.locations ?? []).map((l) => ({
-    label: l.locationTitle || l.locationName,
+  const gbpLocations = gbp?.insights?.locations ?? [];
+  // Chain brands share one title across locations — label bars by city instead.
+  const gbpPreferCity = hasDuplicateTitles(gbpLocations.map((l) => l.locationTitle));
+  const locationBars = gbpLocations.map((l) => ({
+    label: gbpLocationLabel(l.locationTitle || l.locationName, l.locality, l.administrativeArea, gbpPreferCity),
     value: GBP_IMPRESSION_METRICS.reduce((s, k) => s + (l.metrics[k] ?? 0), 0),
   }));
 

@@ -407,6 +407,10 @@ export interface GBPMetricDelta {
 export interface GBPLocationInsight {
   locationName: string // "locations/123"
   locationTitle: string
+  /** City from the storefront address — disambiguates chain locations that all share one title. */
+  locality?: string | null
+  /** State/region code from the storefront address. */
+  administrativeArea?: string | null
   /** Current-window totals per metric. */
   metrics: Record<string, number>
   /** true if the per-location insights fetch failed (counts as zero). */
@@ -471,7 +475,7 @@ export async function fetchGBPClientInsights(
 ): Promise<GBPClientInsights> {
   const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h — within the 12–24h band
   const cacheKey = [
-    'gbp:client-insights',
+    'gbp:client-insights:v2', // v2: rows carry locality/administrativeArea
     accountName,
     range.startDate,
     range.endDate,
@@ -517,6 +521,8 @@ export async function fetchGBPClientInsights(
         locationRows.push({
           locationName: loc.name,
           locationTitle: loc.title || loc.name,
+          locality: loc.address?.locality ?? null,
+          administrativeArea: loc.address?.administrativeArea ?? null,
           metrics: cur.metrics,
         })
       } catch (err) {
@@ -524,6 +530,8 @@ export async function fetchGBPClientInsights(
         locationRows.push({
           locationName: loc.name,
           locationTitle: loc.title || loc.name,
+          locality: loc.address?.locality ?? null,
+          administrativeArea: loc.address?.administrativeArea ?? null,
           metrics: emptyMetricTotals(GBP_DASHBOARD_METRICS),
           error: err instanceof Error ? err.message : 'Insights fetch failed',
         })

@@ -109,6 +109,7 @@ export default async function ClientDetailPage({ params }: Props) {
             gbp_location_group: (client.gbp_location_group as string | null) ?? null,
             key_event_names: (client.key_event_names as string[] | null) ?? null,
             competitors: (client.competitors as string[] | null) ?? null,
+            brand_terms: (client.brand_terms as string[] | null) ?? null,
             targets: (client.targets as Targets | null) ?? null,
           }}
         />
