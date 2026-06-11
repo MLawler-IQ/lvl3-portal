@@ -130,6 +130,9 @@ export async function updateClient(clientId: string, formData: FormData) {
   const gbp_location_group = (formData.get('gbp_location_group') as string | null)?.trim() || null
   const key_event_names = parseStringList((formData.get('key_event_names') as string | null) ?? null)
   const competitors = parseStringList((formData.get('competitors') as string | null) ?? null)
+  const brand_terms = parseStringList((formData.get('brand_terms') as string | null) ?? null)
+  const brand_match_mode =
+    (formData.get('brand_match_mode') as string | null) === 'exact' ? 'exact' : 'contains'
   const targets = parseTargets(formData)
 
   const { error } = await service
@@ -151,6 +154,8 @@ export async function updateClient(clientId: string, formData: FormData) {
       gbp_location_group,
       key_event_names,
       competitors,
+      brand_terms,
+      brand_match_mode,
       targets,
     })
     .eq('id', clientId)

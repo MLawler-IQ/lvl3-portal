@@ -110,6 +110,7 @@ export default async function ClientDetailPage({ params }: Props) {
             key_event_names: (client.key_event_names as string[] | null) ?? null,
             competitors: (client.competitors as string[] | null) ?? null,
             brand_terms: (client.brand_terms as string[] | null) ?? null,
+            brand_match_mode: (client.brand_match_mode as string | null) ?? null,
             targets: (client.targets as Targets | null) ?? null,
           }}
         />

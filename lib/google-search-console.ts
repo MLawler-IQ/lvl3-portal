@@ -315,10 +315,13 @@ function defaultBrandToken(siteUrl: string): string {
  * (case-insensitive substring match). When `brandTerms` is empty a sensible
  * default token is derived from the site domain.
  */
+export type BrandMatchMode = 'contains' | 'exact'
+
 export async function fetchGSCBrandedSplit(
   siteUrl: string,
   range: DateRange | undefined,
   brandTerms: string[],
+  matchMode: BrandMatchMode = 'contains',
 ): Promise<GSCBrandedSplit> {
   const normalizedUrl = normalizeSiteUrl(siteUrl)
   const terms = (brandTerms.length > 0 ? brandTerms : [defaultBrandToken(siteUrl)])
@@ -327,7 +330,7 @@ export async function fetchGSCBrandedSplit(
   const termsKey = terms.join(',') || 'none'
 
   return cachedFetch(
-    `gsc:branded:${normalizedUrl}:${gscRangeKey(range)}:${termsKey}`,
+    `gsc:branded:${normalizedUrl}:${gscRangeKey(range)}:${matchMode}:${termsKey}`,
     GSC_TTL_SECONDS,
     async () => {
       const auth = await getAdminOAuthClient()
@@ -349,7 +352,10 @@ export async function fetchGSCBrandedSplit(
       }
       for (const row of data.rows ?? []) {
         const query = (row.keys?.[0] ?? '').toLowerCase()
-        const isBranded = terms.some((t) => query.includes(t))
+        const isBranded =
+          matchMode === 'exact'
+            ? terms.includes(query)
+            : terms.some((t) => query.includes(t))
         const bucket = isBranded ? split.branded : split.nonBranded
         bucket.clicks += row.clicks ?? 0
         bucket.impressions += row.impressions ?? 0

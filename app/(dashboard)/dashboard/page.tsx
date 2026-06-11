@@ -24,6 +24,8 @@ export default async function DashboardPage({
     analytics_summary_updated_at: string | null;
     client_type: string | null;
     targets: import("@/lib/dashboard/types").Targets | null;
+    competitors: string[] | null;
+    key_event_names: string[] | null;
   };
 
   const selectedClientId = await resolveSelectedClientId(user);
@@ -31,7 +33,7 @@ export default async function DashboardPage({
   const selectedClient = selectedClientId
     ? await getClientById<ClientRow>(
         selectedClientId,
-        "id, name, looker_embed_url, snapshot_insights, analytics_summary_updated_at, client_type, targets"
+        "id, name, looker_embed_url, snapshot_insights, analytics_summary_updated_at, client_type, targets, competitors, key_event_names"
       )
     : null;
 
@@ -72,6 +74,8 @@ export default async function DashboardPage({
         compare={compare}
         clientType={selectedClient.client_type ?? null}
         targets={selectedClient.targets ?? null}
+        hasCompetitors={(selectedClient.competitors ?? []).length > 0}
+        hasKeyEvents={(selectedClient.key_event_names ?? []).length > 0}
         snapshotInsights={selectedClient.snapshot_insights ?? null}
         snapshotUpdatedAt={selectedClient.analytics_summary_updated_at ?? null}
       />

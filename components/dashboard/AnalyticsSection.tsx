@@ -26,6 +26,8 @@ type AnalyticsSectionProps = {
   compare: string;
   clientType: string | null;
   targets: Targets | null;
+  hasCompetitors: boolean;
+  hasKeyEvents: boolean;
   snapshotInsights: SnapshotInsights | null;
   snapshotUpdatedAt: string | null;
 };
@@ -79,11 +81,18 @@ export default async function AnalyticsSection({
   compare,
   clientType,
   targets,
+  hasCompetitors,
+  hasKeyEvents,
   snapshotInsights,
   snapshotUpdatedAt,
 }: AnalyticsSectionProps) {
   const type = (clientType as ClientType | null) ?? null;
-  const modules: DashboardModuleId[] = defaultModulesForType(type);
+  // Registry defaults for the client type, plus data-gated modules: configuring
+  // competitors / key events surfaces those modules regardless of client type.
+  const moduleSet = new Set<DashboardModuleId>(defaultModulesForType(type));
+  if (hasCompetitors) moduleSet.add("competitive");
+  if (hasKeyEvents) moduleSet.add("converting_pages");
+  const modules: DashboardModuleId[] = Array.from(moduleSet);
   const showGbp = modules.includes("gbp_overview");
   const trendGranularity: Granularity = pickGranularity(period);
 
