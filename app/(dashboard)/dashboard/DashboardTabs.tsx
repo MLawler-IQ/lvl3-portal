@@ -9,9 +9,33 @@ import WebsiteTab from "@/components/analytics/website/WebsiteTab";
 import SeoTab from "@/components/analytics/seo/SeoTab";
 import ExecutiveSummaryBand, { type ExecutiveSummaryBandProps } from "@/components/dashboard/exec/ExecutiveSummaryBand";
 import TrendChart from "@/components/analytics/shared/TrendChart";
+import InsightCards from "@/components/dashboard/modules/InsightCards";
+import EcomFunnel from "@/components/dashboard/modules/EcomFunnel";
+import TopProducts from "@/components/dashboard/modules/TopProducts";
+import BrandedSplit from "@/components/dashboard/modules/BrandedSplit";
+import LocationLeaderboard from "@/components/dashboard/modules/LocationLeaderboard";
+import LocationCompleteness from "@/components/dashboard/modules/LocationCompleteness";
+import ConvertingPages from "@/components/dashboard/modules/ConvertingPages";
+import ContentPerformance from "@/components/dashboard/modules/ContentPerformance";
+import Competitive from "@/components/dashboard/modules/Competitive";
+import { CALENDAR_PRESETS } from "@/lib/date-range";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
 import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
-import type { Granularity, TrendPoint } from "@/lib/dashboard/types";
+import type { GA4EcomFunnel, GA4TopProduct } from "@/app/actions/dashboard-ga4";
+import type { GSCBrandedSplit, GSCIntentSplit } from "@/lib/google-search-console";
+import type { ConvertingPageRow, ContentUrlRow } from "@/app/actions/dashboard-leadgen";
+import type { CompetitiveResult } from "@/app/actions/dashboard-competitive";
+import type { Granularity, TrendPoint, InsightCard, DashboardModuleId, ClientType } from "@/lib/dashboard/types";
+
+interface ModuleData {
+  ecomFunnel: GA4EcomFunnel | null;
+  topProducts: GA4TopProduct[];
+  branded: GSCBrandedSplit | null;
+  intent: GSCIntentSplit | null;
+  convertingPages: ConvertingPageRow[];
+  contentPerformance: ContentUrlRow[];
+  competitive: CompetitiveResult | null;
+}
 
 interface Props {
   lookerUrl: string | null;
@@ -26,6 +50,10 @@ interface Props {
   sessionsTrend: TrendPoint[];
   trendGranularity: Granularity;
   gbp: DashboardGBPData | null;
+  clientType: ClientType | null;
+  modules: DashboardModuleId[];
+  moduleData: ModuleData;
+  insightCards: InsightCard[];
 }
 
 type Tab = "snapshot" | "website" | "seo" | "full" | "definitions";
@@ -139,6 +167,9 @@ export default function DashboardTabs({
   sessionsTrend,
   trendGranularity,
   gbp,
+  modules,
+  moduleData,
+  insightCards,
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -220,6 +251,18 @@ export default function DashboardTabs({
               ))}
             </div>
 
+            {/* Calendar presets */}
+            <select
+              value={CALENDAR_PRESETS.some((p) => p.value === period) ? period : ""}
+              onChange={(e) => e.target.value && navigate({ period: e.target.value })}
+              className="text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 focus:outline-none focus:border-surface-500"
+            >
+              <option value="">Calendar…</option>
+              {CALENDAR_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+
             {/* Compare select */}
             <select
               value={compare}
@@ -251,6 +294,31 @@ export default function DashboardTabs({
 
             {/* Google Business Profile overview (local_service / multi_location) */}
             {gbp?.configured && <GbpOverview gbp={gbp} />}
+
+            {/* Type-specific modules (registry-driven by client_type) */}
+            {modules.includes("insight_cards") && insightCards.length > 0 && (
+              <InsightCards cards={insightCards} headline={execBand.headline} />
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {modules.includes("ecom_funnel") && <EcomFunnel funnel={moduleData.ecomFunnel} />}
+              {modules.includes("top_products") && <TopProducts products={moduleData.topProducts} />}
+              {modules.includes("converting_pages") && <ConvertingPages rows={moduleData.convertingPages} />}
+              {modules.includes("content_performance") && <ContentPerformance rows={moduleData.contentPerformance} />}
+              {modules.includes("location_leaderboard") && (
+                <div className="lg:col-span-2">
+                  <LocationLeaderboard data={gbp} />
+                </div>
+              )}
+              {modules.includes("location_completeness") && <LocationCompleteness data={gbp} />}
+              {modules.includes("branded_split") && (
+                <BrandedSplit branded={moduleData.branded} intent={moduleData.intent} />
+              )}
+              {modules.includes("competitive") && moduleData.competitive && (
+                <div className="lg:col-span-2">
+                  <Competitive data={moduleData.competitive} />
+                </div>
+              )}
+            </div>
 
             {/* KPI strip */}
             <div>

@@ -1,6 +1,8 @@
 import { fetchAnalyticsData, fetchDashboardReport, type AnalyticsData, type DashboardReport, type SnapshotInsights } from "@/app/actions/analytics";
-import { getGA4TrendData } from "@/app/actions/dashboard-ga4";
-import { getGSCTrendAction } from "@/app/actions/dashboard-gsc";
+import { getGA4TrendData, getGA4EcomFunnelData, getGA4TopProductsData } from "@/app/actions/dashboard-ga4";
+import { getGSCTrendAction, getGSCBrandedSplitAction, getGSCIntentSplitAction } from "@/app/actions/dashboard-gsc";
+import { getConvertingPagesData, getContentPerformanceData } from "@/app/actions/dashboard-leadgen";
+import { getCompetitiveData } from "@/app/actions/dashboard-competitive";
 import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboard-gbp";
 import { defaultModulesForType } from "@/lib/dashboard/registry";
 import { pickGranularity } from "@/lib/date-range";
@@ -96,6 +98,34 @@ export default async function AnalyticsSection({
   const gbp: DashboardGBPData | null = (gbpRes as DashboardGBPData | null) ?? null;
   const activityItems: ActivityItem[] = Array.isArray(activity) ? activity : [];
 
+  // ── Phase B: type-specific module data (gated on the client's module set) ──
+  const wants = (id: DashboardModuleId) => modules.includes(id);
+  const safe = async <T,>(p: Promise<T> | null): Promise<T | null> => {
+    if (!p) return null;
+    try { return await p; } catch { return null; }
+  };
+  const [ecomFunnelRes, topProductsRes, brandedRes, intentRes, convRes, contentRes, compRes] =
+    await Promise.all([
+      safe(wants("ecom_funnel") ? getGA4EcomFunnelData({ period, compare }) : null),
+      safe(wants("top_products") ? getGA4TopProductsData({ period, compare }) : null),
+      safe(wants("branded_split") ? getGSCBrandedSplitAction({ period, compare }) : null),
+      safe(wants("branded_split") ? getGSCIntentSplitAction({ period, compare }) : null),
+      safe(wants("converting_pages") ? getConvertingPagesData({ period, compare }) : null),
+      safe(wants("content_performance") ? getContentPerformanceData({ period, compare }) : null),
+      safe(wants("competitive") ? getCompetitiveData() : null),
+    ]);
+
+  const moduleData = {
+    ecomFunnel: ecomFunnelRes?.funnel ?? null,
+    topProducts: topProductsRes?.products ?? [],
+    branded: brandedRes ?? null,
+    intent: intentRes ?? null,
+    convertingPages: convRes?.rows ?? [],
+    contentPerformance: contentRes?.rows ?? [],
+    competitive: compRes ?? null,
+  };
+  const insightCards = snapshotInsights?.cards ?? [];
+
   const ga4 = analyticsData.ga4;
   const gsc = analyticsData.gsc;
   const hasAnalytics = ga4 !== null || gsc !== null;
@@ -125,8 +155,8 @@ export default async function AnalyticsSection({
     health.push({ label: `GBP Profiles (${gbp.audit.locationCount})`, score: gbp.audit.avgScore });
   }
 
-  let headline: string | undefined;
-  if (ga4) {
+  let headline: string | undefined = snapshotInsights?.headline;
+  if (!headline && ga4) {
     const d = ga4.sessionsDelta;
     headline =
       d > 0
@@ -172,6 +202,10 @@ export default async function AnalyticsSection({
           sessionsTrend={sessionsTrend}
           trendGranularity={trendGranularity}
           gbp={gbp}
+          clientType={type}
+          modules={modules}
+          moduleData={moduleData}
+          insightCards={insightCards}
         />
       </div>
     </div>

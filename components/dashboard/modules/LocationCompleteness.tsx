@@ -138,8 +138,6 @@ export default function LocationCompleteness({
   // sorted score-ascending (worst first); only surface those below perfect.
   const attention = audit.locations.filter((l) => l.score < 100).slice(0, maxAttention)
 
-  const avgTone = TONE_STYLES[scoreTone(audit.avgScore)]
-
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center justify-between gap-2">

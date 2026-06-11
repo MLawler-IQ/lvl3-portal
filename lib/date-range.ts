@@ -47,12 +47,6 @@ const CALENDAR_LABELS: Record<CalendarPeriod, string> = {
   qtd: 'Quarter to date',
 }
 
-const CALENDAR_SHORT: Record<CalendarPeriod, string> = {
-  last_full_month: 'month',
-  mtd: 'month to date',
-  qtd: 'quarter to date',
-}
-
 /** Iterable list for the UI period selector. */
 export const CALENDAR_PRESETS: { value: CalendarPeriod; label: string }[] =
   CALENDAR_PERIODS.map((value) => ({ value, label: CALENDAR_LABELS[value] }))
@@ -86,7 +80,7 @@ function buildCalendarRange(period: CalendarPeriod, compare: string, now: Date):
   let endDate: string
   let compareStart: string
   let compareEnd: string
-  let label = CALENDAR_LABELS[period]
+  const label = CALENDAR_LABELS[period]
   let compareLabel: string
 
   if (period === 'last_full_month') {
