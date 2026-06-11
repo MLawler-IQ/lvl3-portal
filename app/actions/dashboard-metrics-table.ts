@@ -34,6 +34,12 @@ export type MetricTableRow = {
   revenue: number
   /** True for the in-progress current calendar month (incomplete data — no fair deltas). */
   isPartial: boolean
+  /**
+   * 'suspect' when this month's sessions or clicks fall below half the median of
+   * the OTHER complete months — a likely tracking gap (data not fully collected)
+   * rather than a real drop. Absent/'ok' otherwise. The MTD month is never flagged.
+   */
+  dataQuality?: 'ok' | 'suspect'
 }
 
 export type MetricTableResult = {
@@ -120,8 +126,37 @@ export async function get13MonthTable(): Promise<MetricTableResult> {
     }
 
     const rows = Array.from(byMonth.values()).sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))
+    flagSuspectMonths(rows)
     return { configured: true, rows }
   } catch {
     return { configured: false, rows: [] }
+  }
+}
+
+/** Median of a numeric list (0 for empty). */
+function median(xs: number[]): number {
+  if (xs.length === 0) return 0
+  const s = [...xs].sort((a, b) => a - b)
+  const mid = Math.floor(s.length / 2)
+  return s.length % 2 === 0 ? (s[mid - 1] + s[mid]) / 2 : s[mid]
+}
+
+/**
+ * Mark complete months whose sessions OR clicks read like a tracking gap: less
+ * than half the median of the OTHER complete months for that metric. The MTD
+ * month is excluded (expected to be partial) and a metric with no baseline
+ * (median 0 — e.g. GSC not configured, all clicks 0) can't trigger a flag.
+ * Needs ≥4 complete months for a meaningful baseline; below that we don't guess.
+ */
+function flagSuspectMonths(rows: MetricTableRow[]): void {
+  const complete = rows.filter((r) => !r.isPartial)
+  if (complete.length < 4) return
+  for (const row of complete) {
+    const others = complete.filter((r) => r !== row)
+    const medSessions = median(others.map((r) => r.sessions))
+    const medClicks = median(others.map((r) => r.clicks))
+    const sessionsGap = medSessions > 0 && row.sessions < medSessions * 0.5
+    const clicksGap = medClicks > 0 && row.clicks < medClicks * 0.5
+    if (sessionsGap || clicksGap) row.dataQuality = 'suspect'
   }
 }

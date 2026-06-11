@@ -1,5 +1,5 @@
 import { EmptyState } from '@/components/ui/EmptyState'
-import { CalendarRange, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
+import { CalendarRange, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from 'lucide-react'
 import type { MetricTableRow } from '@/app/actions/dashboard-metrics-table'
 
 export interface MetricTable13Props {
@@ -7,7 +7,7 @@ export interface MetricTable13Props {
   rows: MetricTableRow[]
 }
 
-type MetricKey = keyof Omit<MetricTableRow, 'yearMonth' | 'isPartial'>
+type MetricKey = keyof Omit<MetricTableRow, 'yearMonth' | 'isPartial' | 'dataQuality'>
 
 const COLUMNS: { key: MetricKey; label: string; format: (n: number) => string }[] = [
   { key: 'sessions', label: 'Sessions', format: (n) => n.toLocaleString() },
@@ -94,6 +94,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
 
   // Newest-first for display.
   const display = [...ascending].reverse()
+  const hasSuspect = ascending.some((r) => r.dataQuality === 'suspect')
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
@@ -152,8 +153,19 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
                   }`}
                 >
                   <td className="py-2 pr-4 text-left">
-                    <span className={isAnchor ? 'font-medium text-surface-100' : 'text-surface-300'}>
-                      {rowLabel(row)}
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className={isAnchor ? 'font-medium text-surface-100' : 'text-surface-300'}>
+                        {rowLabel(row)}
+                      </span>
+                      {row.dataQuality === 'suspect' && (
+                        <span
+                          className="inline-flex items-center text-amber-500"
+                          title="Possible tracking gap — sessions or clicks were far below this client's typical month, which usually means data wasn't fully collected, not a real drop."
+                          aria-label="Possible tracking gap"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+                        </span>
+                      )}
                     </span>
                   </td>
                   {COLUMNS.map((col) => (
@@ -172,6 +184,13 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
           </tbody>
         </table>
       </div>
+
+      {hasSuspect && (
+        <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-surface-500">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+          Flagged months had sessions or clicks far below this client&apos;s typical month — likely a tracking gap, not a real drop.
+        </p>
+      )}
     </div>
   )
 }
