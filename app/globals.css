@@ -169,3 +169,55 @@ h1, h2, h3, h4, h5, h6 {
     color:      var(--color-primary);
   }
 }
+
+/* ── Print ──────────────────────────────────────────────────
+   Light-paper output: the active view prints as one flowing
+   document on the existing light canvas. Chrome and controls
+   are hidden, the viewport-pinned dashboard shell is unclipped,
+   and exact color printing keeps chart hues, KPI accents and
+   status colors legible on paper. */
+@page { margin: 14mm; }
+
+@media print {
+  html, body {
+    height:     auto !important;
+    overflow:   visible !important;
+    background: #fff !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust:         exact;
+  }
+
+  /* App chrome (top bar, sidebar, breadcrumbs) and interactive
+     controls (tab pills, period selectors, buttons) are meaningless
+     on paper. */
+  header, nav, aside, button, select { display: none !important; }
+
+  /* Sortable column headers render their labels inside buttons —
+     keep those as static text or tables print with blank headers. */
+  th button { display: inline-flex !important; }
+
+  /* Drop the fixed top-bar / sidebar offsets so content starts at
+     the page edge. */
+  #main-content { padding: 0 !important; }
+  .min-h-screen { min-height: 0 !important; }
+
+  /* The dashboard shell pins itself to the viewport
+     (height: calc(100vh - 56px)) and scrolls internally — let it
+     flow as a document instead. */
+  [style*="100vh"] { height: auto !important; }
+  #main-content .h-full { height: auto !important; }
+  #main-content .overflow-auto,
+  #main-content .overflow-hidden,
+  #main-content .overflow-y-auto,
+  #main-content .overflow-x-auto { overflow: visible !important; }
+
+  /* Charts scale to the paper width (recharts SVGs carry a viewBox);
+     keep table rows and cards intact across page breaks. */
+  .recharts-responsive-container { width: 100% !important; }
+  .recharts-wrapper { max-width: 100% !important; height: auto !important; }
+  .recharts-wrapper svg { max-width: 100% !important; height: auto !important; }
+  tr, .rounded-xl { break-inside: avoid; }
+}

@@ -53,12 +53,12 @@ export default async function DashboardLayout({
   type ClientBasic = {
     id: string;
     name: string;
-    ai_summary_updated_at: string | null;
+    analytics_summary_updated_at: string | null;
   };
   const selectedClient = selectedClientId
     ? await getClientById<ClientBasic>(
         selectedClientId,
-        "id, name, ai_summary_updated_at"
+        "id, name, analytics_summary_updated_at"
       )
     : null;
 
@@ -119,7 +119,7 @@ export default async function DashboardLayout({
       selectedClientId={selectedClientId}
       selectedClientName={selectedClient?.name ?? null}
       showClientSelector={showSelector}
-      summaryUpdatedAt={selectedClient?.ai_summary_updated_at ?? null}
+      summaryUpdatedAt={selectedClient?.analytics_summary_updated_at ?? null}
       unreadCount={unreadCount}
       deliverableBadgeCount={deliverableBadgeCount}
       postsBadgeCount={postsBadgeCount}

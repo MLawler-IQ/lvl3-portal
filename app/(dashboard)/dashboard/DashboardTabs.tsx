@@ -23,6 +23,8 @@ import Alerts from "@/components/dashboard/modules/Alerts";
 import Targets from "@/components/dashboard/modules/Targets";
 import MetricTable13 from "@/components/dashboard/modules/MetricTable13";
 import Annotations from "@/components/dashboard/modules/Annotations";
+import ExportTool from "@/components/tools/primitives/ExportTool";
+import { Printer } from "lucide-react";
 import { buildDateRange, CALENDAR_PRESETS } from "@/lib/date-range";
 import { gbpLocationLabel, hasDuplicateTitles } from "@/lib/dashboard/gbp-labels";
 import type { Annotation } from "@/app/actions/annotations";
@@ -305,6 +307,17 @@ export default function DashboardTabs({
               <option value="prior">vs. prior period</option>
               <option value="yoy">vs. prior year</option>
             </select>
+
+            {/* Print / Save PDF */}
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="print:hidden flex items-center gap-1.5 text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 hover:text-surface-100 hover:border-surface-500 transition-colors focus:outline-none focus:border-surface-500"
+              title="Print this view or save it as a PDF"
+            >
+              <Printer size={12} aria-hidden="true" />
+              Print / Save PDF
+            </button>
           </div>
         )}
       </div>
@@ -424,6 +437,25 @@ export default function DashboardTabs({
                 </div>
               )}
             </div>
+            {isAdmin && metricTableRows.length > 0 && (
+              <div className="flex justify-end print:hidden">
+                <ExportTool
+                  toolSlug="dashboard-metrics-13mo"
+                  clientId={clientId}
+                  persist={false}
+                  input={{ clientId }}
+                  output={{ months: metricTableRows.length }}
+                  filename={`metrics-13mo-${clientName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || clientId}`}
+                  formats={["csv", "xlsx"]}
+                  data={{
+                    headers: ["Month", "Sessions", "Clicks", "Impressions", "Conversions", "Revenue"],
+                    rows: [...metricTableRows]
+                      .reverse()
+                      .map((r) => [r.yearMonth, r.sessions, r.clicks, r.impressions, r.conversions, r.revenue]),
+                  }}
+                />
+              </div>
+            )}
             {isAdmin && <MetricTable13 rows={metricTableRows} />}
           </div>
         )}
