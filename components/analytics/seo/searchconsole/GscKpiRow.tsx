@@ -36,7 +36,15 @@ export default function GscKpiRow({ gsc, compareLabel }: Props) {
       <KpiCard
         label="Avg. Position"
         value={gsc.position.toFixed(1)}
-        delta={{ direction: dir(gsc.positionDelta), percent: `${Math.abs(gsc.positionDelta)}%` }}
+        delta={{
+          // positionDelta is the raw signed movement of the position number
+          // (lib/google-search-console.ts pct()) — direction follows the number,
+          // goodDirection inverts the color since a LOWER position is better.
+          direction: dir(gsc.positionDelta),
+          percent: `${Math.abs(gsc.positionDelta)}%`,
+          goodDirection: 'down',
+          wording: { up: 'Worsened', down: 'Improved' },
+        }}
         tooltip={`Average search ranking position ${compareLabel} (Search Console)`}
       />
     </div>
