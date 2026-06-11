@@ -103,6 +103,11 @@ export default async function ClientDetailPage({ params }: Props) {
             ga4_property_id: (client.ga4_property_id as string | null) ?? null,
             gsc_site_url: (client.gsc_site_url as string | null) ?? null,
             brand_context: (client.brand_context as string | null) ?? null,
+            client_type: (client.client_type as string | null) ?? null,
+            gbp_account_id: (client.gbp_account_id as string | null) ?? null,
+            gbp_location_group: (client.gbp_location_group as string | null) ?? null,
+            key_event_names: (client.key_event_names as string[] | null) ?? null,
+            competitors: (client.competitors as string[] | null) ?? null,
           }}
         />
       </div>

@@ -6,6 +6,17 @@ import {
   createServiceClient,
 } from '@/lib/supabase/server'
 import { parseSheetId } from '@/lib/google-sheets'
+import { CLIENT_TYPES, type ClientType } from '@/lib/dashboard/types'
+
+/** Parse a comma/newline-separated list into a clean string[] (or null when empty). */
+function parseStringList(raw: string | null): string[] | null {
+  if (!raw) return null
+  const items = raw
+    .split(/[\n,]/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  return items.length > 0 ? items : null
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -90,6 +101,16 @@ export async function updateClient(clientId: string, formData: FormData) {
   const hero_image_url = (formData.get('hero_image_url') as string | null)?.trim() || null
   const brand_context = (formData.get('brand_context') as string | null)?.trim() || null
 
+  // Dashboard metadata (see lib/dashboard/registry.ts + 20260611000000_dashboard_metadata.sql)
+  const rawClientType = (formData.get('client_type') as string | null)?.trim() || ''
+  const client_type: ClientType | null = CLIENT_TYPES.includes(rawClientType as ClientType)
+    ? (rawClientType as ClientType)
+    : null
+  const gbp_account_id = (formData.get('gbp_account_id') as string | null)?.trim() || null
+  const gbp_location_group = (formData.get('gbp_location_group') as string | null)?.trim() || null
+  const key_event_names = parseStringList((formData.get('key_event_names') as string | null) ?? null)
+  const competitors = parseStringList((formData.get('competitors') as string | null) ?? null)
+
   const { error } = await service
     .from('clients')
     .update({
@@ -104,6 +125,11 @@ export async function updateClient(clientId: string, formData: FormData) {
       gsc_site_url,
       hero_image_url,
       brand_context,
+      client_type,
+      gbp_account_id,
+      gbp_location_group,
+      key_event_names,
+      competitors,
     })
     .eq('id', clientId)
 
