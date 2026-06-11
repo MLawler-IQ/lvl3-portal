@@ -29,6 +29,28 @@ async function loadClient(clientId: string): Promise<RecsClient | null> {
   return getClientById<RecsClient>(clientId, 'id, name, gsc_site_url, ga4_property_id, brand_context')
 }
 
+/**
+ * Extract a JSON string[] from an LLM reply that may include code fences or
+ * surrounding prose. Tries the whole (fence-stripped) text first, then every
+ * flat [...] block, returning the first that parses. Null when nothing does —
+ * callers degrade gracefully instead of surfacing a JSON.parse error.
+ */
+function parseStringArray(raw: string): string[] | null {
+  const cleaned = raw.replace(/```(?:json)?/gi, '').trim()
+  const candidates = [cleaned, ...(cleaned.match(/\[[^\[\]]*\]/g) ?? [])]
+  for (const candidate of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(candidate)
+      if (Array.isArray(parsed)) {
+        return parsed.filter((t): t is string => typeof t === 'string' && t.trim().length > 1)
+      }
+    } catch {
+      // try the next candidate
+    }
+  }
+  return null
+}
+
 /** Deterministic brand-term seeds from the client name + domain. */
 function heuristicBrandTerms(name: string, domain: string): string[] {
   const out = new Set<string>()
@@ -101,11 +123,9 @@ Respond with ONLY a JSON array of strings, e.g. ["brand name","brandname"]. Max 
     })
 
     const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
-    const match = raw.match(/\[[\s\S]*\]/)
-    const parsed: unknown = match ? JSON.parse(match[0]) : []
-    const llmTerms = Array.isArray(parsed)
-      ? parsed.filter((t): t is string => typeof t === 'string' && t.trim().length > 1)
-      : []
+    // An unparseable LLM reply degrades to the heuristic seeds, never an error.
+    const llmTerms = parseStringArray(raw) ?? []
+    if (llmTerms.length === 0) return { suggestions: seeds, source: 'heuristic' }
 
     const merged = Array.from(new Set([...seeds, ...llmTerms.map((t) => t.toLowerCase().trim())])).slice(0, 10)
     return { suggestions: merged, source: 'gsc+llm' }
@@ -162,10 +182,11 @@ Respond with ONLY a JSON array of up to 6 competitor root domains (no protocol, 
     })
 
     const raw = message.content[0]?.type === 'text' ? message.content[0].text : '[]'
-    const match = raw.match(/\[[\s\S]*\]/)
-    const parsed: unknown = match ? JSON.parse(match[0]) : []
-    const suggestions = (Array.isArray(parsed) ? parsed : [])
-      .filter((d): d is string => typeof d === 'string')
+    const llmDomains = parseStringArray(raw)
+    if (llmDomains === null) {
+      return { suggestions: [], source: 'none', error: 'AI returned an unparseable response — try again' }
+    }
+    const suggestions = llmDomains
       .map((d) => normalizeDomain(d))
       .filter((d) => d && d !== domain)
       .slice(0, 6)
