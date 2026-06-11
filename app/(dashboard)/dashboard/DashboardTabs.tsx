@@ -7,7 +7,11 @@ import AnalyticsKpiStrip from "@/components/analytics/AnalyticsKpiStrip";
 import RefreshAnalyticsButton from "@/components/home/RefreshAnalyticsButton";
 import WebsiteTab from "@/components/analytics/website/WebsiteTab";
 import SeoTab from "@/components/analytics/seo/SeoTab";
+import ExecutiveSummaryBand, { type ExecutiveSummaryBandProps } from "@/components/dashboard/exec/ExecutiveSummaryBand";
+import TrendChart from "@/components/analytics/shared/TrendChart";
 import type { AnalyticsData, SnapshotInsights, DashboardReport } from "@/app/actions/analytics";
+import type { DashboardGBPData } from "@/app/actions/dashboard-gbp";
+import type { Granularity, TrendPoint } from "@/lib/dashboard/types";
 
 interface Props {
   lookerUrl: string | null;
@@ -18,6 +22,10 @@ interface Props {
   snapshotUpdatedAt: string | null;
   clientId: string;
   dashboardReport: DashboardReport;
+  execBand: ExecutiveSummaryBandProps;
+  sessionsTrend: TrendPoint[];
+  trendGranularity: Granularity;
+  gbp: DashboardGBPData | null;
 }
 
 type Tab = "snapshot" | "website" | "seo" | "full" | "definitions";
@@ -49,6 +57,75 @@ function SnapshotSection({
   );
 }
 
+const GBP_TILE_LABELS: Record<string, string> = {
+  CALL_CLICKS: "Calls",
+  WEBSITE_CLICKS: "Website clicks",
+  BUSINESS_DIRECTION_REQUESTS: "Directions",
+  BUSINESS_CONVERSATIONS: "Messages",
+  BUSINESS_BOOKINGS: "Bookings",
+};
+
+const GBP_IMPRESSION_METRICS = [
+  "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+  "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+  "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+  "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+];
+
+function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
+  if (!gbp.configured) return null;
+  const totals = gbp.insights?.totals ?? {};
+  const impressions = GBP_IMPRESSION_METRICS.reduce((s, k) => s + (totals[k] ?? 0), 0);
+  const deltaFor = (m: string) => gbp.insights?.deltas.find((d) => d.metric === m)?.deltaPct ?? null;
+
+  const tiles: { label: string; value: number; delta: number | null }[] = [
+    { label: "Total impressions", value: impressions, delta: null },
+    ...Object.keys(GBP_TILE_LABELS)
+      .filter((k) => (totals[k] ?? 0) > 0 || k === "CALL_CLICKS")
+      .map((k) => ({ label: GBP_TILE_LABELS[k], value: totals[k] ?? 0, delta: deltaFor(k) })),
+  ];
+
+  const topIssues = Object.entries(gbp.audit?.issueCounts ?? {})
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  return (
+    <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm font-semibold text-surface-100">Google Business Profile</p>
+        {gbp.audit && (
+          <span className="text-xs text-surface-400">
+            {gbp.audit.locationCount} location{gbp.audit.locationCount === 1 ? "" : "s"} ·{" "}
+            <span className="text-accent-400 font-medium">{gbp.audit.avgScore}/100</span> avg profile
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {tiles.map((t) => (
+          <div key={t.label} className="rounded-lg border border-surface-700 bg-surface-950/40 px-3 py-2.5">
+            <p className="text-xs text-surface-400 truncate">{t.label}</p>
+            <p className="text-lg font-semibold text-surface-100 tabular-nums">{Math.round(t.value).toLocaleString()}</p>
+            {typeof t.delta === "number" && (
+              <p className={`text-xs ${t.delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                {t.delta >= 0 ? "+" : ""}
+                {t.delta.toFixed(0)}%
+              </p>
+            )}
+          </div>
+        ))}
+      </div>
+      {topIssues.length > 0 && (
+        <p className="mt-3 text-xs text-surface-500">
+          Top profile gaps: {topIssues.map(([issue, count]) => `${issue} (${count})`).join(" · ")}
+        </p>
+      )}
+      {(gbp.insightsError || gbp.auditError) && (
+        <p className="mt-3 text-xs text-amber-400/80">Some GBP data could not be loaded this period.</p>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardTabs({
   lookerUrl,
   clientName,
@@ -58,6 +135,10 @@ export default function DashboardTabs({
   snapshotUpdatedAt,
   clientId,
   dashboardReport,
+  execBand,
+  sessionsTrend,
+  trendGranularity,
+  gbp,
 }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -157,6 +238,20 @@ export default function DashboardTabs({
         {/* Snapshot tab */}
         {activeTab === "snapshot" && (
           <div className="p-6 max-w-4xl space-y-6">
+            {/* Executive summary band (type-aware hero) */}
+            <ExecutiveSummaryBand {...execBand} />
+
+            {/* Period-aware traffic trend with prior-period ghost overlay */}
+            {sessionsTrend.length >= 2 && (
+              <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
+                <p className="text-sm font-semibold text-surface-100 mb-3">Traffic trend</p>
+                <TrendChart data={sessionsTrend} label="Sessions" granularity={trendGranularity} />
+              </div>
+            )}
+
+            {/* Google Business Profile overview (local_service / multi_location) */}
+            {gbp?.configured && <GbpOverview gbp={gbp} />}
+
             {/* KPI strip */}
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-surface-500 mb-3">

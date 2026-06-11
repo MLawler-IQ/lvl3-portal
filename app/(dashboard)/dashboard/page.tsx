@@ -21,6 +21,7 @@ export default async function DashboardPage({
     looker_embed_url: string | null;
     snapshot_insights: import("@/app/actions/analytics").SnapshotInsights | null;
     analytics_summary_updated_at: string | null;
+    client_type: string | null;
   };
 
   const selectedClientId = await resolveSelectedClientId(user);
@@ -28,7 +29,7 @@ export default async function DashboardPage({
   const selectedClient = selectedClientId
     ? await getClientById<ClientRow>(
         selectedClientId,
-        "id, name, looker_embed_url, snapshot_insights, analytics_summary_updated_at"
+        "id, name, looker_embed_url, snapshot_insights, analytics_summary_updated_at, client_type"
       )
     : null;
 
@@ -67,6 +68,7 @@ export default async function DashboardPage({
         isAdmin={isAdmin}
         period={period}
         compare={compare}
+        clientType={selectedClient.client_type ?? null}
         snapshotInsights={selectedClient.snapshot_insights ?? null}
         snapshotUpdatedAt={selectedClient.analytics_summary_updated_at ?? null}
       />
