@@ -102,17 +102,20 @@ interface AlertMetricMeta {
   key: keyof AlertMetrics
   label: string
   chartRef: DashboardModuleId
+  /** The so-what + next-step for the alert detail — adds context beyond the
+   *  title's "<metric> down X%" so the strip never restates itself. */
+  implication: string
 }
 
 const METRIC_META: AlertMetricMeta[] = [
-  { key: 'revenue', label: 'Revenue', chartRef: 'ecom_funnel' },
+  { key: 'revenue', label: 'Revenue', chartRef: 'ecom_funnel', implication: 'Open the funnel to see whether traffic, conversion rate, or order value gave way.' },
   // `conversions` key, but LABELED "Purchases" — backed by GA4 transactions.
   // "Conversions" stays reserved for keyEvents-backed pacing/goal-miss alerts.
-  { key: 'conversions', label: 'Purchases', chartRef: 'converting_pages' },
-  { key: 'gbpCalls', label: 'GBP calls', chartRef: 'gbp_overview' },
-  { key: 'gbpBookings', label: 'GBP bookings', chartRef: 'gbp_overview' },
-  { key: 'organicClicks', label: 'Organic clicks', chartRef: 'search_queries' },
-  { key: 'sessions', label: 'Sessions', chartRef: 'traffic_trend' },
+  { key: 'conversions', label: 'Purchases', chartRef: 'converting_pages', implication: 'The funnel is converting fewer visitors — check converting pages and channel mix for where it leaks.' },
+  { key: 'gbpCalls', label: 'GBP calls', chartRef: 'gbp_overview', implication: 'Calls are direct leads — review Business Profile visibility and the locations driving the drop.' },
+  { key: 'gbpBookings', label: 'GBP bookings', chartRef: 'gbp_overview', implication: 'Bookings are direct conversions — check Business Profile actions and the locations driving the drop.' },
+  { key: 'organicClicks', label: 'Organic clicks', chartRef: 'search_queries', implication: 'Organic clicks feed pipeline — check which queries and pages lost ground before rankings settle.' },
+  { key: 'sessions', label: 'Sessions', chartRef: 'traffic_trend', implication: 'A smaller top of funnel caps everything downstream — open the trend to see when it started and which channels moved.' },
 ]
 
 const METRIC_LABELS: Record<string, string> = METRIC_META.reduce(
@@ -183,7 +186,9 @@ function metricDeclineAlerts(metrics: AlertMetrics): DashboardAlert[] {
       id: `metric-decline-${meta.key}`,
       severity,
       title: `${meta.label} down ${MINUS}${magnitude}`,
-      detail: `${meta.label} fell ${MINUS}${magnitude} versus the comparison period.`,
+      // Detail ADDS the so-what + next-step rather than restating the title's
+      // "<metric> down X%" (which read as a duplicate in the strip).
+      detail: meta.implication,
       metric: meta.key,
       chartRef: meta.chartRef,
     })
