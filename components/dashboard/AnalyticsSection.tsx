@@ -10,7 +10,8 @@ import { fetchDashboardGBP, type DashboardGBPData } from "@/app/actions/dashboar
 import { defaultModulesForType } from "@/lib/dashboard/registry";
 import { computePacing, monthElapsedFraction, type PacingRow } from "@/lib/dashboard/pacing";
 import { deriveAlerts, type AlertInput } from "@/lib/dashboard/alerts";
-import { pickGranularity } from "@/lib/date-range";
+import { deriveInsightCards, deriveHeadline, type InsightSignals, type MetricSignal } from "@/lib/dashboard/insights";
+import { buildDateRange, pickGranularity } from "@/lib/date-range";
 import type { ClientType, DashboardModuleId, Granularity, TrendPoint, Targets, DashboardAlert } from "@/lib/dashboard/types";
 import type { ExecutiveSummaryBandProps, ExecKpi, HealthItem, ActivityItem } from "@/components/dashboard/exec/ExecutiveSummaryBand";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,20 @@ const PACING_TO_ALERT_KEY: Record<string, string> = {
   revenue: "revenue",
   gbp_calls: "gbpCalls",
 };
+
+// Alert-engine metric keys → the human labels used in alert titles and insight
+// cards (mirrors lib/dashboard/alerts.ts METRIC_META).
+const ALERT_METRIC_LABELS: Record<string, string> = {
+  sessions: "Sessions",
+  organicClicks: "Organic clicks",
+  conversions: "Conversions",
+  revenue: "Revenue",
+  gbpCalls: "GBP calls",
+};
+
+// Decline phrasings (or a signed-minus magnitude, U+2212) used to detect a
+// down-reading headline for the dedup-vs-top-alert check below.
+const HEADLINE_DECLINE_RE = /\b(down|fell|behind|declin\w*|drop\w*|decreas\w*)\b|−\s?\d/i;
 
 /** Recent deliverables for the exec-band activity feed. Best-effort; empty on any failure. */
 async function fetchActivity(clientId: string): Promise<ActivityItem[]> {
@@ -155,7 +170,6 @@ export default async function AnalyticsSection({
     contentPerformance: contentRes?.rows ?? [],
     competitive: compRes ?? null,
   };
-  const insightCards = snapshotInsights?.cards ?? [];
 
   // ── Phase C: pacing (month-to-date vs goals), alerts, 13-month table ──
   const targetsMap = targets ?? {};
@@ -276,15 +290,56 @@ export default async function AnalyticsSection({
     health.push({ label: `GBP Profiles (${gbp.audit.locationCount})`, score: gbp.audit.avgScore });
   }
 
-  let headline: string | undefined = snapshotInsights?.headline;
-  if (!headline && ga4) {
-    const d = ga4.sessionsDelta;
-    headline =
-      d > 0
-        ? `Sessions up ${Math.abs(d).toFixed(0)}% vs the prior period`
-        : d < 0
-        ? `Sessions down ${Math.abs(d).toFixed(0)}% vs the prior period`
-        : `Sessions holding steady vs the prior period`;
+  // ── Live insight cards (verdict layer) ────────────────────────────────────
+  // Derived at render from the same current-period deltas that feed the exec
+  // band and alerts, so cards always match the selected period/compare frame.
+  // Stored snapshot insights contribute only the LLM headline + takeaways.
+  const compareLabel = buildDateRange(period, compare).compareLabel;
+  // A structurally absent metric (e.g. no ecommerce tracking) reports 0 value
+  // and 0% delta — drop it so it can't surface as a noise card.
+  const liveSignal = (value: number, delta?: number | null): MetricSignal | undefined =>
+    value > 0 || (typeof delta === "number" && delta !== 0)
+      ? { value, delta: delta ?? undefined }
+      : undefined;
+  const insightSignals: InsightSignals = { period: compareLabel };
+  if (ga4) {
+    insightSignals.sessions = liveSignal(ga4.sessions, ga4.sessionsDelta);
+    insightSignals.users = liveSignal(ga4.users, ga4.usersDelta);
+    insightSignals.pageviews = liveSignal(ga4.pageviews, ga4.pageviewsDelta);
+  }
+  if (gsc) {
+    insightSignals.organicClicks = liveSignal(gsc.clicks, clicksDeltaPct);
+  }
+  if (dashboardReport.gsc) {
+    insightSignals.impressions = liveSignal(dashboardReport.gsc.impressions, dashboardReport.gsc.impressionsDelta);
+    insightSignals.avgPosition = liveSignal(dashboardReport.gsc.position, dashboardReport.gsc.positionDelta);
+  }
+  if (dashboardReport.ga4) {
+    insightSignals.conversions = liveSignal(dashboardReport.ga4.transactions, dashboardReport.ga4.transactionsDelta);
+    insightSignals.revenue = liveSignal(dashboardReport.ga4.purchaseRevenue, dashboardReport.ga4.purchaseRevenueDelta);
+  }
+  if (gbp?.configured && gbp.insights) {
+    insightSignals.gbpCalls = liveSignal(
+      gbp.insights.totals["CALL_CLICKS"] ?? 0,
+      gbp.insights.deltas.find((d) => d.metric === "CALL_CLICKS")?.deltaPct
+    );
+  }
+  const insightCards = deriveInsightCards(insightSignals);
+
+  // Stored LLM headline when present; otherwise a deterministic fallback from
+  // the live cards (deriveHeadline embeds each card's correct period label).
+  let headline: string | undefined = snapshotInsights?.headline || deriveHeadline(insightCards);
+  // Dedup rule: suppress the band headline when it restates the top alert —
+  // i.e. it names the same metric AND reads as a decline (metric alerts are
+  // decline-only) — so the identical message never renders twice back-to-back.
+  const topAlertMetric = alerts[0]?.metric ? ALERT_METRIC_LABELS[alerts[0].metric] : undefined;
+  if (
+    headline &&
+    topAlertMetric &&
+    headline.toLowerCase().includes(topAlertMetric.toLowerCase()) &&
+    HEADLINE_DECLINE_RE.test(headline)
+  ) {
+    headline = undefined;
   }
 
   const execBand: ExecutiveSummaryBandProps = { headline, kpis, health, activity: activityItems };

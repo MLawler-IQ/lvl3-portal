@@ -3,7 +3,6 @@ import type { InsightCard, InsightDirection, InsightSeverity } from '@/lib/dashb
 
 interface InsightCardsProps {
   cards: InsightCard[]
-  headline?: string
 }
 
 /** Per-severity color tokens. */
@@ -80,29 +79,20 @@ function InsightCardTile({ card }: { card: InsightCard }) {
 }
 
 /**
- * Presentational insight-cards module. Renders an optional headline plus a
- * responsive grid of severity-colored insight cards, each showing the direction
- * arrow, magnitude, period, the what-happened statement, and the business
- * implication. Renders nothing when there are no cards.
+ * Presentational insight-cards module. Renders a responsive grid of
+ * severity-colored insight cards, each showing the direction arrow, magnitude,
+ * period, the what-happened statement, and the business implication. The
+ * narrative headline lives in the exec band, not here. Renders nothing when
+ * there are no cards.
  */
-export default function InsightCards({ cards, headline }: InsightCardsProps) {
+export default function InsightCards({ cards }: InsightCardsProps) {
   if (!cards || cards.length === 0) return null
 
   return (
     <section className="space-y-4">
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500">
-          Key Insights
-        </p>
-        {headline && (
-          <h3
-            className="mt-2 text-base font-bold leading-snug text-surface-100"
-            style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
-          >
-            {headline}
-          </h3>
-        )}
-      </div>
+      <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500">
+        Key Insights
+      </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, i) => (
