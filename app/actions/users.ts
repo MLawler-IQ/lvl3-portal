@@ -204,27 +204,31 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
     throw new Error('A client is required for client-role users')
   }
 
+  // Invites onboard NEW users only. If the email already belongs to a user,
+  // reject — role/access changes must go through the edit flow, which carries
+  // the last-admin and self-protection guardrails. Otherwise invite would be an
+  // unguarded back door to demote/relocate even the last admin (or yourself).
+  // (The signup trigger creates a public.users row even for unconfirmed/pending
+  // invitees, so this also catches a duplicate re-invite.)
+  const { data: existing } = await service
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle()
+  if (existing) {
+    throw new Error('A user with that email already exists — edit them from the table instead.')
+  }
+
   const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(email, {
     data: { role, client_id: role === 'client' ? clientId : null },
     redirectTo: `${siteUrl()}/auth/callback`,
   })
-  if (inviteError && !inviteError.message.includes('already been registered')) {
-    throw new Error(inviteError.message)
-  }
+  if (inviteError) throw new Error(inviteError.message)
 
-  // Resolve the user id (invite returns it; for an already-registered email,
-  // fall back to the existing profile row created by the signup trigger).
-  let userId = invited?.user?.id ?? null
-  if (!userId) {
-    const { data: existing } = await service
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle()
-    userId = existing?.id ?? null
-  }
-  if (!userId) throw new Error('Could not resolve a user for that email')
+  const userId = invited?.user?.id
+  if (!userId) throw new Error('Could not create the invited user')
 
+  // Align the profile row the signup trigger just created with the chosen role.
   const { error: upsertError } = await service.from('users').upsert(
     {
       id: userId,
@@ -238,9 +242,6 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
 
   if (role === 'member') {
     await replaceMemberClients(service, userId, memberClientIds)
-  } else {
-    // admin/client never carry member grants
-    await service.from('user_client_access').delete().eq('user_id', userId)
   }
 
   revalidatePath('/admin/users')
