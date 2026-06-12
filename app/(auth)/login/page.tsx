@@ -223,7 +223,7 @@ export default function LoginPage() {
                   style={{
                     backgroundColor: 'var(--color-cream)',
                     border: '1px solid var(--color-border)',
-                    color: 'var(--background)',
+                    color: 'var(--foreground)',
                   }}
                   onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
