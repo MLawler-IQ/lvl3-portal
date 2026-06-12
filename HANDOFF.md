@@ -58,6 +58,8 @@ The portal is the single pane of glass through which the agency:
 | Repo | https://github.com/MLawler-IQ/lvl3-portal |
 | Supabase Project | `zoeaifsxnaenlcdkavzf` |
 | Vercel Project | `lvl3-portal` (production alias auto-aliased) |
+| DNS | Cloudflare (authoritative — edit there, NOT the NameBright registrar) |
+| Infra / cutover | see `.claude/CLAUDE-infra.md` |
 | Default branch | `main` |
 | Current branding | IgniteIQ v4.2 (rebrand landed in `6d1820b`) |
 | Owner / Maintainer | Matt Lawler (matt@igniteiq.com) |
