@@ -36,7 +36,7 @@ All underlying GA4/GSC/GBP/Semrush lib fetches are `cachedFetch`-wrapped.
 |-----|---------|
 | **Snapshot** | Alerts banner, executive summary band (KPIs + sparklines + health + activity + freshness stamp), goals & pacing (admin nudge when no targets), traffic trend (ghost overlay), channel mix, key insights, context (takeaways/anomalies/opportunities + annotations) |
 | **Locations** | GBP overview tiles, top-locations chart, location leaderboard, profile completeness (when `gbp.configured`) |
-| **Detail** | 13-month sessions trend, per-vertical modules (ecom funnel/products, converting pages, content performance, branded split, competitive), source/medium table, 13-month metric table (admin); also shown when analytics is connected |
+| **Detail** | 13-month sessions trend, per-vertical modules (ecom funnel/products, converting pages, content performance, branded split, competitive), source/medium table (AI-referral rows grouped as "AI Search"), new-vs-returning revenue share (admin + ecommerce only — TODO: client-visible is a deliberate later flip), 13-month metric table (admin; suspect months flagged `dataQuality:'suspect'` when sessions/clicks < 50% of the other complete months' median); also shown when analytics is connected |
 | SEO | Existing GSC tab (when analytics connected) |
 | Full Dashboard | Looker embed (when `looker_embed_url`) |
 
@@ -50,9 +50,19 @@ with an aligned ghost-overlay comparison series.
 
 ## Insights, alerts, pacing
 
-- **Insights** — `generateAnalyticsInsights` (in `analytics.ts`) writes `headline` +
-  `cards: InsightCard[]` into `snapshot_insights` via `lib/dashboard/insights.ts`
-  (deterministic from metric deltas).
+- **Insights (draft-gated LLM layer)** — `generateAnalyticsInsights` (in `analytics.ts`)
+  writes the LLM output to `clients.snapshot_insights_draft` ONLY (admins + members can
+  trigger; client-role cannot). `approveSnapshotInsightsDraft` (admin-only; saving an
+  edit counts as approval) publishes to `snapshot_insights` + `analytics_summary` and
+  clears the draft; `discardSnapshotInsightsDraft` drops it. Admins review via
+  `InsightDraftReview` in the Snapshot Context panel. Client-visible surfaces read only
+  the published columns and fall back to deterministic `deriveHeadline`/live cards —
+  never a blank, never a draft. Deterministic insight cards + alerts are NOT gated.
+- **Metric naming (canon)** — anything backed by GA4 `transactions` is labeled
+  **"Purchases"**; **"Conversions"** is reserved for keyEvents-backed numbers (13-month
+  table, pacing). Internal keys (`conversions`) stay stable; only labels differ.
+  Inverted metrics (Avg Position) use the `DeltaChip`/`KpiCard` `goodDirection`/`wording`
+  contract — color follows goodDirection, the arrow shows numeric movement.
 - **Alerts** — `lib/dashboard/alerts.ts` `deriveAlerts(input)` from metric drops, goal
   misses, and GBP health.
 - **Pacing** — goals set in client settings (`clients.targets`); `dashboard-pacing.ts`
@@ -66,3 +76,18 @@ with an aligned ghost-overlay comparison series.
 - Module components are presentational (no fetching); `AnalyticsSection` feeds them.
 - Charts reuse `components/analytics/shared/*` (`TrendChart`, `RankedBarChart`, `ChartContainer`)
   and the `--chart-*` CSS-var tokens so they track the active theme.
+- GA4 monthly-series + converting-pages fetches scope keyEvents to
+  `clients.key_event_names` (separate filtered report joined in JS — never put an
+  eventName filter on a report that also measures sessions/revenue).
+
+## Open follow-ups (June 2026 dashboard pass)
+
+- **TFK conversions** (manual, can't fix in code): set `key_event_names` in client
+  settings, AND un-flag the junk high-frequency event as a key event in the GA4
+  property admin.
+- New-vs-returning module: flipping client-visible is a deliberate decision, not a bug.
+- First insight-draft generation after deploy: smoke-test generate → review → approve
+  end to end.
+- Parked from the improvement plan: P1 (data entry, not code) and items 12/14/16/17.
+- `dashboard-improvement-review.md` was never committed (local-only on Matt's machine) —
+  commit it if dashboard work resumes from that plan.

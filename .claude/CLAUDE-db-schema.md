@@ -15,7 +15,8 @@ clients
   gsc_site_url text           -- e.g. "https://example.com/" or "sc-domain:example.com"
   analytics_summary text      -- AI-generated narrative (updated by generateAnalyticsInsights)
   analytics_summary_updated_at timestamptz
-  snapshot_insights jsonb     -- { takeaways, anomalies, opportunities } + structured { headline, cards: InsightCard[] } (Phase B)
+  snapshot_insights jsonb     -- { takeaways, anomalies, opportunities } + structured { headline, cards: InsightCard[] } (Phase B) — PUBLISHED (client-visible); written ONLY by approveSnapshotInsightsDraft
+  snapshot_insights_draft jsonb -- unapproved LLM draft { summary, takeaways, anomalies, opportunities, headline, cards, generatedAt }; written by generateAnalyticsInsights, never shown to client-role users
   ai_summary text             -- project AI summary (updated by generateClientSummary)
   -- Dashboard metadata (additive, nullable; null client_type = generic dashboard):
   client_type text            -- local_service | multi_location | ecommerce | lead_gen

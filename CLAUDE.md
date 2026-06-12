@@ -72,9 +72,41 @@ const client = selectedClientId ? await getClientById(selectedClientId, 'id, nam
 5. **TypeScript** — `npx tsc --noEmit` after every change. Fix all errors before stopping.
 6. **No new packages** without explicit request.
 7. **No database migrations** without explicit request.
-8. **Deploy**: `vercel --prod` then `git push`. Both always needed.
+8. **Deploy**: `vercel --prod` then `git push`. Both always needed. **From Claude Code
+   cloud sessions** (no CLI credentials in the container): apply any pending migration
+   via the Supabase integration (`apply_migration`, project `zoeaifsxnaenlcdkavzf`,
+   name = repo filename stem), then fast-forward `main` and push — the GitHub→Vercel
+   integration builds production from `main`. Verify via the Vercel deployment API
+   (state READY + `lvl3-portal.vercel.app` alias), not URL scraping. Migration first,
+   code second; keep migration SQL idempotent (`if not exists`) so `db push` stays safe.
 9. **Map iteration** — use `Array.from(map.entries())` not `for...of` (TS target constraint).
 10. **`params`/`searchParams`** in App Router are Promises — always `await` them.
+11. **Metric naming** — GA4 `transactions`-backed numbers are labeled **"Purchases"**;
+    **"Conversions"** is reserved for keyEvents-backed numbers. Internal keys don't change.
+12. **LLM insight output is draft-gated** — never write LLM text to a client-visible
+    column directly; it goes to `snapshot_insights_draft` and publishes only on admin
+    approval (see `.claude/CLAUDE-dashboard.md`).
+
+## Claude Session Workflow (Matt's preferences)
+
+- **Parallel subagents, exclusive file ownership.** Plan lanes by files-to-touch before
+  launching; no two concurrent agents may edit the same file; serial within a lane; one
+  final integration pass owns the contested files (page.tsx / AnalyticsSection /
+  DashboardTabs). Define shared prop/type contracts up front (or land them first).
+- **Commit + push each completed slice immediately** (the stop hook enforces this).
+  Don't batch everything for one end-of-session commit — a mid-session interruption
+  (e.g. a `/model` switch kills running background agents) should lose at most one lane.
+- **Gates, in order**: `npx tsc --noEmit` per lane → `npm test` → `npm run build` →
+  a FRESH verification subagent that did no implementation re-checks every item against
+  the spec plus the cross-lane seams. It catches real bugs — keep it.
+- **Don't deploy unless told.** Default deliverable: per-item summary table, files
+  changed, any migration SQL verbatim for review, flagged-but-not-fixed list. When told
+  to deploy, do the full path (migration → main → verify live) without re-asking.
+- **Status on demand**: lead with the answer, evidence-based (git state, deployment
+  state), no padding. Post a brief checkpoint between phases during long runs.
+- **Don't code around external misconfigurations** (e.g. a GA4 property with a junk
+  key event) — scope the code correctly and report the manual fix as a follow-up.
+- TodoWrite may be unavailable in cloud sessions — keep the task checklist in replies.
 
 ## Common Patterns
 
