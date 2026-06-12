@@ -33,12 +33,17 @@ export async function guardRoute(opts: {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, client_id')
+    .select('role, client_id, status')
     .eq('id', user.id)
     .single()
 
   const role = profile?.role as AuthUser['role'] | undefined
   if (!profile || !role || !opts.roles.includes(role)) {
+    return { ok: false, response: jsonError('Forbidden', 403) }
+  }
+  // Deactivated users are blocked everywhere — these route handlers do manual
+  // auth (no requireAuth), so enforce the status column here too.
+  if (profile.status === 'deactivated') {
     return { ok: false, response: jsonError('Forbidden', 403) }
   }
 

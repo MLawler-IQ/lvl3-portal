@@ -53,11 +53,14 @@ export async function POST(req: NextRequest) {
   const service = await createServiceClient()
   const { data: profile } = await service
     .from('users')
-    .select('role')
+    .select('role, status')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
+  }
+  if (profile.status === 'deactivated') {
     return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 })
   }
 

@@ -256,6 +256,8 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
 }
 
 export async function setUserName(userId: string, name: string): Promise<void> {
+  // No self-guard by design: admins may rename their own account (a display
+  // name is not a privilege boundary, unlike role/status).
   await requireAdminUser()
   const service = await createServiceClient()
 
