@@ -45,6 +45,35 @@ export async function requireAdmin() {
 }
 
 /**
+ * Admin guard for server actions. Unlike requireAdmin(), this THROWS instead of
+ * redirecting, so the calling client component can catch and surface the error.
+ * Returns the admin's own identity for self-protection checks (e.g. an admin
+ * must not be able to delete or demote their own account).
+ */
+export async function requireAdminUser(): Promise<AuthUser> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role, client_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.role !== 'admin') throw new Error('Unauthorized')
+
+  return {
+    id: user.id,
+    email: user.email!,
+    role: profile.role as 'admin' | 'member' | 'client',
+    client_id: profile.client_id as string | null,
+  }
+}
+
+/**
  * True if a member has been granted access to a client via user_client_access.
  * Uses the service client so the membership check itself isn't subject to RLS.
  */
