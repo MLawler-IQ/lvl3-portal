@@ -4,6 +4,14 @@ Internal client portal for LVL3 digital marketing agency. Admins manage clients,
 
 Deployed at: **https://portal.igniteiq.com** | Repo: **https://github.com/MLawler-IQ/lvl3-portal**
 
+## Working preferences (Matt)
+
+- Be terse and lead with action; on long tool runs, give a quick ETA instead of going silent.
+- For external dashboards (Cloudflare, Vercel, Supabase, Google Cloud) give exact click-by-click steps with literal field values.
+- Default to shipping: once a change is validated, deploy it (merge to `main` auto-deploys). Confirm first only for risky or irreversible production actions.
+- Verify before declaring a cause — pull logs/evidence early for "X isn't working" reports.
+- The live site is unreachable from the sandbox (egress allowlist), so live/visual checks are Matt's to run.
+
 ## Stack
 
 | Layer | Technology |
@@ -145,6 +153,7 @@ Specs in `design-system/DESIGN.md`.
 - `.claude/CLAUDE-dashboard.md` — Type-aware dashboard: client types, module registry, tabs, data flow, insights/alerts/pacing
 - `.claude/CLAUDE-google-api.md` — Google API auth (OAuth2 vs service account)
 - `.claude/CLAUDE-seo-tools.md` — SEO tools, Ask LVL3, dashboard date range
+- `.claude/CLAUDE-infra.md` — Hosting, DNS (Cloudflare), Vercel, Supabase, OAuth, domain-cutover state
 
 ---
 
