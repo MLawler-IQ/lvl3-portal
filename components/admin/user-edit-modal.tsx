@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, Trash2 } from 'lucide-react'
 import type { AdminUserRow, ClientOption, UserRole } from '@/app/actions/users'
 import {
+  setUserName,
   setUserRole,
   setMemberClients,
   deactivateUser,
@@ -12,6 +13,12 @@ import {
   deleteUser,
 } from '@/app/actions/users'
 import RoleAssignment from './role-assignment'
+
+function sameSet(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const set = new Set(b)
+  return a.every((x) => set.has(x))
+}
 
 interface Props {
   user: AdminUserRow
@@ -23,6 +30,7 @@ interface Props {
 
 export default function UserEditModal({ user, clients, currentUserId, adminCount, onClose }: Props) {
   const router = useRouter()
+  const [name, setName] = useState(user.name ?? '')
   const [role, setRole] = useState<UserRole>(user.role)
   const [clientId, setClientId] = useState(user.clientId ?? '')
   const [memberIds, setMemberIds] = useState<string[]>(user.memberClientIds)
@@ -36,10 +44,17 @@ export default function UserEditModal({ user, clients, currentUserId, adminCount
   const isLastAdmin = user.role === 'admin' && adminCount <= 1
   const promotingToAdmin = role === 'admin' && user.role !== 'admin'
 
-  const canSave =
-    !isSelf &&
-    (role !== 'client' || !!clientId) &&
-    (!promotingToAdmin || adminConfirmed)
+  const normName = name.trim().length > 0 ? name.trim() : null
+  const nameChanged = normName !== (user.name ?? null)
+  const roleChanged = role !== user.role
+  const clientChanged = role === 'client' && clientId !== (user.clientId ?? '')
+  const grantsChanged = role === 'member' && !sameSet(memberIds, user.memberClientIds)
+  const profileChanged = roleChanged || clientChanged || grantsChanged
+
+  // Name is editable even on your own account; role/status/delete are not.
+  const roleValid = role !== 'client' || !!clientId
+  const confirmOk = !promotingToAdmin || adminConfirmed
+  const canSave = roleValid && confirmOk && (nameChanged || (!isSelf && profileChanged))
 
   async function run(fn: () => Promise<unknown>, flag: (v: boolean) => void) {
     flag(true)
@@ -56,8 +71,15 @@ export default function UserEditModal({ user, clients, currentUserId, adminCount
 
   function handleSave() {
     run(async () => {
-      await setUserRole(user.id, role, role === 'client' ? clientId : null)
-      if (role === 'member') await setMemberClients(user.id, memberIds)
+      if (nameChanged) await setUserName(user.id, name)
+      if (!isSelf) {
+        if (roleChanged || clientChanged) {
+          await setUserRole(user.id, role, role === 'client' ? clientId : null)
+        }
+        if (role === 'member' && (roleChanged || grantsChanged)) {
+          await setMemberClients(user.id, memberIds)
+        }
+      }
     }, setSaving)
   }
 
@@ -90,6 +112,17 @@ export default function UserEditModal({ user, clients, currentUserId, adminCount
             This is your own account — role and status can&apos;t be changed here.
           </p>
         )}
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-surface-300 mb-1.5">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Display name"
+            className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+          />
+        </div>
 
         {/* Role + assignment */}
         <fieldset disabled={isSelf} className={isSelf ? 'opacity-50' : ''}>
@@ -135,6 +168,17 @@ export default function UserEditModal({ user, clients, currentUserId, adminCount
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-surface-300">
               Currently <span className="text-surface-100 font-medium">{user.status}</span>
+              {user.status === 'deactivated' && user.deactivatedAt && (
+                <span className="text-surface-500">
+                  {' '}
+                  since{' '}
+                  {new Date(user.deactivatedAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              )}
             </span>
             {user.status === 'deactivated' ? (
               <button

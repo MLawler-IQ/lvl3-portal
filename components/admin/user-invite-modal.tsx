@@ -15,6 +15,7 @@ interface Props {
 export default function UserInviteModal({ clients, onClose }: Props) {
   const router = useRouter()
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [role, setRole] = useState<UserRole>('client')
   const [clientId, setClientId] = useState('')
   const [memberIds, setMemberIds] = useState<string[]>([])
@@ -40,6 +41,7 @@ export default function UserInviteModal({ clients, onClose }: Props) {
     try {
       const fd = new FormData()
       fd.set('email', email)
+      fd.set('name', name)
       fd.set('role', role)
       if (role === 'client') fd.set('clientId', clientId)
       if (role === 'member') fd.set('memberClientIds', memberIds.join(','))
@@ -94,6 +96,19 @@ export default function UserInviteModal({ clients, onClose }: Props) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@company.com"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-surface-300 mb-1.5">
+                Name <span className="text-surface-500 font-normal">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Doe"
                 className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
               />
             </div>

@@ -21,11 +21,19 @@ export async function requireAuth(): Promise<{
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, client_id')
+    .select('role, client_id, status')
     .eq('id', user.id)
     .single()
 
   if (!profile) redirect('/login')
+  if (profile.status === 'deactivated') {
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // best-effort — the Auth ban already prevents token refresh
+    }
+    redirect('/login')
+  }
 
   return {
     supabase,
@@ -59,11 +67,12 @@ export async function requireAdminUser(): Promise<AuthUser> {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('role, client_id')
+    .select('role, client_id, status')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.role !== 'admin') throw new Error('Unauthorized')
+  if (profile.status === 'deactivated') throw new Error('Account deactivated')
 
   return {
     id: user.id,

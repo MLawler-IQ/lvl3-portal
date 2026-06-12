@@ -15,6 +15,7 @@ export type UserStatus = 'invited' | 'active' | 'deactivated'
 export type AdminUserRow = {
   id: string
   email: string
+  name: string | null
   role: UserRole
   /** Single pinned client (client-role only). */
   clientId: string | null
@@ -22,6 +23,7 @@ export type AdminUserRow = {
   /** Multi-client grants (member-role only), via user_client_access. */
   memberClientIds: string[]
   status: UserStatus
+  deactivatedAt: string | null
   lastSignInAt: string | null
   createdAt: string
 }
@@ -38,7 +40,7 @@ export type AdminUsersData = {
 
 // ── Internal helpers (not exported → may be sync) ──────────────────────────────
 
-/** Long ban used to "deactivate" without a schema change (~100 years). */
+/** Long ban toggled alongside status as defense-in-depth (~100 years). */
 const BAN_FOREVER = '876600h'
 
 function siteUrl(): string {
@@ -57,13 +59,11 @@ function parseIdList(raw: string | null): string[] {
     .filter(Boolean)
 }
 
-type AuthMeta = { lastSignInAt: string | null; bannedUntil: string | null }
-
 type ServiceClient = Awaited<ReturnType<typeof createServiceClient>>
 
-/** Page through the Auth admin API and index sign-in / ban metadata by user id. */
-async function fetchAuthMeta(service: ServiceClient): Promise<Map<string, AuthMeta>> {
-  const map = new Map<string, AuthMeta>()
+/** Page through the Auth admin API and index last-sign-in time by user id. */
+async function fetchLastSignIn(service: ServiceClient): Promise<Map<string, string | null>> {
+  const map = new Map<string, string | null>()
   const perPage = 200
   // Hard cap at 50 pages (10k users) — this portal is far smaller.
   for (let page = 1; page <= 50; page++) {
@@ -71,19 +71,20 @@ async function fetchAuthMeta(service: ServiceClient): Promise<Map<string, AuthMe
     if (error) throw new Error(error.message)
     const batch = data?.users ?? []
     for (const u of batch) {
-      map.set(u.id, {
-        lastSignInAt: (u.last_sign_in_at as string | null) ?? null,
-        bannedUntil: (u as { banned_until?: string | null }).banned_until ?? null,
-      })
+      map.set(u.id, (u.last_sign_in_at as string | null) ?? null)
     }
     if (batch.length < perPage) break
   }
   return map
 }
 
-function deriveStatus(meta: AuthMeta | undefined): UserStatus {
-  if (meta?.bannedUntil && new Date(meta.bannedUntil).getTime() > Date.now()) return 'deactivated'
-  if (meta?.lastSignInAt) return 'active'
+/**
+ * Deactivation is now an explicit column (users.status), so sign-in history is
+ * only used to distinguish a never-signed-in "invited" user from an "active" one.
+ */
+function deriveStatus(dbStatus: string, lastSignInAt: string | null): UserStatus {
+  if (dbStatus === 'deactivated') return 'deactivated'
+  if (lastSignInAt) return 'active'
   return 'invited'
 }
 
@@ -126,7 +127,10 @@ export async function listAllUsers(): Promise<AdminUsersData> {
 
   const [{ data: profiles, error: pErr }, { data: access }, { data: clientRows }] =
     await Promise.all([
-      service.from('users').select('id, email, role, client_id, created_at').order('created_at'),
+      service
+        .from('users')
+        .select('id, email, name, role, client_id, status, deactivated_at, created_at')
+        .order('created_at'),
       service.from('user_client_access').select('user_id, client_id'),
       service.from('clients').select('id, name').order('name'),
     ])
@@ -142,17 +146,19 @@ export async function listAllUsers(): Promise<AdminUsersData> {
     memberClients.set(row.user_id, list)
   }
 
-  const authMeta = await fetchAuthMeta(service)
+  const lastSignIn = await fetchLastSignIn(service)
 
   const users: AdminUserRow[] = (profiles ?? []).map((u) => ({
     id: u.id,
     email: u.email,
+    name: (u.name as string | null) ?? null,
     role: u.role as UserRole,
     clientId: (u.client_id as string | null) ?? null,
     clientName: u.client_id ? clientName.get(u.client_id) ?? null : null,
     memberClientIds: memberClients.get(u.id) ?? [],
-    status: deriveStatus(authMeta.get(u.id)),
-    lastSignInAt: authMeta.get(u.id)?.lastSignInAt ?? null,
+    status: deriveStatus(u.status as string, lastSignIn.get(u.id) ?? null),
+    deactivatedAt: (u.deactivated_at as string | null) ?? null,
+    lastSignInAt: lastSignIn.get(u.id) ?? null,
     createdAt: u.created_at,
   }))
 
@@ -169,15 +175,15 @@ export async function getLastLoginByClient(): Promise<Record<string, string | nu
   await requireAdminUser()
   const service = await createServiceClient()
 
-  const [{ data: profiles }, authMeta] = await Promise.all([
+  const [{ data: profiles }, lastSignIn] = await Promise.all([
     service.from('users').select('id, client_id'),
-    fetchAuthMeta(service),
+    fetchLastSignIn(service),
   ])
 
   const result: Record<string, string | null> = {}
   for (const u of profiles ?? []) {
     if (!u.client_id) continue
-    const last = authMeta.get(u.id)?.lastSignInAt ?? null
+    const last = lastSignIn.get(u.id) ?? null
     if (!last) continue
     const prev = result[u.client_id]
     if (!prev || new Date(last).getTime() > new Date(prev).getTime()) {
@@ -194,6 +200,7 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
   const service = await createServiceClient()
 
   const email = (formData.get('email') as string).trim().toLowerCase()
+  const name = (formData.get('name') as string | null)?.trim() || null
   const role = formData.get('role') as UserRole
   const clientId = (formData.get('clientId') as string | null)?.trim() || null
   const memberClientIds = parseIdList(formData.get('memberClientIds') as string | null)
@@ -220,7 +227,7 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
   }
 
   const { data: invited, error: inviteError } = await service.auth.admin.inviteUserByEmail(email, {
-    data: { role, client_id: role === 'client' ? clientId : null },
+    data: { role, client_id: role === 'client' ? clientId : null, name },
     redirectTo: `${siteUrl()}/auth/callback`,
   })
   if (inviteError) throw new Error(inviteError.message)
@@ -233,6 +240,7 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
     {
       id: userId,
       email,
+      name,
       role,
       client_id: role === 'client' ? clientId : null,
     },
@@ -243,6 +251,18 @@ export async function inviteUserGlobal(formData: FormData): Promise<void> {
   if (role === 'member') {
     await replaceMemberClients(service, userId, memberClientIds)
   }
+
+  revalidatePath('/admin/users')
+}
+
+export async function setUserName(userId: string, name: string): Promise<void> {
+  await requireAdminUser()
+  const service = await createServiceClient()
+
+  const value = name.trim().length > 0 ? name.trim() : null
+  const { error } = await service.from('users').update({ name: value }).eq('id', userId)
+  if (error) throw new Error(error.message)
+  await service.auth.admin.updateUserById(userId, { user_metadata: { name: value } })
 
   revalidatePath('/admin/users')
 }
@@ -318,8 +338,17 @@ export async function deactivateUser(userId: string): Promise<void> {
   const service = await createServiceClient()
   await assertNotLastAdmin(service, userId)
 
+  // Source of truth: the status column (enforced app-side in requireAuth).
+  const { error: dbErr } = await service
+    .from('users')
+    .update({ status: 'deactivated', deactivated_at: new Date().toISOString() })
+    .eq('id', userId)
+  if (dbErr) throw new Error(dbErr.message)
+
+  // Defense-in-depth: an Auth ban also blocks token refresh + non-requireAuth paths.
   const { error } = await service.auth.admin.updateUserById(userId, { ban_duration: BAN_FOREVER })
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/users')
 }
 
@@ -327,8 +356,15 @@ export async function reactivateUser(userId: string): Promise<void> {
   await requireAdminUser()
   const service = await createServiceClient()
 
+  const { error: dbErr } = await service
+    .from('users')
+    .update({ status: 'active', deactivated_at: null })
+    .eq('id', userId)
+  if (dbErr) throw new Error(dbErr.message)
+
   const { error } = await service.auth.admin.updateUserById(userId, { ban_duration: 'none' })
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/users')
 }
 

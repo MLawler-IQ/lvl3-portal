@@ -43,7 +43,10 @@ export default function UsersTable({ data }: { data: AdminUsersData }) {
 
   const filtered = users.filter((u) => {
     if (roleFilter !== 'all' && u.role !== roleFilter) return false
-    if (search.trim() && !u.email.toLowerCase().includes(search.trim().toLowerCase())) return false
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      if (!`${u.name ?? ''} ${u.email}`.toLowerCase().includes(q)) return false
+    }
     return true
   })
 
@@ -100,7 +103,7 @@ export default function UsersTable({ data }: { data: AdminUsersData }) {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search email…"
+                placeholder="Search name or email…"
                 className="w-48 bg-surface-800 border border-surface-600 rounded-lg pl-8 pr-3 py-1.5 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20"
               />
             </div>
@@ -139,6 +142,7 @@ export default function UsersTable({ data }: { data: AdminUsersData }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-surface-700">
+                  <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Name</th>
                   <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Email</th>
                   <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Role</th>
                   <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Clients</th>
@@ -150,7 +154,10 @@ export default function UsersTable({ data }: { data: AdminUsersData }) {
               <tbody>
                 {filtered.map((u) => (
                   <tr key={u.id} className="border-b border-surface-800/50 last:border-0">
-                    <td className="px-5 py-3 text-surface-200 break-all">
+                    <td className="px-5 py-3 text-surface-200">
+                      {u.name ? u.name : <span className="text-surface-500">—</span>}
+                    </td>
+                    <td className="px-5 py-3 text-surface-400 break-all">
                       {u.email}
                       {u.id === currentUserId && (
                         <span className="ml-2 text-xs text-surface-500">(you)</span>
