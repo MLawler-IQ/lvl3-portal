@@ -29,7 +29,9 @@ npx tsc --noEmit     # Type-check — run after every set of changes
 vercel --prod        # Deploy to production (always follow with git push)
 ```
 
-No test framework. Validate with `npx tsc --noEmit` and `npm run build`. Migrations: `supabase db push --include-all`.
+No test framework assumed historically, but the repo now has vitest. Validate with `npx tsc --noEmit`, `npm run test` (vitest), and `npm run build`. Migrations: `supabase db push --include-all` (or Supabase MCP `apply_migration` for additive changes — keep the matching SQL file in `supabase/migrations/` in sync).
+
+**Prod deploy:** merging to `main` auto-deploys via the Vercel git integration. That integration intermittently drops the merge webhook (~half the time) — when prod doesn't update, push an empty no-op commit to `main` to re-fire it, then verify the deployment is READY on lvl3-portal.vercel.app. **Prod currently runs the IgniteIQ light theme**, not the LVL3 dark default — components must use the `--chart-*` / surface / brand CSS-var tokens so they track the active theme.
 
 ## User Roles
 
@@ -111,6 +113,25 @@ Specs in `design-system/DESIGN.md`.
 - `.claude/CLAUDE-dashboard.md` — Type-aware dashboard: client types, module registry, tabs, data flow, insights/alerts/pacing
 - `.claude/CLAUDE-google-api.md` — Google API auth (OAuth2 vs service account)
 - `.claude/CLAUDE-seo-tools.md` — SEO tools, Ask LVL3, dashboard date range
+
+---
+
+# Working Agreements & Hard-Won Lessons
+
+## How to work with me
+- Ship fast and maximize parallelism; run each chunk through its own PR → CI (`validate`) → merge → prod, and **verify the deploy** — own the full ops loop, don't hand it back half-done.
+- Comms are terse and action-first. Short replies ("yes", "it's green") mean proceed; skip long status narration.
+- Push back and raise the quality bar when asked — critique the output, don't just comply.
+- Use throwaway/audit credentials for automated/test work, never a personal password.
+- Pushing a no-op commit to `main` (the Vercel deploy retrigger) needs explicit per-time authorization ("Yes, push the empty commit to main"); a vague "take care of it" won't clear the safety gate.
+
+## Engineering lessons (don't repeat these)
+- **Verify Supabase `.update()` persistence for every "save" field.** A missing key in an update object is NOT a TypeScript error, so tsc/build stay green while saves silently vanish (this bit `brand_terms`). Grep the committed file for the field.
+- **Config-driven module visibility must be data-gated, not `client_type`-gated.** A registry entry with `defaultFor: []` and no `core` flag never renders (this hid the Competitive + key-event modules even after the user configured them). Always test the "I configured X — where is it?" path.
+- **Parse LLM output robustly from the start:** strip code fences and try candidate `[...]` blocks; never a greedy `/\[[\s\S]*\]/` (it breaks on any prose after the array) and never copy a fragile parser across functions.
+- **Rate-limit/concurrency-bound every external API fan-out** (Semrush/GBP). Batch per the provider's limit; a "resilience fix" must not make things worse (throwing on one sub-call discarded good partial data).
+- **Look at the rendered product, not just the code** — render at mobile (375px) + desktop (1440px). Visual issues (city labels, "where is this") are obvious in a screenshot and invisible in a code read.
+- **Verify environment assumptions before fanning work out to many agents** (e.g. the active theme, connected integrations, the actual default branch state).
 
 ---
 

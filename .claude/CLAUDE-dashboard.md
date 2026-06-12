@@ -67,3 +67,11 @@ with an aligned ghost-overlay comparison series.
 - Module components are presentational (no fetching); `AnalyticsSection` feeds them.
 - Charts reuse `components/analytics/shared/*` (`TrendChart`, `RankedBarChart`, `ChartContainer`)
   and the `--chart-*` CSS-var tokens so they track the active theme.
+
+## Product decisions (keep these intact)
+- **Default range = last full month vs. same month prior year** (`last_full_month` / `yoy`), applied across all tabs (set in page.tsx + DashboardTabs, kept in sync).
+- **Config-driven modules are data-gated, not type-gated:** competitors set → Competitive renders; key events set → Converting Pages renders — regardless of `client_type`. `AnalyticsSection` augments `defaultModulesForType` with these.
+- **Multi-location/chain locations label by city ("City, ST"), not the repeated brand `title`** (GBP returns one title for every location). See `lib/dashboard/gbp-labels.ts`.
+- **Branded split honors `clients.brand_match_mode`** (`contains` default | `exact`); the Branded Search settings field has a Contains/Exact toggle.
+- **Competitor recommendations** = Semrush organic competitors → platform denylist → AI screen to genuine direct competitors (never invents domains). External fan-outs are concurrency-bounded.
+- Visuals must be useful/insightful, not decorative (matches the design philosophy). Prefer cutting/merging over adding; every addition should replace something.
