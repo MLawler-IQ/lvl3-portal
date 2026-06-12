@@ -1,9 +1,11 @@
 import { requireAdmin } from "@/lib/auth";
 import { getClientsWithStats } from "@/app/actions/clients";
+import { getLastLoginByClient } from "@/app/actions/users";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ShieldCheck, CheckCircle, XCircle } from "lucide-react";
 import GoogleConnectionPanel from "@/components/admin/GoogleConnectionPanel";
 import GBPConnectionPanel from "@/components/admin/GBPConnectionPanel";
+import AdminTabs from "@/components/admin/admin-tabs";
 
 export default async function AdminPage({
   searchParams,
@@ -14,6 +16,7 @@ export default async function AdminPage({
   await requireAdmin();
 
   const clients = await getClientsWithStats();
+  const lastLoginByClient = await getLastLoginByClient();
 
   // Fetch open thread counts per client
   const service = await createServiceClient();
@@ -33,6 +36,7 @@ export default async function AdminPage({
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
+      <AdminTabs />
       <GoogleConnectionPanel googleParam={params.google ?? null} />
       <GBPConnectionPanel gbpParam={params.gbp ?? null} />
       <div className="flex items-center gap-3">
@@ -125,7 +129,14 @@ export default async function AdminPage({
                     </div>
                     <div className="flex items-center gap-2 text-xs text-surface-500">
                       <span className="w-3 h-3 rounded-full border border-surface-600 flex-shrink-0" />
-                      Last login: Coming soon
+                      Last login:{" "}
+                      {lastLoginByClient[client.id]
+                        ? new Date(lastLoginByClient[client.id]!).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "Never"}
                     </div>
                   </div>
                 </div>
