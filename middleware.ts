@@ -37,6 +37,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Public, no-login pages (served statically from /public)
+  if (pathname === '/market-eval' || pathname === '/market-eval.html') {
+    return supabaseResponse
+  }
+
   // Redirect unauthenticated users to login
   if (!user) {
     const url = request.nextUrl.clone()

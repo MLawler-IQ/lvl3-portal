@@ -26,6 +26,12 @@ const nextConfig = {
       },
     ]
   },
+  async rewrites() {
+    return [
+      // Public, no-login report — clean URL serves the static bundle in /public
+      { source: '/market-eval', destination: '/market-eval.html' },
+    ]
+  },
   async headers() {
     return [
       {
