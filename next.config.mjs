@@ -15,21 +15,25 @@ const LEGACY_HOST = 'lvl3-portal.vercel.app'
 
 const nextConfig = {
   async redirects() {
-    if (!CANONICAL_URL || CANONICAL_URL.includes(LEGACY_HOST)) return []
+    // Old dashboard link folds into the single-link report shell.
+    // (Redirects run before middleware, so no auth whitelist is needed.)
+    const redirects = [
+      {
+        source: '/decision-dashboard',
+        destination: '/market-eval?view=dashboard',
+        permanent: false,
+      },
+    ]
+    if (!CANONICAL_URL || CANONICAL_URL.includes(LEGACY_HOST)) return redirects
     // 308-redirect old Vercel-host traffic to the custom domain, keeping path + query.
     return [
+      ...redirects,
       {
         source: '/:path*',
         has: [{ type: 'host', value: LEGACY_HOST }],
         destination: `${CANONICAL_URL}/:path*`,
         permanent: true,
       },
-    ]
-  },
-  async rewrites() {
-    return [
-      // Public, no-login report — clean URL serves the static bundle in /public
-      { source: '/market-eval', destination: '/market-eval.html' },
     ]
   },
   async headers() {

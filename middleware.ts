@@ -37,8 +37,12 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Public, no-login pages (served statically from /public)
-  if (pathname === '/market-eval' || pathname === '/market-eval.html') {
+  // Public, no-login report shell + its APIs (report HTML and chat)
+  if (
+    pathname === '/market-eval' ||
+    pathname.startsWith('/api/reports/') ||
+    pathname === '/api/report-chat'
+  ) {
     return supabaseResponse
   }
 
