@@ -37,6 +37,9 @@ export default function BlogImageGeneratorClient() {
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const STALL_TIMEOUT_MS = 120_000
+  // Must not exceed MAX_ROWS_PER_BATCH in app/api/generate-blog-images/route.ts.
+  // Keeps each request under Vercel's 300s function cap (3 × 90s worst case).
+  const BATCH_SIZE = 3
 
   function handleFile(file: File) {
     setFileName(file.name)
@@ -108,92 +111,98 @@ export default function BlogImageGeneratorClient() {
     const abortController = new AbortController()
     abortRef.current = abortController
 
-    const formData = new FormData()
-    const blob = new Blob([fileText], { type: 'text/plain' })
-    formData.append('file', blob, fileName || 'prompts.csv')
-    formData.append('styleRules', styleRules)
-
     try {
-      const res = await fetch('/api/generate-blog-images', {
-        method: 'POST',
-        body: formData,
-        signal: abortController.signal,
-      })
+      let failed = false
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({ error: 'Request failed' }))
-        setError(errData.error ?? 'Request failed')
-        setGenerating(false)
-        return
-      }
+      for (let start = 0; start < previewRows.length; start += BATCH_SIZE) {
+        const batch = previewRows.slice(start, start + BATCH_SIZE)
 
-      const reader = res.body!.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
+        const res = await fetch('/api/generate-blog-images', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ styleRules, rows: batch }),
+          signal: abortController.signal,
+        })
 
-      resetStallTimer()
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: 'Request failed' }))
+          setError(errData.error ?? 'Request failed')
+          failed = true
+          break
+        }
 
-      while (true) {
-        const { done: streamDone, value } = await reader.read()
-        if (streamDone) break
+        const reader = res.body!.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
 
         resetStallTimer()
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() ?? ''
+        while (true) {
+          const { done: streamDone, value } = await reader.read()
+          if (streamDone) break
 
-        for (const line of lines) {
-          if (!line.trim()) continue
-          try {
-            const event = JSON.parse(line) as {
-              type: 'progress' | 'image' | 'image_error' | 'done' | 'error' | 'heartbeat'
-              index?: number
-              total?: number
-              filename?: string
-              data?: string
-              message?: string
+          resetStallTimer()
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+
+          for (const line of lines) {
+            if (!line.trim()) continue
+            try {
+              const event = JSON.parse(line) as {
+                type: 'progress' | 'image' | 'image_error' | 'done' | 'error' | 'heartbeat'
+                index?: number
+                total?: number
+                filename?: string
+                data?: string
+                message?: string
+              }
+
+              if (event.type === 'heartbeat') continue
+
+              if (event.type === 'progress' && event.filename) {
+                setImages((prev) =>
+                  prev.map((img) =>
+                    img.filename === event.filename
+                      ? { ...img, status: 'generating' }
+                      : img
+                  )
+                )
+              } else if (event.type === 'image' && event.filename && event.data) {
+                imageDataRef.current.set(event.filename, event.data)
+                setImages((prev) =>
+                  prev.map((img) =>
+                    img.filename === event.filename
+                      ? { ...img, status: 'done', data: event.data }
+                      : img
+                  )
+                )
+                setCompletedCount((c) => c + 1)
+              } else if (event.type === 'image_error' && event.filename) {
+                setImages((prev) =>
+                  prev.map((img) =>
+                    img.filename === event.filename
+                      ? { ...img, status: 'error', error: event.message }
+                      : img
+                  )
+                )
+                setCompletedCount((c) => c + 1)
+              } else if (event.type === 'error') {
+                setError(event.message ?? 'Unknown error')
+                failed = true
+              }
+              // 'done' here is batch-level — the run completes after the last batch
+            } catch {
+              // skip malformed line
             }
-
-            if (event.type === 'heartbeat') continue
-
-            if (event.type === 'progress' && event.filename) {
-              setImages((prev) =>
-                prev.map((img) =>
-                  img.filename === event.filename
-                    ? { ...img, status: 'generating' }
-                    : img
-                )
-              )
-            } else if (event.type === 'image' && event.filename && event.data) {
-              imageDataRef.current.set(event.filename, event.data)
-              setImages((prev) =>
-                prev.map((img) =>
-                  img.filename === event.filename
-                    ? { ...img, status: 'done', data: event.data }
-                    : img
-                )
-              )
-              setCompletedCount((c) => c + 1)
-            } else if (event.type === 'image_error' && event.filename) {
-              setImages((prev) =>
-                prev.map((img) =>
-                  img.filename === event.filename
-                    ? { ...img, status: 'error', error: event.message }
-                    : img
-                )
-              )
-              setCompletedCount((c) => c + 1)
-            } else if (event.type === 'done') {
-              setDone(true)
-            } else if (event.type === 'error') {
-              setError(event.message ?? 'Unknown error')
-            }
-          } catch {
-            // skip malformed line
           }
         }
+
+        if (failed) break
       }
+
+      if (!failed) setDone(true)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') {
         // user cancelled or stall timeout — error already set if stall
@@ -326,7 +335,7 @@ export default function BlogImageGeneratorClient() {
           </button>
         )}
 
-        {done && successCount > 0 && (
+        {!generating && successCount > 0 && (
           <button
             onClick={handleDownload}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"

@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { guardRoute, jsonError } from '@/lib/api/route-guard'
-import { parsePromptRows, type ParsedPromptRow } from '@/lib/parse-csv'
 import OpenAI from 'openai'
 import sharp from 'sharp'
 
@@ -13,12 +12,16 @@ function getOpenAI(): OpenAI {
   return new OpenAI({ apiKey })
 }
 
+// 3 rows × 90s worst case = 270s, inside the 300s function cap.
+// The client splits full runs into batches of this size.
+const MAX_ROWS_PER_BATCH = 3
+
 const requestSchema = z.object({
   styleRules: z.string().max(5000),
   rows: z
     .array(z.object({ filename: z.string().min(1), prompt: z.string().min(1) }))
-    .min(1, 'No valid rows found in file')
-    .max(200, 'Too many rows (max 200 per run)'),
+    .min(1, 'No rows provided')
+    .max(MAX_ROWS_PER_BATCH, `Too many rows per batch (max ${MAX_ROWS_PER_BATCH})`),
 })
 
 const PER_IMAGE_TIMEOUT_MS = 90_000
@@ -59,22 +62,12 @@ export async function POST(req: NextRequest) {
   const guard = await guardRoute({ roles: ['admin'] })
   if (!guard.ok) return guard.response
 
-  let rows: ParsedPromptRow[]
+  let rows: { filename: string; prompt: string }[]
   let styleRules: string
 
   try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File | null
-
-    if (!file) {
-      return jsonError('No file uploaded', 400)
-    }
-
-    const text = await file.text()
-    const parsed = requestSchema.safeParse({
-      styleRules: (formData.get('styleRules') as string | null) ?? '',
-      rows: parsePromptRows(text),
-    })
+    const body = await req.json()
+    const parsed = requestSchema.safeParse(body)
     if (!parsed.success) {
       return jsonError(parsed.error.issues[0]?.message ?? 'Invalid request', 400)
     }
