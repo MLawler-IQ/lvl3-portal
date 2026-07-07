@@ -12,9 +12,11 @@ function getOpenAI(): OpenAI {
   return new OpenAI({ apiKey })
 }
 
-// 3 rows × 90s worst case = 270s, inside the 300s function cap.
-// The client splits full runs into batches of this size.
-const MAX_ROWS_PER_BATCH = 3
+// Rows within a batch generate CONCURRENCY at a time. Worst case
+// 2 waves × 90s = 180s, inside the 300s function cap with headroom.
+// The client splits full runs into batches of MAX_ROWS_PER_BATCH.
+const MAX_ROWS_PER_BATCH = 6
+const CONCURRENCY = 3
 
 const requestSchema = z.object({
   styleRules: z.string().max(5000),
@@ -95,28 +97,33 @@ export async function POST(req: NextRequest) {
           } catch { /* controller may be closed */ }
         }, 15_000)
 
-        for (let i = 0; i < total; i++) {
-          const { filename, prompt } = rows[i]
-          const fullFilename = `${filename}.webp`
+        for (let waveStart = 0; waveStart < total; waveStart += CONCURRENCY) {
+          const wave = rows.slice(waveStart, waveStart + CONCURRENCY)
 
-          emit(controller, { type: 'progress', index: i, total, filename: fullFilename })
+          await Promise.all(
+            wave.map(async ({ filename, prompt }, j) => {
+              const fullFilename = `${filename}.webp`
 
-          try {
-            const fullPrompt = styleRules
-              ? `${prompt}\n\n${styleRules}`
-              : prompt
+              emit(controller, { type: 'progress', index: waveStart + j, total, filename: fullFilename })
 
-            const webpBuffer = await generateAndCrop(fullPrompt)
-            const b64 = webpBuffer.toString('base64')
+              try {
+                const fullPrompt = styleRules
+                  ? `${prompt}\n\n${styleRules}`
+                  : prompt
 
-            emit(controller, { type: 'image', filename: fullFilename, data: b64 })
-          } catch (err) {
-            emit(controller, {
-              type: 'image_error',
-              filename: fullFilename,
-              message: err instanceof Error ? err.message : 'Generation failed',
+                const webpBuffer = await generateAndCrop(fullPrompt)
+                const b64 = webpBuffer.toString('base64')
+
+                emit(controller, { type: 'image', filename: fullFilename, data: b64 })
+              } catch (err) {
+                emit(controller, {
+                  type: 'image_error',
+                  filename: fullFilename,
+                  message: err instanceof Error ? err.message : 'Generation failed',
+                })
+              }
             })
-          }
+          )
         }
 
         emit(controller, { type: 'done', total })

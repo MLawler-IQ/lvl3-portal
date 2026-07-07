@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { Upload, Download, CheckCircle2, Loader2, Circle, AlertCircle, X } from 'lucide-react'
 import JSZip from 'jszip'
 import { parsePromptRows, type ParsedPromptRow } from '@/lib/parse-csv'
+import { imageCacheKey, getCachedImage, putCachedImage } from '@/lib/blog-image-cache'
 
 type Row = ParsedPromptRow
 
@@ -14,6 +15,7 @@ interface ImageState {
   status: ImageStatus
   error?: string
   data?: string // base64 WebP
+  cached?: boolean
 }
 
 const DEFAULT_STYLE_RULES = `Style rules: photorealistic lifestyle interior, warm neutral palette, natural light, minimal clutter, clean lines, TV screen dark/blank, no text overlays, no logos.
@@ -31,6 +33,7 @@ export default function BlogImageGeneratorClient() {
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [completedCount, setCompletedCount] = useState(0)
+  const [regenerateCached, setRegenerateCached] = useState(false)
 
   const imageDataRef = useRef<Map<string, string>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
@@ -38,8 +41,9 @@ export default function BlogImageGeneratorClient() {
 
   const STALL_TIMEOUT_MS = 120_000
   // Must not exceed MAX_ROWS_PER_BATCH in app/api/generate-blog-images/route.ts.
-  // Keeps each request under Vercel's 300s function cap (3 × 90s worst case).
-  const BATCH_SIZE = 3
+  // The server generates 3 rows concurrently, so 6 rows = 2 waves × 90s worst
+  // case = 180s, under Vercel's 300s function cap.
+  const BATCH_SIZE = 6
 
   function handleFile(file: File) {
     setFileName(file.name)
@@ -114,8 +118,34 @@ export default function BlogImageGeneratorClient() {
     try {
       let failed = false
 
-      for (let start = 0; start < previewRows.length; start += BATCH_SIZE) {
-        const batch = previewRows.slice(start, start + BATCH_SIZE)
+      // Resolve cache: identical filename + prompt + style rules from a prior
+      // run (last 30 days) is reused instead of regenerated.
+      const cacheKeyByFilename = new Map<string, string>()
+      const rowsToGenerate: Row[] = []
+
+      for (const row of previewRows) {
+        const fullFilename = `${row.filename}.webp`
+        const key = await imageCacheKey(row.filename, row.prompt, styleRules)
+        cacheKeyByFilename.set(fullFilename, key)
+
+        const cached = regenerateCached ? null : await getCachedImage(key)
+        if (cached) {
+          imageDataRef.current.set(fullFilename, cached)
+          setImages((prev) =>
+            prev.map((img) =>
+              img.filename === fullFilename
+                ? { ...img, status: 'done', data: cached, cached: true }
+                : img
+            )
+          )
+          setCompletedCount((c) => c + 1)
+        } else {
+          rowsToGenerate.push(row)
+        }
+      }
+
+      for (let start = 0; start < rowsToGenerate.length; start += BATCH_SIZE) {
+        const batch = rowsToGenerate.slice(start, start + BATCH_SIZE)
 
         const res = await fetch('/api/generate-blog-images', {
           method: 'POST',
@@ -171,6 +201,8 @@ export default function BlogImageGeneratorClient() {
                 )
               } else if (event.type === 'image' && event.filename && event.data) {
                 imageDataRef.current.set(event.filename, event.data)
+                const cacheKey = cacheKeyByFilename.get(event.filename)
+                if (cacheKey) void putCachedImage(cacheKey, event.data)
                 setImages((prev) =>
                   prev.map((img) =>
                     img.filename === event.filename
@@ -315,6 +347,16 @@ export default function BlogImageGeneratorClient() {
       </div>
 
       {/* Generate button */}
+      <label className="flex items-center gap-2 text-xs text-surface-400 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={regenerateCached}
+          onChange={(e) => setRegenerateCached(e.target.checked)}
+          className="accent-[var(--color-accent)]"
+        />
+        Regenerate cached images (identical prompts are otherwise reused from previous runs)
+      </label>
+
       <div className="flex items-center gap-4">
         <button
           onClick={handleGenerate}
@@ -398,6 +440,9 @@ export default function BlogImageGeneratorClient() {
                   }
                 >
                   {img.filename}
+                  {img.cached && (
+                    <span className="ml-2 text-xs text-surface-500">— cached</span>
+                  )}
                   {img.status === 'error' && img.error && (
                     <span className="ml-2 text-xs text-red-400">— {img.error}</span>
                   )}
