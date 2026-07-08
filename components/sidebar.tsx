@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Home, FolderKanban, LayoutDashboard, PackageOpen,
   Lightbulb, Sparkles, ShieldCheck, Users,
-  ChevronLeft, ChevronRight, Search, Wrench, MessageCircle,
+  ChevronLeft, ChevronRight, Search, Wrench, MessageCircle, Images,
 } from "lucide-react";
 
 type NavItem = {
@@ -51,6 +51,7 @@ export default function Sidebar({
     { label: 'Tools',    href: '/tools',    icon: Wrench },
     { label: 'Ask LVL3', href: '/ask-lvl3', icon: MessageCircle },
     ...(isAdmin ? [
+      { label: "Reviews", href: "/reviews", icon: Images },
       { label: "Clients", href: "/clients", icon: Users },
       { label: "Admin",   href: "/admin",   icon: ShieldCheck },
     ] : []),
