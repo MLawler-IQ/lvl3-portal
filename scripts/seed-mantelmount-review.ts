@@ -145,9 +145,18 @@ async function main(): Promise<void> {
       contentType = CONTENT_TYPES[ext] ?? 'application/octet-stream'
     }
 
-    const { error: uploadError } = await service.storage
-      .from(BUCKET)
-      .upload(uploadPath, uploadBuf, { contentType, upsert: true })
+    // Uploads flake transiently ("fetch failed") on long runs — retry a few
+    // times with backoff before giving up (upsert makes retries safe).
+    let uploadError: { message: string } | null = null
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const result = await service.storage
+        .from(BUCKET)
+        .upload(uploadPath, uploadBuf, { contentType, upsert: true })
+      uploadError = result.error
+      if (!uploadError) break
+      console.log(`  attempt ${attempt} failed (${uploadError.message}) — retrying…`)
+      await new Promise((r) => setTimeout(r, attempt * 2000))
+    }
     if (uploadError) throw new Error(`Upload failed for ${item.image}: ${uploadError.message}`)
 
     const { data: publicUrlData } = service.storage.from(BUCKET).getPublicUrl(uploadPath)
