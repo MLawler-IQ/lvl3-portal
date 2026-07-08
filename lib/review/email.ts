@@ -1,8 +1,9 @@
 /**
  * Owner notification for submitted reviews. Plain-text body via Resend's
- * HTTP API (same raw-fetch approach as app/actions/deliverables.ts; sender
- * stays on the verified lvl3.com domain). Returns false instead of throwing
- * — a failed email must never fail the submit.
+ * HTTP API (same raw-fetch approach as app/actions/deliverables.ts). Sender
+ * must be on send.igniteiq.com — the only domain verified on this Resend
+ * account. Returns false instead of throwing — a failed email must never
+ * fail the submit.
  */
 export async function sendReviewNotification({
   subject,
@@ -24,7 +25,7 @@ export async function sendReviewNotification({
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'IgniteIQ Reviews <portal@lvl3.com>',
+        from: 'IgniteIQ Reviews <reviews@send.igniteiq.com>',
         to,
         subject,
         text,

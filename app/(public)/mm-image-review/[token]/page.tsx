@@ -5,6 +5,7 @@ import { InvalidLink } from './invalid-link'
 import { ReviewClient } from './review-client'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function Page({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params

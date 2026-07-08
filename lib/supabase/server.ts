@@ -40,6 +40,11 @@ export async function createServiceClient() {
   // fail with "new row violates row-level security policy"). Using the base
   // client with the service-role key and no session guarantees `service_role`,
   // which has bypassrls.
+  //
+  // The custom fetch opts every PostgREST request out of Next's Data Cache:
+  // without it, GET reads on force-dynamic pages/route handlers are served
+  // from the first render's cached response (observed: review page never
+  // seeing new review_responses rows).
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -47,6 +52,9 @@ export async function createServiceClient() {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
+      },
+      global: {
+        fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
       },
     }
   )
