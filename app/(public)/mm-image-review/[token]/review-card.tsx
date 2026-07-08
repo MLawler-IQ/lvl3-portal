@@ -100,6 +100,7 @@ export function ReviewCard({
             ref={noteRef}
             placeholder="What works, what doesn't, what to change…"
             value={state.note}
+            maxLength={2000}
             onChange={(e) => onChange({ ...state, note: e.target.value })}
             disabled={locked}
           />

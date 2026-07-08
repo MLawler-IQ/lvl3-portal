@@ -93,12 +93,20 @@ export function useAutosave(token: string, handlers: Handlers) {
         return
       }
       if (res.status === 404) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null
+        if (body?.error === 'item_not_found') {
+          // Item was removed by an admin mid-review — drop this save quietly.
+          latest.current.delete(itemId)
+          retryCounts.current.delete(itemId)
+          if (errors.current.delete(itemId)) syncErrors()
+          return
+        }
         stopAll()
         handlersRef.current.onInvalid()
         return
       }
       if (!res.ok) {
-        if (res.status >= 500) scheduleRetry(itemId)
+        if (res.status >= 500 || res.status === 429) scheduleRetry(itemId)
         else {
           errors.current.add(itemId)
           syncErrors()
@@ -156,22 +164,41 @@ export function useAutosave(token: string, handlers: Handlers) {
     )
   }
 
-  async function flushAll(): Promise<void> {
+  /**
+   * Force every pending save through now and wait for the outcome. Returns
+   * the ids of items that STILL failed after the drain — the caller must
+   * refuse to submit while that list is non-empty, or the batch would lock
+   * with data the server never received.
+   */
+  async function flushAll(): Promise<string[]> {
     for (const [itemId, timer] of Array.from(timers.current.entries())) {
       clearTimeout(timer)
       timers.current.delete(itemId)
       send(itemId)
     }
+    // Items parked on a retry timer or stuck in the error state get one
+    // immediate resend cycle (retryCounts still bounds total attempts).
     for (const [itemId, timer] of Array.from(retryTimers.current.entries())) {
       clearTimeout(timer)
       retryTimers.current.delete(itemId)
       send(itemId)
     }
-    // Dirty resends are re-queued synchronously as each request settles, so
-    // looping until the in-flight map drains covers the whole chain.
-    while (inFlight.current.size > 0) {
+    for (const itemId of Array.from(errors.current)) send(itemId)
+    // Dirty resends re-queue synchronously as each request settles; failures
+    // mid-flush land back on retry timers, which we fire immediately until
+    // everything has either saved or exhausted its attempts.
+    while (inFlight.current.size > 0 || retryTimers.current.size > 0) {
+      if (inFlight.current.size === 0) {
+        for (const [itemId, timer] of Array.from(retryTimers.current.entries())) {
+          clearTimeout(timer)
+          retryTimers.current.delete(itemId)
+          send(itemId)
+        }
+        continue
+      }
       await Promise.all(Array.from(inFlight.current.values()))
     }
+    return Array.from(errors.current)
   }
 
   const flushKeepalive = useCallback(() => {

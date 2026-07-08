@@ -305,9 +305,10 @@ export default function NewBatchForm() {
                       <input
                         type="number"
                         value={row.sort_order}
-                        onChange={(e) =>
-                          updateRow(row.key, { sort_order: Number(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const n = Number(e.target.value)
+                          if (Number.isFinite(n)) updateRow(row.key, { sort_order: n })
+                        }}
                         aria-label="Sort order"
                         className={`${INPUT_CLASS} w-16 px-2`}
                       />

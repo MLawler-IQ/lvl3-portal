@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-const limited = createIpLimiter({ windowMs: 10 * 60 * 1000, max: 240 })
+const limited = createIpLimiter({ windowMs: 10 * 60 * 1000, max: 600 })
 
 export async function POST(
   req: NextRequest,

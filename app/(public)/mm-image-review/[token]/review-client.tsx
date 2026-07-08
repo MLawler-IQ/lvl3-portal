@@ -79,7 +79,7 @@ export function ReviewClient({ token, batch, items, initialResponses, readOnly }
 
   const onLocked = useCallback(() => {
     setLocked(true)
-    showToast('This review has been submitted and is now locked.')
+    showToast('This review has been locked.')
   }, [showToast])
 
   const onInvalid = useCallback(() => {
@@ -133,7 +133,14 @@ export function ReviewClient({ token, batch, items, initialResponses, readOnly }
     if (locked || submitting) return
     setSubmitting(true)
     try {
-      await flushAll()
+      const unsaved = await flushAll()
+      if (unsaved.length > 0) {
+        showToast(
+          'Some changes haven’t saved yet — check your connection and try again.',
+          true
+        )
+        return
+      }
       const answers = toAnswers(statesRef.current)
       const missing = findMissingDenyNotes(answers, itemIds)
       if (missing.length > 0) {
@@ -225,7 +232,7 @@ export function ReviewClient({ token, batch, items, initialResponses, readOnly }
             <span className="locktext">
               {submittedDateText
                 ? `Submitted ${submittedDateText} — this review is locked.`
-                : 'This review has been submitted and is locked.'}
+                : 'This review is locked.'}
             </span>
           </div>
         )}

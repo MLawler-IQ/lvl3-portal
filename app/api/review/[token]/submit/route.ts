@@ -86,10 +86,12 @@ export async function POST(
     return NextResponse.json({ error: 'already_submitted' }, { status: 409 })
   }
 
+  const adminBase = (
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://portal.igniteiq.com'
+  ).replace(/\/+$/, '')
   const subject = `${batch.client} review submitted — ${batch.title}`
   const text =
-    buildSummaryText(batch, items, answers) +
-    `\n\nAdmin view: ${new URL(req.url).origin}/reviews/${batch.id}`
+    buildSummaryText(batch, items, answers) + `\n\nAdmin view: ${adminBase}/reviews/${batch.id}`
   const emailSent = await sendReviewNotification({ subject, text })
 
   return NextResponse.json({ ok: true, submittedAt, emailSent })
