@@ -46,6 +46,11 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Public, token-gated client image review (token validated server-side)
+  if (pathname.startsWith('/mm-image-review/') || pathname.startsWith('/api/review/')) {
+    return supabaseResponse
+  }
+
   // Redirect unauthenticated users to login
   if (!user) {
     const url = request.nextUrl.clone()
