@@ -159,6 +159,47 @@ export type Database = {
           },
         ]
       }
+      client_annotations: {
+        Row: {
+          annotation_date: string
+          body: string | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          module: string | null
+          title: string
+        }
+        Insert: {
+          annotation_date?: string
+          body?: string | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module?: string | null
+          title: string
+        }
+        Update: {
+          annotation_date?: string
+          body?: string | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_annotations_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           ai_summary: string | null
@@ -166,12 +207,19 @@ export type Database = {
           analytics_summary: string | null
           analytics_summary_updated_at: string | null
           brand_context: string | null
+          brand_match_mode: string
+          brand_terms: string[] | null
+          client_type: string | null
+          competitors: string[] | null
           created_at: string
           ga4_property_id: string | null
+          gbp_account_id: string | null
+          gbp_location_group: string | null
           google_sheet_id: string | null
           gsc_site_url: string | null
           hero_image_url: string | null
           id: string
+          key_event_names: string[] | null
           logo_url: string | null
           looker_embed_url: string | null
           name: string
@@ -180,6 +228,7 @@ export type Database = {
           slug: string
           snapshot_insights: Json | null
           snapshot_insights_draft: Json | null
+          targets: Json | null
         }
         Insert: {
           ai_summary?: string | null
@@ -187,12 +236,19 @@ export type Database = {
           analytics_summary?: string | null
           analytics_summary_updated_at?: string | null
           brand_context?: string | null
+          brand_match_mode?: string
+          brand_terms?: string[] | null
+          client_type?: string | null
+          competitors?: string[] | null
           created_at?: string
           ga4_property_id?: string | null
+          gbp_account_id?: string | null
+          gbp_location_group?: string | null
           google_sheet_id?: string | null
           gsc_site_url?: string | null
           hero_image_url?: string | null
           id?: string
+          key_event_names?: string[] | null
           logo_url?: string | null
           looker_embed_url?: string | null
           name: string
@@ -201,6 +257,7 @@ export type Database = {
           slug: string
           snapshot_insights?: Json | null
           snapshot_insights_draft?: Json | null
+          targets?: Json | null
         }
         Update: {
           ai_summary?: string | null
@@ -208,12 +265,19 @@ export type Database = {
           analytics_summary?: string | null
           analytics_summary_updated_at?: string | null
           brand_context?: string | null
+          brand_match_mode?: string
+          brand_terms?: string[] | null
+          client_type?: string | null
+          competitors?: string[] | null
           created_at?: string
           ga4_property_id?: string | null
+          gbp_account_id?: string | null
+          gbp_location_group?: string | null
           google_sheet_id?: string | null
           gsc_site_url?: string | null
           hero_image_url?: string | null
           id?: string
+          key_event_names?: string[] | null
           logo_url?: string | null
           looker_embed_url?: string | null
           name?: string
@@ -222,6 +286,7 @@ export type Database = {
           slug?: string
           snapshot_insights?: Json | null
           snapshot_insights_draft?: Json | null
+          targets?: Json | null
         }
         Relationships: []
       }
@@ -346,6 +411,193 @@ export type Database = {
             columns: ["target_client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_reports: {
+        Row: {
+          content_text: string
+          created_at: string
+          html: string
+          id: string
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content_text?: string
+          created_at?: string
+          html: string
+          id?: string
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content_text?: string
+          created_at?: string
+          html?: string
+          id?: string
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      report_revisions: {
+        Row: {
+          content_text: string
+          created_at: string
+          html: string
+          id: string
+          note: string | null
+          report_id: string
+        }
+        Insert: {
+          content_text?: string
+          created_at?: string
+          html: string
+          id?: string
+          note?: string | null
+          report_id: string
+        }
+        Update: {
+          content_text?: string
+          created_at?: string
+          html?: string
+          id?: string
+          note?: string | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_revisions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "public_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_batches: {
+        Row: {
+          client: string
+          created_at: string
+          created_by: string | null
+          id: string
+          status: string
+          submitted_at: string | null
+          title: string
+          token: string
+        }
+        Insert: {
+          client: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          title: string
+          token?: string
+        }
+        Update: {
+          client?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          submitted_at?: string | null
+          title?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      review_items: {
+        Row: {
+          batch_id: string
+          copy: string | null
+          copy_url: string | null
+          id: string
+          image_url: string
+          shopify_handle: string | null
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          batch_id: string
+          copy?: string | null
+          copy_url?: string | null
+          id?: string
+          image_url: string
+          shopify_handle?: string | null
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          batch_id?: string
+          copy?: string | null
+          copy_url?: string | null
+          id?: string
+          image_url?: string
+          shopify_handle?: string | null
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "review_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_responses: {
+        Row: {
+          batch_id: string
+          decision: string | null
+          id: string
+          item_id: string
+          note: string | null
+          rating: number | null
+          reviewer_name: string
+          updated_at: string
+        }
+        Insert: {
+          batch_id: string
+          decision?: string | null
+          id?: string
+          item_id: string
+          note?: string | null
+          rating?: number | null
+          reviewer_name?: string
+          updated_at?: string
+        }
+        Update: {
+          batch_id?: string
+          decision?: string | null
+          id?: string
+          item_id?: string
+          note?: string | null
+          rating?: number | null
+          reviewer_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_responses_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "review_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_responses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "review_items"
             referencedColumns: ["id"]
           },
         ]
