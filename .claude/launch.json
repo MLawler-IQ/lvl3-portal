@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lvl3-portal",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "pasha-site-v4",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/matthewlawler/pasha-site-v4", "run", "dev"],
+      "port": 3100
+    },
+    {
+      "name": "amberline-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/matthewlawler/peptide-lab-site", "run", "dev"],
+      "port": 3200
+    },
+    {
+      "name": "lvl3-site",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "/Users/matthewlawler/lvl3-site", "run", "dev"],
+      "port": 3300
+    }
+  ]
+}

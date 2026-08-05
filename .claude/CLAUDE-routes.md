@@ -41,6 +41,7 @@
 |-------|---------|
 | `app/api/ask-lvl3/route.ts` | Streaming NDJSON endpoint for Ask LVL3 chat. Agentic loop with Claude tool_use (GSC/GA4 queries). Manual auth check (no `requireAdmin()` — it uses `redirect()` which throws inside ReadableStream). |
 | `app/api/generate-blog-images/route.ts` | Batch blog image generation via OpenAI DALL-E + sharp for resizing. Uploads to Supabase Storage. `maxDuration = 300`. |
+| `app/api/onboarding/route.ts` | Streaming NDJSON endpoint for the conversational onboarding interview. Forked from `ask-lvl3`; same auth preamble and `clear_partial` handling. ONE tool (`record_answers`), write-only. The system prompt is rebuilt each iteration from `describeGapsForPrompt()`, and session status is derived from `computeCompleteness()` — the model cannot declare the interview finished. Reads `answers` from the DB, never the request body. Adds a `completeness` event carrying the fresh draft. |
 
 Route Handlers do NOT use `'use server'`. They use manual auth via `supabase.auth.getUser()` + profile role check.
 
@@ -69,6 +70,7 @@ All files must have `'use server'` at the top. No `'use server'` in `lib/` files
 | `deliverables.ts` | CRUD + comment actions |
 | `ask-lvl3-conversations.ts` | `listConversations`, `loadConversation`, `deleteConversation` — thread persistence |
 | `semrush-reports.ts` | `listSemrushReports`, `loadSemrushReport`, `saveSemrushReport` — gap analysis persistence |
+| `onboarding.ts` | `getActiveSession`, `startSession`, `saveAnswerEdits`, `abandonOnboardingSession`, `getSlotMeta`, and **`approveOnboardingSession`** — the only write path from onboarding to `clients`. Validates with zod, then promotes via the pure `buildClientUpdate` in `lib/onboarding/promote.ts`. Empty and `unknown` slots are OMITTED from the patch, so an interview that couldn't confirm a GA4 property leaves analytics connected rather than nulling it. |
 
 ## Lib Files (`lib/`)
 
@@ -93,3 +95,8 @@ No `'use server'` in any lib file — they are plain async functions.
 | `dashboard/alerts.ts` | `deriveAlerts(input)` — ranked alerts from metric drops / goal misses / GBP health |
 | `queries.ts` | Shared Supabase query helpers |
 | `ask-tools.ts` | `gscQuery` — flexible GSC search analytics query used by Ask LVL3 agentic tools |
+| `ai/models.ts` | `MODEL_SONNET`, `MODEL_HAIKU` — model ids. New code only; the ~15 existing hardcoded literals were left alone |
+| `onboarding/schema.ts` | `SLOTS` (the spec of what a complete client context is, each slot naming the consumer it feeds), `sanitizeAnswerPatch` (enforces slot membership + choice values in code, not by prompt), `isFilled` (`unknown` is never filled), zod `answersSchema` |
+| `onboarding/completeness.ts` | `computeCompleteness` — pure, no LLM, the ONLY thing that can set `ready_for_review`; `describeGapsForPrompt` rebuilds the model's gap list each turn |
+| `onboarding/tools.ts` | `RECORD_ANSWERS_TOOL` + `applyRecordAnswers` — the interview's single write-only tool |
+| `onboarding/promote.ts` | `buildClientUpdate` — pure mapping of approved answers onto `clients.*`. Omits empty/`unknown` slots so approval never nulls live config |

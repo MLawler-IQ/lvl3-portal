@@ -27,6 +27,11 @@ clients
   brand_terms text[]          -- branded-query matchers for the branded split (null = domain-derived)
   brand_match_mode text        -- 'contains' (substring, default) | 'exact' (full-query equality)
   brand_context text          -- brand/voice context blurb fed into AI prompts (Content Engine, Content Refresh Finder, recommendations)
+                              -- PROSE, not structured. Read as an opaque string by 6+ content paths; do not repurpose.
+  service_context jsonb       -- approved onboarding context: services + avg job value, real service radius,
+                              -- seasonality, lead handling, prior vendor work, approval authority, CMS/hosting.
+                              -- Written only by approveOnboardingSession. Carries `gaps` for slots the client
+                              -- couldn't answer, so a consumer can tell "not tracked" from "never asked".
   targets jsonb               -- monthly goals: { "<metricId>": { value, period: "YYYY-MM" } }
 
 users
@@ -62,6 +67,17 @@ ask_lvl3_conversations      -- chat threads per client
 
 ask_lvl3_messages           -- messages within a thread
   id uuid PK, conversation_id FK, role, content, created_at
+
+client_onboarding_sessions  -- conversational onboarding interview (admin-only)
+  id uuid PK, client_id FK (cascade), status, answers jsonb, started_by FK,
+  approved_by FK, approved_at, created_at, updated_at
+  status: in_progress | ready_for_review | approved | abandoned  (CHECK)
+  answers is the DRAFT — the LLM writes only here. Promoted to clients.* and
+  clients.service_context exclusively by approveOnboardingSession (convention #12).
+  Status is derived from computeCompleteness(), never set by the model.
+
+client_onboarding_messages  -- interview transcript
+  id uuid PK, session_id FK (cascade), role, content, created_at
 
 semrush_reports             -- persisted gap analysis results
   id uuid PK, client_id FK, client_domain, competitors, database,
