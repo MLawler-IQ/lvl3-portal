@@ -36,7 +36,7 @@ export async function getActiveSession(
   await requireAdmin()
   const service = await createServiceClient()
 
-  const { data: row } = await service
+  const { data: row, error } = await service
     .from('client_onboarding_sessions')
     .select('id, client_id, status, answers, created_at, updated_at')
     .eq('client_id', clientId)
@@ -45,6 +45,9 @@ export async function getActiveSession(
     .limit(1)
     .maybeSingle()
 
+  // Distinguish "no session" from "could not read". Swallowing the error would
+  // render the start-an-interview screen and invite a duplicate session.
+  if (error) throw new Error(`Could not load onboarding session: ${error.message}`)
   if (!row) return { session: null, messages: [] }
 
   const { data: msgs } = await service
@@ -68,6 +71,25 @@ export async function startSession(
   try {
     const { user } = await requireAdmin()
     const service = await createServiceClient()
+
+    // Reuse an active session rather than creating a second one.
+    const { data: existing } = await service
+      .from('client_onboarding_sessions')
+      .select('id, client_id, status, answers, created_at, updated_at')
+      .eq('client_id', clientId)
+      .in('status', ['in_progress', 'ready_for_review'])
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existing) {
+      return {
+        session: {
+          ...existing,
+          answers: answersSchema.safeParse(existing.answers).data ?? {},
+        } as OnboardingSession,
+      }
+    }
 
     const { data, error } = await service
       .from('client_onboarding_sessions')
@@ -103,7 +125,7 @@ export async function saveAnswerEdits(
     const answers = parsed.data
     const completeness = computeCompleteness(answers)
 
-    const { error } = await service
+    const { data: updated, error } = await service
       .from('client_onboarding_sessions')
       .update({
         answers,
@@ -112,8 +134,12 @@ export async function saveAnswerEdits(
       })
       .eq('id', sessionId)
       .neq('status', 'approved')
+      .select('id')
 
     if (error) return { error: error.message }
+    if (!updated || updated.length === 0) {
+      return { error: 'Nothing was saved — this session is already approved or no longer exists.' }
+    }
     return { completeness }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to save' }
@@ -201,12 +227,16 @@ export async function abandonOnboardingSession(
   try {
     await requireAdmin()
     const service = await createServiceClient()
-    const { error } = await service
+    const { data: updated, error } = await service
       .from('client_onboarding_sessions')
       .update({ status: 'abandoned', updated_at: new Date().toISOString() })
       .eq('id', sessionId)
       .neq('status', 'approved')
+      .select('id')
     if (error) return { error: error.message }
+    if (!updated || updated.length === 0) {
+      return { error: 'Nothing changed — this session is already approved or no longer exists.' }
+    }
     return { ok: true }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to abandon' }

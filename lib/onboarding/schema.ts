@@ -211,6 +211,16 @@ export const SLOTS: readonly Slot[] = [
     kind: 'text',
   },
   {
+    id: 'gbp_location_group',
+    label: 'GBP location group',
+    group: 'access',
+    questionHint: 'Only if the GBP account has several groups or labels — which one is this client?',
+    why: 'Scopes GBP calls to one client. Without it a multi-client account returns locations aggregated across every client, with no identifiers to separate them.',
+    required: false,
+    promotesTo: 'gbp_location_group',
+    kind: 'text',
+  },
+  {
     id: 'competitors',
     label: 'Competitors',
     group: 'access',
@@ -219,6 +229,38 @@ export const SLOTS: readonly Slot[] = [
     required: false,
     promotesTo: 'competitors',
     kind: 'list',
+  },
+  {
+    id: 'brand_terms',
+    label: 'Branded search terms',
+    group: 'access',
+    questionHint:
+      'How do customers actually type the business name — including misspellings and shorthand?',
+    why: 'Splits branded from non-branded search. Tornado was 89% branded, which is the difference between "traffic is fine" and "we rank for nothing we sell".',
+    required: false,
+    promotesTo: 'brand_terms',
+    kind: 'list',
+  },
+  {
+    id: 'key_event_names',
+    label: 'GA4 key events that count as a lead',
+    group: 'access',
+    questionHint:
+      'Which GA4 events represent a real lead — a call, a form, a booking? Exact event names if known.',
+    why: 'Outcome reporting. Counting the wrong event is how a dashboard shows conversions that nobody in the business recognises.',
+    required: false,
+    promotesTo: 'key_event_names',
+    kind: 'list',
+  },
+  {
+    id: 'google_sheet_id',
+    label: 'Client-facing tracker sheet',
+    group: 'access',
+    questionHint: 'Paste the Google Sheet URL if this client has a shared tracker.',
+    why: 'Feeds the project tracker view. Paste the URL — it is normalised to an id on approval.',
+    required: false,
+    promotesTo: 'google_sheet_id',
+    kind: 'text',
   },
 ] as const
 
@@ -255,6 +297,15 @@ export function sanitizeAnswerPatch(patch: unknown): Answers {
     out[key] = { ...v, recordedAt: v.recordedAt ?? new Date().toISOString() }
   }
   return out
+}
+
+/**
+ * Is a slot recorded as an explicit gap? Requires a reason — an `unknown` with
+ * no reason is a gap nobody can interpret three months later, which defeats the
+ * point of recording it instead of guessing.
+ */
+export function isKnownGap(v: SlotValue | undefined): boolean {
+  return v?.unknown === true && (v.reason ?? '').trim().length > 0
 }
 
 /** Is this slot actually answered? `unknown` is a visible gap, never an answer. */

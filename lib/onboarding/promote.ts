@@ -64,13 +64,24 @@ export function buildClientUpdate(
   const gbp = str('gbp_account_id')
   if (gbp) update.gbp_account_id = gbp
 
+  const gbpGroup = str('gbp_location_group')
+  if (gbpGroup) update.gbp_location_group = gbpGroup
+
   const sheet = str('google_sheet_id')
   if (sheet) update.google_sheet_id = parseSheetId(sheet)
 
-  const competitors = isFilled(answers['competitors'])
-    ? toList(answers['competitors']!.value)
-    : null
-  if (competitors) update.competitors = competitors
+  // List columns. Same omit-when-absent rule: an unanswered slot leaves the
+  // existing array alone rather than emptying it.
+  for (const [slotId, column] of [
+    ['competitors', 'competitors'],
+    ['brand_terms', 'brand_terms'],
+    ['key_event_names', 'key_event_names'],
+  ] as const) {
+    const v = answers[slotId]
+    if (!isFilled(v)) continue
+    const list = toList(v!.value)
+    if (list) update[column] = list
+  }
 
   const context: ServiceContext = {
     answers,

@@ -236,6 +236,7 @@ You have no ability to look anything up. Everything you record must come from wh
 
               emit(controller, { type: 'status', text: RECORD_ANSWERS_STATUS })
 
+              const previousAnswers = answers
               const result = applyRecordAnswers(block.input as Record<string, unknown>, answers)
               answers = result.answers
 
@@ -268,10 +269,14 @@ You have no ability to look anything up. Everything you record must come from wh
                   sessionId,
                   detail: saveErr.message,
                 })
+                // Roll the in-memory draft back to what is actually in the
+                // database, so the `done` event and the review pane never show
+                // answers that were not persisted.
+                answers = previousAnswers
                 toolResults.push({
                   type: 'tool_result',
                   tool_use_id: block.id,
-                  content: `Error saving: ${saveErr.message}. Tell the strategist the answer was not saved.`,
+                  content: `Error saving: ${saveErr.message}. Tell the strategist the answer was not saved and to try again.`,
                   is_error: true,
                 })
                 continue

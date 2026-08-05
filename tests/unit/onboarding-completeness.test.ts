@@ -8,6 +8,7 @@ import {
   SLOTS,
   clientTypeFromAnswers,
   isFilled,
+  isKnownGap,
   sanitizeAnswerPatch,
   type Answers,
 } from '@/lib/onboarding/schema'
@@ -55,6 +56,19 @@ describe('isFilled', () => {
   })
 })
 
+describe('isKnownGap', () => {
+  // An unknown with no reason is a gap nobody can interpret later, so it counts
+  // as empty rather than as a recorded gap — otherwise it would unblock approval
+  // while telling a future reader nothing.
+  it('requires a non-empty reason', () => {
+    expect(isKnownGap({ value: null, unknown: true, reason: 'not tracked' })).toBe(true)
+    expect(isKnownGap({ value: null, unknown: true })).toBe(false)
+    expect(isKnownGap({ value: null, unknown: true, reason: '   ' })).toBe(false)
+    expect(isKnownGap({ value: 'answered', unknown: false })).toBe(false)
+    expect(isKnownGap(undefined)).toBe(false)
+  })
+})
+
 describe('computeCompleteness', () => {
   it('reports every required slot missing when there are no answers', () => {
     const c = computeCompleteness({})
@@ -97,6 +111,16 @@ describe('computeCompleteness', () => {
       state: 'unknown',
       reason: 'client does not track job value by service',
     })
+  })
+
+  it('does NOT unblock review for an unknown with no reason', () => {
+    const answers = completeAnswers()
+    answers['avg_job_value'] = { value: null, unknown: true }
+    const c = computeCompleteness(answers)
+
+    expect(c.readyForReview).toBe(false)
+    expect(c.missing).toContain('avg_job_value')
+    expect(c.unknown).not.toContain('avg_job_value')
   })
 
   it('reaches 100% and ready only when all required slots are truly filled', () => {
@@ -175,6 +199,46 @@ describe('describeGapsForPrompt', () => {
     const text = describeGapsForPrompt(answers)
     expect(text).toContain('MARKED UNKNOWN')
     expect(text).toContain('client will check with IT')
+  })
+})
+
+describe('access slots cover what the intake form collected', () => {
+  // "Replace the form fully" means every column ClientSettingsForm wrote is
+  // reachable from the interview. This caught four missing slots.
+  it('has a slot for every clients.* column the old form set', () => {
+    const promoted = new Set(SLOTS.map((s) => s.promotesTo).filter(Boolean))
+    for (const column of [
+      'client_type',
+      'ga4_property_id',
+      'gsc_site_url',
+      'gbp_account_id',
+      'gbp_location_group',
+      'competitors',
+      'brand_terms',
+      'key_event_names',
+      'google_sheet_id',
+    ]) {
+      expect(promoted.has(column)).toBe(true)
+    }
+  })
+
+  it('has no slot promoting to a column that does not exist on clients', () => {
+    // Guards against the inverse failure: promotion code for a slot that can
+    // never be filled, which is dead code with a passing test.
+    const known = new Set([
+      'client_type',
+      'ga4_property_id',
+      'gsc_site_url',
+      'gbp_account_id',
+      'gbp_location_group',
+      'competitors',
+      'brand_terms',
+      'key_event_names',
+      'google_sheet_id',
+    ])
+    for (const slot of SLOTS) {
+      if (slot.promotesTo) expect(known.has(slot.promotesTo)).toBe(true)
+    }
   })
 })
 

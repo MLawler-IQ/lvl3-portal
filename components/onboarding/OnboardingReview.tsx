@@ -102,7 +102,14 @@ export default function OnboardingReview({
     setAnswers((prev) => ({
       ...prev,
       [slot.id]: unknown
-        ? { value: null, unknown: true, reason: prev[slot.id]?.reason ?? 'Client could not answer' }
+        ? {
+            value: null,
+            unknown: true,
+            // Pre-filled rather than blank: an unknown with no reason does not
+            // count as a gap, so a blank default would silently keep the slot
+            // empty and block approval with no visible cause.
+            reason: prev[slot.id]?.reason?.trim() || 'Client could not answer',
+          }
         : { value: '', unknown: false },
     }))
   }
@@ -204,7 +211,7 @@ export default function OnboardingReview({
                         type="text"
                         value={answer?.reason ?? ''}
                         onChange={(e) => setReason(slot, e.target.value)}
-                        placeholder="Why is this unknown?"
+                        placeholder="Why is this unknown? (required)"
                         className="w-full rounded-sm border border-surface-800 bg-surface-950 px-3 py-2 text-sm text-surface-100 placeholder-surface-400 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                       />
                     ) : slot.kind === 'choice' ? (

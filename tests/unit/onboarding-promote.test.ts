@@ -50,6 +50,26 @@ describe('buildClientUpdate — access field promotion', () => {
   it('drops blank entries from a competitor list rather than writing them', () => {
     expect(build({ competitors: filled(['a.com', '   ', '']) }).competitors).toEqual(['a.com'])
   })
+
+  it('promotes the other list columns the intake form used to set', () => {
+    const update = build({
+      brand_terms: filled(['tornado hvac', 'tornadohvac']),
+      key_event_names: filled('generate_lead, phone_call'),
+    })
+    expect(update.brand_terms).toEqual(['tornado hvac', 'tornadohvac'])
+    expect(update.key_event_names).toEqual(['generate_lead', 'phone_call'])
+  })
+
+  it('promotes gbp_location_group, which scopes GBP to one client', () => {
+    expect(build({ gbp_location_group: filled('Ungrouped') }).gbp_location_group).toBe('Ungrouped')
+  })
+
+  it('omits each list column when its slot was not answered', () => {
+    const update = build({ competitors: filled(['a.com']) })
+    expect('brand_terms' in update).toBe(false)
+    expect('key_event_names' in update).toBe(false)
+    expect('gbp_location_group' in update).toBe(false)
+  })
 })
 
 describe('buildClientUpdate — never clobber live config', () => {

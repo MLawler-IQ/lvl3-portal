@@ -5,7 +5,7 @@
 // answers blob, so it is trivially unit-testable and is the regression gate for
 // prompt changes.
 
-import { SLOTS, isFilled, type Answers, type Slot } from './schema'
+import { SLOTS, isFilled, isKnownGap, type Answers, type Slot } from './schema'
 
 export interface SlotStatus {
   id: string
@@ -27,10 +27,11 @@ export interface Completeness {
   /** Percentage of required slots filled. Excludes `unknown` on purpose. */
   pct: number
   /**
-   * True only when every required slot is either filled or explicitly marked
-   * unknown. `unknown` is allowed to unblock review — a client who doesn't know
+   * True only when every required slot is either filled or marked unknown WITH
+   * a reason. `unknown` is allowed to unblock review — a client who doesn't know
    * their average ticket shouldn't be able to deadlock onboarding — but it is
-   * carried into the review screen and the approved context as a named gap.
+   * carried into the review screen and the approved context as a named gap, and
+   * an unknown with no reason counts as empty rather than as a gap.
    */
   readyForReview: boolean
 }
@@ -38,7 +39,11 @@ export interface Completeness {
 export function computeCompleteness(answers: Answers): Completeness {
   const slots: SlotStatus[] = SLOTS.map((slot) => {
     const v = answers[slot.id]
-    const state: SlotStatus['state'] = isFilled(v) ? 'filled' : v?.unknown ? 'unknown' : 'empty'
+    const state: SlotStatus['state'] = isFilled(v)
+      ? 'filled'
+      : isKnownGap(v)
+        ? 'unknown'
+        : 'empty'
     return {
       id: slot.id,
       label: slot.label,
