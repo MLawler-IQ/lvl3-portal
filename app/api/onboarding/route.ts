@@ -237,7 +237,18 @@ You have no ability to look anything up. Everything you record must come from wh
               emit(controller, { type: 'status', text: RECORD_ANSWERS_STATUS })
 
               const result = applyRecordAnswers(block.input as Record<string, unknown>, answers)
-              answers = result.applied
+              answers = result.answers
+
+              // Nothing valid was sent — tell the model what was wrong and skip
+              // the write entirely rather than re-persisting an unchanged map.
+              if (result.appliedIds.length === 0) {
+                toolResults.push({
+                  type: 'tool_result',
+                  tool_use_id: block.id,
+                  content: result.message,
+                })
+                continue
+              }
 
               const completeness = computeCompleteness(answers)
 

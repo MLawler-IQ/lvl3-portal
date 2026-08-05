@@ -60,9 +60,20 @@ ${SLOTS.filter((s) => s.kind === 'choice')
 export const RECORD_ANSWERS_STATUS = 'Recording what you told me…'
 
 export interface RecordResult {
-  /** The sanitized patch actually applied. */
-  applied: Answers
-  /** Slot ids the model sent that were rejected, for the model to see and correct. */
+  /**
+   * The complete answer map after applying the patch — ALWAYS the full map,
+   * never just the delta, and never empty when `current` wasn't.
+   *
+   * This shape is deliberate. An earlier version returned only the applied
+   * delta, which meant a rejected patch returned `{}` and the caller — which
+   * assigns this straight onto its `answers` variable and persists it — wiped
+   * every previously recorded answer. Returning the merged map makes the safe
+   * behaviour the default rather than something each caller has to remember.
+   */
+  answers: Answers
+  /** Slot ids that were actually written. Empty when nothing valid was sent. */
+  appliedIds: string[]
+  /** Slot ids the model sent that were rejected, so it can see and correct them. */
   rejected: string[]
   /** Model-readable summary, returned as the tool_result content. */
   message: string
@@ -79,13 +90,14 @@ export function applyRecordAnswers(input: Record<string, unknown>, current: Answ
       ? Object.keys(raw as Record<string, unknown>)
       : []
 
-  const applied = sanitizeAnswerPatch(raw)
-  const appliedIds = Object.keys(applied)
+  const patch = sanitizeAnswerPatch(raw)
+  const appliedIds = Object.keys(patch)
   const rejected = requested.filter((id) => !appliedIds.includes(id))
 
   if (appliedIds.length === 0) {
     return {
-      applied: {},
+      answers: current,
+      appliedIds: [],
       rejected,
       message:
         rejected.length > 0
@@ -101,5 +113,10 @@ export function applyRecordAnswers(input: Record<string, unknown>, current: Answ
     )
   }
 
-  return { applied: { ...current, ...applied }, rejected, message: parts.join(' ') }
+  return {
+    answers: { ...current, ...patch },
+    appliedIds,
+    rejected,
+    message: parts.join(' '),
+  }
 }

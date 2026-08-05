@@ -108,7 +108,8 @@ describe('applyRecordAnswers', () => {
       { answers: { cms_hosting: { value: 'WordPress + Yoast' } } },
       current,
     )
-    expect(Object.keys(result.applied).sort()).toEqual(['cms_hosting', 'seasonality'])
+    expect(Object.keys(result.answers).sort()).toEqual(['cms_hosting', 'seasonality'])
+    expect(result.appliedIds).toEqual(['cms_hosting'])
     expect(result.rejected).toEqual([])
   })
 
@@ -124,21 +125,38 @@ describe('applyRecordAnswers', () => {
     )
     expect(result.rejected).toEqual(['invented_slot'])
     expect(result.message).toContain('invented_slot')
-    expect(result.applied.seasonality).toBeTruthy()
+    expect(result.answers.seasonality).toBeTruthy()
   })
 
-  it('does not wipe existing answers when the whole patch is invalid', () => {
-    const current: Answers = { seasonality: filled('summer') }
+  // Regression. `answers` used to be the applied DELTA, so a fully-rejected
+  // patch returned {} — and the route assigns this onto its answers variable and
+  // persists it, which silently wiped the whole interview. It must always come
+  // back as the complete map.
+  it('returns the existing answers intact when the whole patch is invalid', () => {
+    const current: Answers = {
+      seasonality: filled('summer'),
+      cms_hosting: filled('WordPress'),
+    }
     const result = applyRecordAnswers({ answers: { bogus: { value: 1 } } }, current)
-    // applied is empty, so the caller keeps `current` — the route assigns
-    // result.applied only on success paths.
-    expect(result.applied).toEqual({})
+
+    expect(result.answers).toEqual(current)
+    expect(result.appliedIds).toEqual([])
     expect(result.message).toContain('bogus')
   })
 
-  it('survives a malformed tool input without throwing', () => {
-    expect(() => applyRecordAnswers({}, {})).not.toThrow()
-    expect(() => applyRecordAnswers({ answers: 'nope' }, {})).not.toThrow()
-    expect(applyRecordAnswers({ answers: null }, {}).applied).toEqual({})
+  it('returns the existing answers intact for malformed input, without throwing', () => {
+    const current: Answers = { seasonality: filled('summer') }
+    expect(() => applyRecordAnswers({}, current)).not.toThrow()
+    expect(applyRecordAnswers({}, current).answers).toEqual(current)
+    expect(applyRecordAnswers({ answers: 'nope' }, current).answers).toEqual(current)
+    expect(applyRecordAnswers({ answers: null }, current).answers).toEqual(current)
+    expect(applyRecordAnswers({ answers: null }, current).appliedIds).toEqual([])
+  })
+
+  it('never returns an empty map when it was given a non-empty one', () => {
+    const current: Answers = { seasonality: filled('summer') }
+    for (const bad of [{}, { answers: null }, { answers: 'x' }, { answers: [] }, { answers: { bogus: {} } }]) {
+      expect(Object.keys(applyRecordAnswers(bad, current).answers).length).toBeGreaterThan(0)
+    }
   })
 })
