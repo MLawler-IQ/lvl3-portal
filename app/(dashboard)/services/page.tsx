@@ -73,7 +73,7 @@ export default async function ServicesPage() {
                     href={svc.cta_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 w-full px-4 py-2 bg-surface-800 hover:bg-surface-800 border border-surface-600 text-surface-300 hover:text-surface-100 text-xs font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="flex items-center justify-center gap-1.5 w-full px-4 py-2 bg-surface-800 hover:bg-surface-850 border border-surface-600 text-surface-300 hover:text-surface-100 text-xs font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                   >
                     Learn more
                     <ExternalLink size={11} />

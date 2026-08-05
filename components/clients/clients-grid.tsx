@@ -60,7 +60,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h3 className="text-surface-100 font-medium truncate group-hover:text-surface-100">
+                  <h3 className="text-surface-100 font-medium truncate group-hover:text-brand-400">
                     {client.name}
                   </h3>
                   <p className="text-surface-400 text-xs font-mono">{client.slug}</p>

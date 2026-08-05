@@ -44,7 +44,7 @@ export default function KpiCard({
         {tooltip && (
           <div className="relative group">
             <button
-              className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-400 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+              className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-100 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               aria-label={`More info about ${label}`}
             >
               ?
