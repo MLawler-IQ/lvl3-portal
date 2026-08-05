@@ -432,7 +432,7 @@ export default function SemrushGapClient({
             <button
               type="button"
               onClick={() => setCompetitors([...competitors, ''])}
-              className="mt-2 text-xs font-medium flex items-center gap-1 hover:opacity-80"
+              className="mt-2 text-xs font-medium flex items-center gap-1 rounded-sm transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               style={{ color: 'var(--color-accent)' }}
             >
               <Plus className="w-3 h-3" /> Add competitor

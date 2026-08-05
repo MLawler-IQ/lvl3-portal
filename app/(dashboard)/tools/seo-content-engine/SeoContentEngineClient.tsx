@@ -304,7 +304,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
             {isRunning && (
               <button
                 onClick={stopRun}
-                className="rounded-lg bg-error px-6 py-3 text-sm font-semibold text-surface-950 transition-colors hover:opacity-90"
+                className="rounded-lg bg-error px-6 py-3 text-sm font-semibold text-surface-950 transition-colors hover-error"
               >
                 Stop
               </button>
@@ -352,7 +352,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                 <div className="flex justify-end">
                   <button
                     onClick={stopRun}
-                    className="rounded-lg bg-error px-5 py-2 text-sm font-semibold text-surface-950 transition-colors hover:opacity-90"
+                    className="rounded-lg bg-error px-5 py-2 text-sm font-semibold text-surface-950 transition-colors hover-error"
                   >
                     Stop Pipeline
                   </button>

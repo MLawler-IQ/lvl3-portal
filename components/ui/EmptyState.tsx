@@ -48,8 +48,7 @@ export function EmptyState({
         action.href ? (
           <Link
             href={action.href}
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-            style={{ backgroundColor: "var(--color-primary)", color: "rgb(var(--surface-950))" }}
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-sm bg-brand-400 text-surface-950 transition-colors hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             {action.label}
           </Link>
@@ -57,8 +56,7 @@ export function EmptyState({
           <button
             type="button"
             onClick={action.onClick}
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-            style={{ backgroundColor: "var(--color-primary)", color: "rgb(var(--surface-950))" }}
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-sm bg-brand-400 text-surface-950 transition-colors hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             {action.label}
           </button>

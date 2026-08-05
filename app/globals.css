@@ -150,6 +150,10 @@ h1, h2, h3, h4, h5, h6 {
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
+  /* Destructive hover — a background shift, since the error token carries no
+     alpha-capable Tailwind scale. Hover moves lighter, as on ink generally. */
+  .hover-error:hover { background-color: color-mix(in srgb, var(--color-error) 85%, #F5F2EA); }
+
   /* Eyebrow labels — small Archivo caps above headings. Off mono per the
      editorial system (mono is code/IDs/keys/logs only). The site's fuller
      move is a parenthetical section label, e.g. "(The problem)" — that's a
