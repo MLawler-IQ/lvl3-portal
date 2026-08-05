@@ -159,6 +159,37 @@ stage 4, where the component pass is already opening these files.
   the tab strip sits on a card. Switched to an inset ring, which needs no
   offset colour.
 
+## Verification outcome (stages 1–3)
+
+A fresh verification pass (no implementation) checked every stage 1–3 item
+against the spec. It found real defects, since fixed — see the commit
+"fix defects found by the verification pass". The pattern worth remembering:
+
+**A Tailwind `hover:` class on the same element as an inline `style` for that
+property never fires.** Inline style wins. This silently killed hover on the
+TopBar brand link, the TopBar hamburger, three login inputs, and three sidebar
+mobile items. Two more hovers were no-ops because both sides resolved to the
+same value — most importantly the login magic-link button, which swapped
+`--color-accent` for `--color-primary` after stage 1 had made them identical.
+
+`MobileNavDrawer` had no hover state at all on 11 elements. It was never
+touched by the earlier chrome work because nothing in it matched the greps
+(no shadows, no gradients, no light-tuned palette classes) — a reminder that
+the hover rule needs a per-file read, not a grep.
+
+Measured live in the browser after the fixes:
+
+| Check | Value |
+|---|---|
+| Body background / text | `rgb(23 20 16)` / `rgb(245 242 234)` — 16.4:1 |
+| Primary button | `rgb(224 112 63)` bg, `rgb(23 20 16)` text — 5.7:1 |
+| Primary button hover | → `rgb(229 155 112)` (brand-300, lighter) |
+| Input border hover | `rgb(58 52 40)` → `rgb(92 84 67)` |
+| Focus ring | `rgb(224 112 63) 0 0 0 2px` |
+| Radius | 2px |
+| Hover rules touching transform/box-shadow | 0 |
+| Distinct focus indicators | 1 (112 elements) |
+
 ## Pre-existing issues found and not fixed in this pass
 
 - `tests/e2e/smoke.spec.ts` looks broken independent of the rebrand: it fills
@@ -179,6 +210,10 @@ stage 4, where the component pass is already opening these files.
   memory — CI may be passing only because GitHub runners have more headroom.
 - `DashboardTabs` renders its tabs as bare `<button>`s with no `role="tab"` or
   `aria-selected`. Untouched — an a11y fix, not a visual one.
+- Two custom (non-Recharts-token) tooltips never adopted the paper tooltip and
+  remain dark-on-panel — legible, but inconsistent with the other five:
+  `components/analytics/seo/searchconsole/SerpDistributionChart.tsx:36` and
+  `components/dashboard/modules/BrandedSplit.tsx:44`. Stage 5 work.
 - **`public/market-eval.html` (646 KB) and `public/decision-dashboard.html`
   (479 KB) are static HTML deliverables with their own inline palettes** —
   black background, `#e5484d`-family red, the IgniteIQ Q-mark. The token swap
