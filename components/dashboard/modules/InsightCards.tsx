@@ -48,7 +48,7 @@ function InsightCardTile({ card }: { card: InsightCard }) {
 
   return (
     <div
-      className={`bg-surface-900 border ${styles.border} rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)]`}
+      className={`bg-surface-900 border ${styles.border} rounded-sm p-5 transition-colors duration-200 hover:bg-surface-850`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
@@ -65,7 +65,7 @@ function InsightCardTile({ card }: { card: InsightCard }) {
         <Arrow className="w-5 h-5" aria-hidden="true" />
         <span
           className="text-2xl font-medium font-serif tabular-nums leading-none"
-          style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+          style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
         >
           {card.magnitude}
         </span>

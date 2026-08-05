@@ -50,9 +50,9 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
       <span
         className={`${BASE} border ${className}`}
         style={{
-          backgroundColor: "rgba(74,222,128,0.1)",
-          color: "#4ade80",
-          borderColor: "rgba(74,222,128,0.2)",
+          backgroundColor: "color-mix(in srgb, var(--color-success) 10%, transparent)",
+          color: "var(--color-success)",
+          borderColor: "color-mix(in srgb, var(--color-success) 20%, transparent)",
         }}
       >
         Complete
@@ -65,9 +65,9 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
       <span
         className={`${BASE} border ${className}`}
         style={{
-          backgroundColor: "rgba(248,113,113,0.1)",
-          color: "#f87171",
-          borderColor: "rgba(248,113,113,0.2)",
+          backgroundColor: "color-mix(in srgb, var(--color-error) 10%, transparent)",
+          color: "var(--color-error)",
+          borderColor: "color-mix(in srgb, var(--color-error) 20%, transparent)",
         }}
       >
         Failed

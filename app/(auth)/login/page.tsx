@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -54,19 +53,16 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center px-4 py-16"
       style={{ backgroundColor: 'var(--background)' }}
     >
-      {/* Subtle warm texture overlay */}
-      <div className="w-full max-w-sm">
+            <div className="w-full max-w-sm">
 
-        {/* Brand mark — above the card */}
+        {/* Brand mark — above the card. LVL3. in Archivo 800, accent period. */}
         <div className="text-center mb-8">
-          <Image
-            src="/logo-black.png"
-            alt="IgniteIQ"
-            width={56}
-            height={56}
-            priority
-            className="mx-auto"
-          />
+          <p
+            className="text-4xl font-extrabold"
+            style={{ color: 'var(--foreground)', letterSpacing: '-0.03em' }}
+          >
+            LVL3<span style={{ color: 'rgb(var(--brand-400))' }}>.</span>
+          </p>
           <p
             className="mt-3 text-xs font-medium uppercase tracking-[0.14em]"
             style={{ color: 'var(--nav-text)' }}
@@ -77,19 +73,19 @@ export default function LoginPage() {
 
         {/* Card */}
         <div
-          className="rounded-[10px] p-8 shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
-          style={{ backgroundColor: 'var(--color-cream)', border: '1px solid var(--color-border)' }}
+          className="rounded-sm p-8"
+          style={{ backgroundColor: 'rgb(var(--surface-900))', border: '1px solid var(--color-border)' }}
         >
           {submitted ? (
             <div className="text-center space-y-3 py-2">
-              {/* Marigold check circle */}
+              {/* Accent check circle */}
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center mx-auto text-2xl"
                 style={{ backgroundColor: 'var(--active-bg-bold)', color: 'var(--color-accent)' }}
               >
                 ✓
               </div>
-              <p className="font-semibold text-surface-100" style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}>
+              <p className="font-semibold text-surface-100" style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}>
                 Check your email
               </p>
               <p className="text-sm text-surface-400 leading-relaxed">
@@ -110,7 +106,7 @@ export default function LoginPage() {
               <div>
                 <h1
                   className="text-xl font-medium text-surface-100 mb-1"
-                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   Sign in
                 </h1>
@@ -132,9 +128,9 @@ export default function LoginPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-[4px] px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
                     style={{
-                      backgroundColor: 'var(--color-cream)',
+                      backgroundColor: 'rgb(var(--surface-950))',
                       border: '1px solid var(--color-border)',
                       color: 'var(--foreground)',
                     }}
@@ -157,9 +153,9 @@ export default function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-[4px] px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
                     style={{
-                      backgroundColor: 'var(--color-cream)',
+                      backgroundColor: 'rgb(var(--surface-950))',
                       border: '1px solid var(--color-border)',
                       color: 'var(--foreground)',
                     }}
@@ -170,14 +166,14 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p id="login-error-pw" role="alert" className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
+                <p id="login-error-pw" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2" style={{ color: 'var(--color-error)', backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)', borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--color-error) 25%, transparent)' }}>{error}</p>
               )}
 
               {/* Primary button — ink bg + cream text per design spec */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-[4px] px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--foreground)', color: 'var(--color-cream)' }}
                 onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgb(var(--surface-300))' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--foreground)' }}
@@ -198,7 +194,7 @@ export default function LoginPage() {
               <div>
                 <h1
                   className="text-xl font-medium text-surface-100 mb-1"
-                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   Welcome back
                 </h1>
@@ -219,9 +215,9 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full rounded-[4px] px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                  className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
                   style={{
-                    backgroundColor: 'var(--color-cream)',
+                    backgroundColor: 'rgb(var(--surface-950))',
                     border: '1px solid var(--color-border)',
                     color: 'var(--foreground)',
                   }}
@@ -231,14 +227,14 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p id="login-error" role="alert" className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded-[4px] px-3 py-2">{error}</p>
+                <p id="login-error" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2" style={{ color: 'var(--color-error)', backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)', borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--color-error) 25%, transparent)' }}>{error}</p>
               )}
 
-              {/* Accent button — marigold bg + ink text */}
+              {/* Accent button — sienna bg + ink text */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-[4px] px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ backgroundColor: 'var(--color-accent)', color: 'var(--background)' }}
                 onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary)' }}
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-accent)' }}

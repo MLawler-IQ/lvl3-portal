@@ -1,7 +1,7 @@
 import { Swords, AlertTriangle } from 'lucide-react'
 import type { CompetitiveResult, CompetitiveRow } from '@/app/actions/dashboard-competitive'
 
-const MONO = { fontFamily: 'var(--font-jetbrains-mono), monospace' } as const
+const MONO = { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' } as const
 
 /** Compact integer, e.g. 12,500 → "12.5K", 2,300,000 → "2.3M". */
 function fmtCompact(n: number | null): string {

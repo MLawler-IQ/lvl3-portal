@@ -91,7 +91,7 @@ export default function ExecutiveSummaryBand({
                 </p>
                 <h2
                   className="mt-2 text-lg font-medium leading-snug text-surface-100"
-                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   {headline}
                 </h2>

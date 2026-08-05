@@ -101,7 +101,7 @@ export default function DeliverableSlideOver({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/60 z-40"
+        className="fixed inset-0 bg-black/70 z-40"
         onClick={onClose}
         aria-hidden="true"
       />

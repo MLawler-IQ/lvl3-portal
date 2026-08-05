@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<
   },
 }
 
-const MONO = { fontFamily: 'var(--font-jetbrains-mono), monospace' }
+const MONO = { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }
 
 /** Compact, locale-aware number formatting (e.g. 12.4K, 1.2M) — Intl handles the
  *  magnitude boundaries correctly (999,999 → "1M", not "1000K"). */

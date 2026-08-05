@@ -63,7 +63,7 @@ function ToastView({
   return (
     <div
       role="status"
-      className="flex items-center gap-3 bg-surface-900/95 border border-surface-700 rounded-xl px-4 py-3 shadow-xl animate-slide-in-up whitespace-nowrap pointer-events-auto"
+      className="flex items-center gap-3 bg-surface-900/95 border border-surface-700 rounded-sm px-4 py-3 animate-slide-in-up whitespace-nowrap pointer-events-auto"
     >
       <Icon
         size={14}

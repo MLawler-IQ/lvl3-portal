@@ -22,7 +22,7 @@ const columns: ColumnDef<Row>[] = [
     render: (v) => (
       <span
         className="text-accent-400"
-        style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+        style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
       >
         {Number(v).toLocaleString()}
       </span>

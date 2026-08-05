@@ -128,7 +128,7 @@ function ToolCard({
       href={enabled ? tool.route : '#'}
       className={`bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-3 transition-all duration-200 block ${
         enabled
-          ? 'hover:border-surface-600 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] cursor-pointer'
+          ? 'hover:border-surface-600 hover:bg-surface-850 cursor-pointer'
           : 'opacity-50 cursor-not-allowed pointer-events-none'
       }`}
     >

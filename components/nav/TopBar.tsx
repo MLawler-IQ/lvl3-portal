@@ -84,28 +84,21 @@ export default function TopBar({
         <Menu size={20} />
       </button>
 
-      {/* Brand — IgniteIQ Q-mark + Aeonik wordmark */}
+      {/* Brand — LVL3. wordmark (Archivo 800, tight tracking, accent period) */}
       <Link
         href="/"
-        className="flex items-center gap-2 shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-        aria-label="IgniteIQ Portal — home"
+        className="group flex items-center gap-2 shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        aria-label="LVL3 Portal — home"
       >
-        <img
-          src="/logo-black.png"
-          alt=""
-          width={22}
-          height={22}
-          className="shrink-0"
-        />
         <span
-          className="font-semibold text-base"
-          style={{ color: 'var(--foreground)', letterSpacing: '-0.02em' }}
+          className="text-base font-extrabold transition-colors group-hover:text-brand-400"
+          style={{ color: 'var(--foreground)', letterSpacing: '-0.03em' }}
         >
-          IgniteIQ
+          LVL3<span style={{ color: 'rgb(var(--brand-400))' }}>.</span>
         </span>
         <span
-          className="hidden sm:inline text-xs uppercase font-medium"
-          style={{ color: 'var(--nav-text)', letterSpacing: '0.18em', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+          className="hidden sm:inline text-xs font-medium transition-colors group-hover:text-surface-100"
+          style={{ color: 'var(--nav-text)' }}
         >
           Portal
         </span>
@@ -261,7 +254,7 @@ export default function TopBar({
               aria-hidden="true"
             />
             <div
-              className="absolute right-0 top-full mt-1 w-56 rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.2)] z-50 py-1 animate-fade-in"
+              className="absolute right-0 top-full mt-1 w-56 rounded-sm z-50 py-1 animate-fade-in"
               style={{ backgroundColor: 'var(--nav-bg)', border: '1px solid var(--nav-border)' }}
             >
               <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--nav-border)' }}>

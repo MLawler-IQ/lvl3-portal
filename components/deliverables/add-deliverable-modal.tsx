@@ -71,8 +71,8 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-surface-900 border border-surface-700 rounded-sm">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-700">
           <h2 className="text-surface-100 font-medium">Add Deliverable</h2>

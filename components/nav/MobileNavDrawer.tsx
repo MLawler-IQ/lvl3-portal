@@ -79,7 +79,7 @@ export default function MobileNavDrawer({
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/60 z-40"
+        className="fixed inset-0 bg-black/70 z-40"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -101,13 +101,14 @@ export default function MobileNavDrawer({
           style={{ borderBottom: "1px solid var(--sidebar-border)" }}
         >
           <span
-            className="font-bold text-base"
+            className="font-extrabold text-base"
             style={{
-              color: "var(--color-primary)",
-              fontFamily: "var(--font-jetbrains-mono), monospace",
+              color: "var(--foreground)",
+              fontFamily: "var(--font-archivo), system-ui, sans-serif",
+              letterSpacing: "-0.03em",
             }}
           >
-            LVL3
+            LVL3<span style={{ color: "rgb(var(--brand-400))" }}>.</span>
           </span>
           <button
             onClick={onClose}

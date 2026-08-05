@@ -69,7 +69,7 @@ function ScoreBadge({ score }: { score: number }) {
   return (
     <div
       className={`inline-flex items-baseline gap-1 rounded-lg border px-3 py-1.5 ${tone.chip}`}
-      style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+      style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
     >
       <span className="text-2xl font-medium font-serif tabular-nums leading-none">{score}</span>
       <span className="text-xs opacity-70">/100</span>
@@ -177,7 +177,7 @@ export default function LocationCompleteness({
                 </div>
                 <span
                   className="w-6 shrink-0 text-right text-xs text-surface-300"
-                  style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   {b.count}
                 </span>
@@ -256,7 +256,7 @@ export default function LocationCompleteness({
                   </div>
                   <span
                     className={`shrink-0 rounded-md border px-2 py-0.5 text-xs font-bold ${tone.chip}`}
-                    style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                    style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                     aria-label={`Score ${loc.score}`}
                   >
                     {loc.score}

@@ -105,13 +105,13 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="new-client-title"
-        className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl"
+        className="relative bg-surface-900 border border-surface-700 rounded-sm w-full max-w-md p-6"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 id="new-client-title" className="text-surface-100 font-medium text-lg">New client</h2>
@@ -196,7 +196,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 <img
                   src={logoUrl}
                   alt="Logo preview"
-                  className="w-8 h-8 rounded object-contain bg-white p-0.5 shrink-0"
+                  className="w-8 h-8 rounded-sm object-contain bg-surface-100 p-0.5 shrink-0"
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
               )}

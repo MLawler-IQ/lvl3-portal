@@ -26,9 +26,9 @@ export default function GlobalError({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#FCFBF9',
-          color: '#0A0A0A',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          background: '#171410',
+          color: '#F5F2EA',
+          fontFamily: 'Archivo, system-ui, sans-serif',
           textAlign: 'center',
           padding: '0 24px',
         }}
@@ -39,7 +39,7 @@ export default function GlobalError({
             fontWeight: 500,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#EF4444',
+            color: '#E0703F',
             margin: '0 0 12px',
           }}
         >
@@ -48,7 +48,7 @@ export default function GlobalError({
         <h1 style={{ fontSize: 24, fontWeight: 600, margin: '0 0 8px' }}>
           The app hit a fatal error
         </h1>
-        <p style={{ fontSize: 14, color: '#5C5B59', maxWidth: 420, margin: '0 0 24px' }}>
+        <p style={{ fontSize: 14, color: '#A79E8C', maxWidth: 420, margin: '0 0 24px' }}>
           The issue has been logged. Please try again.
         </p>
         <button
@@ -56,8 +56,8 @@ export default function GlobalError({
           style={{
             border: 0,
             borderRadius: 2,
-            background: '#DC2626',
-            color: '#fff',
+            background: '#E0703F',
+            color: '#171410',
             fontSize: 14,
             fontWeight: 500,
             padding: '8px 16px',

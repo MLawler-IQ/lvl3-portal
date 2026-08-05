@@ -44,8 +44,8 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-surface-900 border border-surface-700 rounded-sm w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-surface-100 font-medium text-lg">Add access</h2>
           <button onClick={onClose} className="text-surface-400 hover:text-surface-100 transition-colors">

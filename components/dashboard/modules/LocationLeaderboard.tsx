@@ -224,7 +224,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
                   <div className="flex items-center gap-2">
                     <span
                       className="w-5 shrink-0 text-right text-xs text-surface-400"
-                      style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                      style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                     >
                       {i + 1}
                     </span>
@@ -253,7 +253,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
                       }`}
                       style={
                         isActive
-                          ? { fontFamily: 'var(--font-jetbrains-mono), monospace' }
+                          ? { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }
                           : undefined
                       }
                     >

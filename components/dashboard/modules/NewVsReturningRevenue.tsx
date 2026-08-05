@@ -58,7 +58,7 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
           >
             ?
           </button>
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 bg-surface-100 border border-surface-700 rounded-lg px-3 py-2 text-xs text-surface-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 bg-surface-100 border border-surface-700 rounded-lg px-3 py-2 text-xs text-surface-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal">
             {TOOLTIP}
           </div>
         </div>
@@ -80,7 +80,7 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
             New-customer share of revenue:{' '}
             <span
               className="font-bold"
-              style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+              style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
             >
               {pctText(newShare)}
             </span>

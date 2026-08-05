@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react'
 import { setSelectedClient } from '@/app/actions/client-selection'
 import type { TriageRow, TriageGbpGrade } from '@/app/actions/admin-triage'
 
-const MONO = { fontFamily: 'var(--font-jetbrains-mono), monospace' }
+const MONO = { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }
 
 // Grade chip tokens, matching the exec HealthScorecard.
 const GRADE_STYLES: Record<TriageGbpGrade, string> = {

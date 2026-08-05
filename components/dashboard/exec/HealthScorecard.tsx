@@ -22,7 +22,7 @@ function GradeChip({ grade }: { grade: NonNullable<HealthItem['grade']> }) {
   return (
     <span
       className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs font-bold ${GRADE_STYLES[grade]}`}
-      style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+      style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
       aria-label={`Grade ${grade}`}
     >
       {grade}
@@ -46,7 +46,7 @@ export default function HealthScorecard({ items }: { items: HealthItem[] }) {
             ) : typeof item.score === 'number' ? (
               <span
                 className="text-sm font-bold text-surface-100"
-                style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
               >
                 {item.score}
               </span>

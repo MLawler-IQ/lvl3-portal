@@ -125,7 +125,7 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span
                   className="text-lg font-bold leading-none"
-                  style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                  style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   {pct(brandedClicks, totalClicks)}%
                 </span>
@@ -148,7 +148,7 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
                     <span className="text-xs text-surface-400 tabular-nums">{fmtNum(d.clicks)}</span>
                     <span
                       className="text-xs font-medium tabular-nums w-9 text-right"
-                      style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+                      style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                     >
                       {pct(d.clicks, totalClicks)}%
                     </span>

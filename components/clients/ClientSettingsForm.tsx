@@ -430,7 +430,7 @@ export default function ClientSettingsForm({ client }: Props) {
               <img
                 src={logoUrl}
                 alt="Logo preview"
-                className="w-8 h-8 rounded object-contain bg-white p-0.5 shrink-0"
+                className="w-8 h-8 rounded-sm object-contain bg-surface-100 p-0.5 shrink-0"
                 onError={(e) => {
                   ;(e.target as HTMLImageElement).style.display = 'none'
                 }}

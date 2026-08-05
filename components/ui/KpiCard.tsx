@@ -29,11 +29,11 @@ export default function KpiCard({
   sparkline,
 }: KpiCardProps) {
   return (
-    <div className="bg-surface-900 border border-surface-700 rounded-[10px] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+    <div className="bg-surface-900 border border-surface-700 rounded-sm p-5 transition-colors duration-200 hover:bg-surface-850 hover:border-surface-600">
       <div className="flex items-start justify-between mb-2">
         <p
           className="text-3xl font-medium font-serif tabular-nums leading-none"
-          style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+          style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
         >
           {value}
         </p>
@@ -49,7 +49,7 @@ export default function KpiCard({
             >
               ?
             </button>
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-48 bg-surface-100 border border-surface-700 rounded-lg px-3 py-2 text-xs text-surface-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-48 bg-surface-100 border border-surface-700 rounded-lg px-3 py-2 text-xs text-surface-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal">
               {tooltip}
             </div>
           </div>
