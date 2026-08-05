@@ -179,3 +179,15 @@ stage 4, where the component pass is already opening these files.
   memory — CI may be passing only because GitHub runners have more headroom.
 - `DashboardTabs` renders its tabs as bare `<button>`s with no `role="tab"` or
   `aria-selected`. Untouched — an a11y fix, not a visual one.
+- **`public/market-eval.html` (646 KB) and `public/decision-dashboard.html`
+  (479 KB) are static HTML deliverables with their own inline palettes** —
+  black background, `#e5484d`-family red, the IgniteIQ Q-mark. The token swap
+  cannot reach them; only the `report-shell` chrome overlaid on top of them
+  retokened. So `/market-eval` is *not* a representative sample of the app's
+  chart screens. Re-generating those two files is its own pass, and they carry
+  IgniteIQ branding a client has already been sent — needs a call in stage 6.
+- **Playwright could not run at all before this pass**: `@playwright/test`
+  1.60.0 wants chromium build 1223 and only 1217 was on disk, so
+  `npm run test:e2e` would have failed to launch a browser even with
+  credentials set. Installed the matching chromium (browser binary for an
+  already-declared devDependency; no package.json change).
