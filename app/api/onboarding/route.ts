@@ -266,7 +266,11 @@ You have no ability to look anything up. Everything you record must come from wh
                 continue
               }
 
-              emit(controller, { type: 'completeness', completeness })
+              // Send the answers too, not just coverage: the review pane needs
+              // the actual values, and inventing a placeholder for it risked an
+              // admin approving that placeholder into ga4_property_id. This is
+              // an admin-only surface, so the draft is safe to send.
+              emit(controller, { type: 'completeness', completeness, answers })
               toolResults.push({
                 type: 'tool_result',
                 tool_use_id: block.id,
@@ -289,6 +293,7 @@ You have no ability to look anything up. Everything you record must come from wh
           emit(controller, {
             type: 'done',
             completeness: computeCompleteness(answers),
+            answers,
           })
           controller.close()
           return
@@ -303,7 +308,11 @@ You have no ability to look anything up. Everything you record must come from wh
           role: 'assistant',
           content: fallback,
         })
-        emit(controller, { type: 'done', completeness: computeCompleteness(answers) })
+        emit(controller, {
+          type: 'done',
+          completeness: computeCompleteness(answers),
+          answers,
+        })
         controller.close()
       } catch (err) {
         logError('onboarding.stream', 'Interview turn failed', {

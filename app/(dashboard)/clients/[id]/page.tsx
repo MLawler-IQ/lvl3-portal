@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, MessagesSquare } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getClientUsers } from '@/app/actions/clients'
@@ -58,7 +58,30 @@ export default async function ClientDetailPage({ params }: Props) {
           <h1 className="text-surface-100 text-2xl font-medium">{client.name}</h1>
           <p className="text-surface-400 text-sm font-mono">{client.slug}</p>
         </div>
+        <Link
+          href={`/clients/${id}/onboarding`}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-surface-800 px-3.5 py-2 text-sm font-medium text-surface-100 transition-colors hover:bg-surface-850 hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        >
+          <MessagesSquare size={14} />
+          {client.service_context ? 'Re-run onboarding' : 'Onboarding interview'}
+        </Link>
       </div>
+
+      {!client.service_context && (
+        <div
+          className="mb-8 rounded-sm px-4 py-3 text-sm"
+          style={{
+            color: 'var(--color-warning)',
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'color-mix(in srgb, var(--color-warning) 25%, transparent)',
+          }}
+        >
+          No onboarding context captured yet. The pipeline is guessing at service radius,
+          average job value and lead handling until the interview is run.
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
