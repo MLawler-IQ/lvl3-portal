@@ -159,6 +159,53 @@ stage 4, where the component pass is already opening these files.
   the tab strip sits on a card. Switched to an inset ring, which needs no
   offset colour.
 
+## Exception: /login is paper (Aug 2026, after stages 1–3)
+
+The spec says *"No light mode in this pass."* The login page is now a deliberate
+exception, at Matt's request. **It is the only light surface in the app** —
+everything behind auth stays ink.
+
+This needed no new colours. The token block already ships the paper end of the
+scale for future use, and this is that future: `--surface-500`, which stage 1b had
+to route *around* because it is labelled paper-only, finally does the job it was
+designed for.
+
+| Role | Ink | Paper | Source |
+|---|---|---|---|
+| Page background | `surface-950` | `surface-100` #F5F2EA | site `--paper` |
+| Primary text | `surface-100` | `surface-950` #171410 | site `--ink` |
+| Muted text | `surface-400` | `surface-500` #6B6353 | site `--muted` |
+| Hairline | `surface-800` | `surface-200` #D8D1C0 | site `--rule` |
+| Accent | `brand-400` | `brand-600` #AC3E19 | site `--accent` |
+| Accent hover | `brand-300` | `brand-700` #8F3314 | site `--accent-deep` |
+
+Measured live in the browser, and the numbers reproduce the design tokens' own
+documented figures exactly:
+
+| Pair | Measured |
+|---|---|
+| Ink text on paper | **16.41:1** |
+| Accent on paper | **5.43:1** (tokens document 5.4:1) |
+| Muted on paper | **5.31:1** (tokens document 5.3:1) |
+| Paper text on the accent fill | **5.43:1** |
+
+**The status colours do not survive the flip, and that is the one real catch.**
+`--color-error` #F2555A is validated on ink only. Measured: **3.02:1 on paper — it
+fails**, against 5.13:1 on `surface-900`. So the error blocks render as a small
+**ink chip on the paper page** (`surface-950` background, error token on it) —
+measured **5.44:1**. That keeps the validated pair and needs no paper-tuned red,
+which the "no new colours" rule would have objected to. Pairing ink against paper
+is the system's core move anyway.
+
+One mechanism worth knowing: `body`'s className is fixed in the root layout and
+cannot vary per route, so the page marks itself with `data-surface="paper"` and
+`app/globals.css` carries a `body:has([data-surface='paper'])` rule. Without it,
+overscroll flashes ink behind the paper page. Any future paper surface opts in the
+same way.
+
+The spec's caveat that the chart palette is not validated for paper still stands —
+there are no charts on the login page, and this does not license one.
+
 ## Verification outcome (stages 1–3)
 
 A fresh verification pass (no implementation) checked every stage 1–3 item

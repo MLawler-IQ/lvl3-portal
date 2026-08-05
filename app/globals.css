@@ -133,6 +133,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Paper surfaces (currently only /login) opt in with data-surface="paper".
+   body's className is fixed in the root layout and can't vary per route, so the
+   page tells body what it is. Without this, overscroll flashes ink behind the
+   paper page. */
+body:has([data-surface='paper']) {
+  background: rgb(var(--surface-100));
+  color:      rgb(var(--surface-950));
+}
+
 /* Headings — Newsreader 500 at app scale, per the editorial system.
    Page titles and section headings are serif; everything else is Archivo. */
 h1, h2, h3, h4, h5, h6 {

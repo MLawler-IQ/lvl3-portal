@@ -48,55 +48,46 @@ export default function LoginPage() {
   }
 
   return (
-    // Full-page dark-ink hero — mirrors the editorial dark sections in the design system
-    <div
-      className="min-h-screen flex items-center justify-center px-4 py-16"
-      style={{ backgroundColor: 'var(--background)' }}
-    >
-            <div className="w-full max-w-sm">
+    // Paper login. The only light surface in the app — see REBRAND-NOTES.md.
+    // Uses the paper end of the token scale (surface-100/200/300/500,
+    // brand-600/700), which shipped with the rebrand for exactly this. No new
+    // colours. Everything behind auth stays ink.
+    <div data-surface="paper" className="min-h-screen flex items-center justify-center px-4 py-16 bg-surface-100">
+      <div className="w-full max-w-sm">
 
-        {/* Brand mark — above the card. LVL3. in Archivo 800, accent period. */}
+        {/* Brand mark. LVL3. in Archivo 800, paper accent period. */}
         <div className="text-center mb-8">
           <p
-            className="text-4xl font-extrabold"
-            style={{ color: 'var(--foreground)', letterSpacing: '-0.03em' }}
+            className="text-4xl font-extrabold text-surface-950"
+            style={{ letterSpacing: '-0.03em' }}
           >
-            LVL3<span style={{ color: 'rgb(var(--brand-400))' }}>.</span>
+            LVL3<span className="text-brand-600">.</span>
           </p>
-          <p
-            className="mt-3 text-xs font-medium uppercase tracking-[0.14em]"
-            style={{ color: 'var(--nav-text)' }}
-          >
+          <p className="mt-3 text-xs font-medium uppercase tracking-[0.14em] text-surface-500">
             Client Portal
           </p>
         </div>
 
         {/* Card */}
-        <div
-          className="rounded-sm p-8"
-          style={{ backgroundColor: 'rgb(var(--surface-900))', border: '1px solid var(--color-border)' }}
-        >
+        <div className="rounded-sm border border-surface-200 p-8">
           {submitted ? (
             <div className="text-center space-y-3 py-2">
               {/* Accent check circle */}
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto text-2xl"
-                style={{ backgroundColor: 'var(--active-bg-bold)', color: 'var(--color-accent)' }}
-              >
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto text-2xl bg-brand-600/10 text-brand-600">
                 ✓
               </div>
-              <p className="font-semibold text-surface-100" style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}>
+              <p className="font-semibold text-surface-950" style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}>
                 Check your email
               </p>
-              <p className="text-sm text-surface-400 leading-relaxed">
+              <p className="text-sm text-surface-500 leading-relaxed">
                 We sent a magic link to{' '}
-                <span className="text-surface-100 font-medium">{email}</span>.
+                <span className="text-surface-950 font-medium">{email}</span>.
                 Click it to sign in.
               </p>
               <button
                 type="button"
                 onClick={() => { setSubmitted(false); setEmail('') }}
-                className="text-xs text-surface-400 hover:text-surface-100 transition-colors mt-2"
+                className="text-xs text-surface-500 hover:text-surface-950 transition-colors mt-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
               >
                 Use a different email
               </button>
@@ -105,17 +96,17 @@ export default function LoginPage() {
             <form onSubmit={handlePasswordLogin} className="space-y-5">
               <div>
                 <h1
-                  className="text-xl font-medium text-surface-100 mb-1"
+                  className="text-xl font-medium text-surface-950 mb-1"
                   style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   Sign in
                 </h1>
-                <p className="text-xs text-surface-400">Enter your email and password below.</p>
+                <p className="text-xs text-surface-500">Enter your email and password below.</p>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="email-pw" className="block text-xs font-medium text-surface-400 mb-1.5 uppercase tracking-widest">
+                  <label htmlFor="email-pw" className="block text-xs font-medium text-surface-500 mb-1.5 uppercase tracking-widest">
                     Email
                   </label>
                   <input
@@ -128,12 +119,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-100 text-surface-950 placeholder-surface-500 border border-surface-200 transition-colors hover:border-surface-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-xs font-medium text-surface-400 mb-1.5 uppercase tracking-widest">
+                  <label htmlFor="password" className="block text-xs font-medium text-surface-500 mb-1.5 uppercase tracking-widest">
                     Password
                   </label>
                   <input
@@ -146,20 +137,20 @@ export default function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-100 text-surface-950 placeholder-surface-500 border border-surface-200 transition-colors hover:border-surface-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                   />
                 </div>
               </div>
 
               {error && (
-                <p id="login-error-pw" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2" style={{ color: 'var(--color-error)', backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)', borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--color-error) 25%, transparent)' }}>{error}</p>
+                <p id="login-error-pw" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2 bg-surface-950" style={{ color: 'var(--color-error)' }}>{error}</p>
               )}
 
-              {/* Primary button — ink bg + cream text per design spec */}
+              {/* Primary button — paper accent (brand-600, 5.4:1 on paper) + paper text */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-400 text-surface-950 transition-colors duration-200 hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-600 text-surface-100 transition-colors duration-200 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
@@ -167,7 +158,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(false); setError(null) }}
-                className="w-full text-xs text-surface-400 hover:text-surface-100 transition-colors py-1"
+                className="w-full text-xs text-surface-500 hover:text-surface-950 transition-colors py-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
               >
                 Use magic link instead →
               </button>
@@ -176,16 +167,16 @@ export default function LoginPage() {
             <form onSubmit={handleMagicLink} className="space-y-5">
               <div>
                 <h1
-                  className="text-xl font-medium text-surface-100 mb-1"
+                  className="text-xl font-medium text-surface-950 mb-1"
                   style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                 >
                   Welcome back
                 </h1>
-                <p className="text-xs text-surface-400">Enter your email — we&apos;ll send a sign-in link.</p>
+                <p className="text-xs text-surface-500">Enter your email — we&apos;ll send a sign-in link.</p>
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-xs font-medium text-surface-400 mb-1.5 uppercase tracking-widest">
+                <label htmlFor="email" className="block text-xs font-medium text-surface-500 mb-1.5 uppercase tracking-widest">
                   Email
                 </label>
                 <input
@@ -198,19 +189,19 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                  className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-100 text-surface-950 placeholder-surface-500 border border-surface-200 transition-colors hover:border-surface-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
                 />
               </div>
 
               {error && (
-                <p id="login-error" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2" style={{ color: 'var(--color-error)', backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)', borderWidth: 1, borderStyle: 'solid', borderColor: 'color-mix(in srgb, var(--color-error) 25%, transparent)' }}>{error}</p>
+                <p id="login-error" role="alert" className="flex items-start gap-2 text-sm rounded-sm px-3 py-2 bg-surface-950" style={{ color: 'var(--color-error)' }}>{error}</p>
               )}
 
-              {/* Accent button — sienna bg + ink text */}
+              {/* Accent button — paper accent (brand-600) + paper text */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-400 text-surface-950 transition-colors duration-200 hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-600 text-surface-100 transition-colors duration-200 hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending…' : 'Send magic link'}
               </button>
@@ -218,7 +209,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(true); setError(null) }}
-                className="w-full text-xs text-surface-400 hover:text-surface-100 transition-colors py-1"
+                className="w-full text-xs text-surface-500 hover:text-surface-950 transition-colors py-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
               >
                 Sign in with password instead →
               </button>
@@ -227,7 +218,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer note */}
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--nav-text)' }}>
+        <p className="text-center text-xs mt-6 text-surface-500">
           Secure portal — access by invitation only
         </p>
       </div>
