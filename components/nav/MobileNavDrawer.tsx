@@ -112,8 +112,18 @@ export default function MobileNavDrawer({
           </span>
           <button
             onClick={onClose}
-            className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            className="p-2.5 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             style={{ color: "var(--sidebar-text)" }}
+            onMouseEnter={e => {
+              const el = e.currentTarget
+              el.style.color = "var(--sidebar-text-bright)"
+              el.style.backgroundColor = "var(--sidebar-hover)"
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget
+              el.style.color = "var(--sidebar-text)"
+              el.style.backgroundColor = "transparent"
+            }}
             aria-label="Close menu"
           >
             <X size={18} />
@@ -137,10 +147,22 @@ export default function MobileNavDrawer({
                 key={href}
                 href={href}
                 onClick={onClose}
-                className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                 style={{
                   color: active ? "var(--sidebar-active)" : "var(--sidebar-text)",
                   backgroundColor: active ? "var(--active-bg)" : "transparent",
+                }}
+                onMouseEnter={e => {
+                  if (active) return
+                  const el = e.currentTarget
+                  el.style.color = "var(--sidebar-text-bright)"
+                  el.style.backgroundColor = "var(--sidebar-hover)"
+                }}
+                onMouseLeave={e => {
+                  if (active) return
+                  const el = e.currentTarget
+                  el.style.color = "var(--sidebar-text)"
+                  el.style.backgroundColor = "transparent"
                 }}
               >
                 <Icon size={16} strokeWidth={active ? 2.5 : 1.8} className="shrink-0" />
@@ -181,10 +203,22 @@ export default function MobileNavDrawer({
                     key={href}
                     href={href}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 min-h-[44px] rounded text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                     style={{
                       color: active ? "var(--sidebar-active)" : "var(--sidebar-text)",
                       backgroundColor: active ? "var(--active-bg)" : "transparent",
+                    }}
+                    onMouseEnter={e => {
+                      if (active) return
+                      const el = e.currentTarget
+                      el.style.color = "var(--sidebar-text-bright)"
+                      el.style.backgroundColor = "var(--sidebar-hover)"
+                    }}
+                    onMouseLeave={e => {
+                      if (active) return
+                      const el = e.currentTarget
+                      el.style.color = "var(--sidebar-text)"
+                      el.style.backgroundColor = "transparent"
                     }}
                   >
                     <Icon size={16} strokeWidth={active ? 2.5 : 1.8} className="shrink-0" />

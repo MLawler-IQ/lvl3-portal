@@ -128,12 +128,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-                    style={{
-                      backgroundColor: 'rgb(var(--surface-950))',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--foreground)',
-                    }}
+                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                   />
                 </div>
 
@@ -151,12 +146,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-                    style={{
-                      backgroundColor: 'rgb(var(--surface-950))',
-                      border: '1px solid var(--color-border)',
-                      color: 'var(--foreground)',
-                    }}
+                    className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                   />
                 </div>
               </div>
@@ -208,12 +198,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-                  style={{
-                    backgroundColor: 'rgb(var(--surface-950))',
-                    border: '1px solid var(--color-border)',
-                    color: 'var(--foreground)',
-                  }}
+                  className="w-full rounded-sm px-4 py-2.5 text-sm bg-surface-950 text-surface-100 border border-surface-800 transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                 />
               </div>
 
@@ -225,10 +210,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--color-accent)', color: 'var(--background)' }}
-                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-primary)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-accent)' }}
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-400 text-surface-950 transition-colors duration-200 hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending…' : 'Send magic link'}
               </button>

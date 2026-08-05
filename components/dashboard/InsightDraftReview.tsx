@@ -36,7 +36,7 @@ function fmtGeneratedAt(iso: string | undefined): string {
 }
 
 const inputClass =
-  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 placeholder:text-surface-400 focus:outline-none focus:border-surface-500 transition-colors'
+  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 transition-colors'
 const labelClass =
   'text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500'
 

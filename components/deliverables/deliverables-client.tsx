@@ -194,7 +194,7 @@ export default function DeliverablesClient({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortType)}
-            className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+            className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             <option value="needs-attention">Needs attention first</option>
             <option value="newest">Newest</option>
@@ -236,7 +236,7 @@ export default function DeliverablesClient({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search deliverables…"
-            className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-4 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
+            className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-4 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           />
         </div>
       </div>

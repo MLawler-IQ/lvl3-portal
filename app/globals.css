@@ -60,13 +60,19 @@
   --color-ink:       rgb(var(--surface-950));         /* ink surface, was surface-100 */
   --color-cream:     rgb(var(--surface-900));         /* panel; login's card surface */
   --color-cream-alt: rgb(var(--surface-850));         /* elevated panel */
-  --color-card:      var(--surface-900);              /* was hardcoded white */
+  --color-card:      rgb(var(--surface-900));         /* was hardcoded white */
 
   /* ── Status colors (ink-tuned; never reused as chart series;
      always shipped with an icon AND a label) ─────────── */
   --color-error:   #F2555A;   /* 5.1:1 on surface-900 */
   --color-warning: #E3B341;   /* 8.9:1 on surface-900 */
   --color-success: #7FB069;   /* 6.9:1 on surface-900 */
+
+  /* Status tints. These were referenced by CoreWebVitalsClient before they
+     existed, so its inline rgba() fallbacks fired and rendered off-palette. */
+  --color-error-bg:   color-mix(in srgb, var(--color-error) 12%, transparent);
+  --color-warning-bg: color-mix(in srgb, var(--color-warning) 12%, transparent);
+  --color-success-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
 
   /* ── Nav tokens (ink) ───────────────────────────────── */
   --nav-bg:          rgb(var(--surface-950));  /* unified with the sidebar + canvas; the hairline separates */

@@ -45,7 +45,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
   }
 
   const inputClass =
-    'w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-brand-500'
+    'w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400'
 
   return (
     <div className="space-y-4">

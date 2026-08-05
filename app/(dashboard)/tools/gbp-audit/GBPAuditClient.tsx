@@ -200,7 +200,7 @@ export default function GBPAuditClient({
                   value={selectedAccount}
                   onChange={(e) => setSelectedAccount(e.target.value)}
                   disabled={status === 'running'}
-                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 focus:outline-none focus:border-brand-500 disabled:opacity-50"
+                  className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
                 >
                   {accounts.map((a) => (
                     <option key={a.name} value={a.name}>{a.accountName || a.name}</option>

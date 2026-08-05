@@ -428,7 +428,7 @@ export default function AskLvl3Chat({
             placeholder={clientId ? 'Ask anything about this client...' : 'Select a client first'}
             disabled={!clientId || loading}
             rows={1}
-            className="flex-1 bg-surface-900 border border-surface-600 text-surface-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-surface-900 border border-surface-600 text-surface-100 text-sm rounded-xl px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder-surface-400 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ minHeight: '44px', maxHeight: '160px' }}
             onInput={(e) => {
               const el = e.currentTarget

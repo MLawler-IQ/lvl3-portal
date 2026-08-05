@@ -77,8 +77,7 @@ export default function TopBar({
       {/* Hamburger — mobile only */}
       <button
         onClick={onMobileNavOpen}
-        className="md:hidden p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-sm -ml-1 transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-        style={{ color: 'var(--nav-text)' }}
+        className="md:hidden p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-sm -ml-1 text-surface-400 transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         aria-label="Open menu"
       >
         <Menu size={20} />
@@ -91,15 +90,12 @@ export default function TopBar({
         aria-label="LVL3 Portal — home"
       >
         <span
-          className="text-base font-extrabold transition-colors group-hover:text-brand-400"
-          style={{ color: 'var(--foreground)', letterSpacing: '-0.03em' }}
+          className="text-base font-extrabold text-surface-100 transition-colors group-hover:text-brand-400"
+          style={{ letterSpacing: '-0.03em' }}
         >
-          LVL3<span style={{ color: 'rgb(var(--brand-400))' }}>.</span>
+          LVL3<span className="text-brand-400">.</span>
         </span>
-        <span
-          className="hidden sm:inline text-xs font-medium transition-colors group-hover:text-surface-100"
-          style={{ color: 'var(--nav-text)' }}
-        >
+        <span className="hidden sm:inline text-xs font-medium text-surface-400 transition-colors group-hover:text-surface-100">
           Portal
         </span>
       </Link>
@@ -139,22 +135,8 @@ export default function TopBar({
       {/* Search trigger */}
       <button
         onClick={onSearchOpen}
-        className="hidden md:flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-        style={{
-          backgroundColor: 'var(--nav-hover)',
-          border: '1px solid var(--nav-border)',
-          color: 'var(--nav-text)',
-        }}
-        onMouseEnter={e => {
-          const el = e.currentTarget as HTMLButtonElement
-          el.style.color = 'var(--nav-text-bright)'
-          el.style.backgroundColor = 'rgb(var(--surface-850))'
-        }}
-        onMouseLeave={e => {
-          const el = e.currentTarget as HTMLButtonElement
-          el.style.color = 'var(--nav-text)'
-          el.style.backgroundColor = 'var(--nav-hover)'
-        }}
+        className="hidden md:flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm bg-surface-850 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        style={{ border: '1px solid var(--nav-border)' }}
         aria-label="Open search (Cmd+K)"
       >
         <Search size={13} />

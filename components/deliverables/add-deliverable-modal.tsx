@@ -91,7 +91,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
             <select
               value={clientId}
               onChange={e => setClientId(e.target.value)}
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
               {clients.length === 0 && <option value="">No clients found</option>}
               {clients.map(c => (
@@ -108,7 +108,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Q1 Performance Report"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder={currentConfig.placeholder ?? 'https://'}
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               />
             </div>
           )}

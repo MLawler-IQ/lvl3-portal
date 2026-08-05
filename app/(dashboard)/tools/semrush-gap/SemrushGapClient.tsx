@@ -380,9 +380,9 @@ export default function SemrushGapClient({
   }
 
   const inputClass =
-    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-brand-400 placeholder:text-surface-400'
+    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder:text-surface-400'
   const selectClass =
-    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-400'
+    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400'
 
   return (
     <div className="space-y-6">

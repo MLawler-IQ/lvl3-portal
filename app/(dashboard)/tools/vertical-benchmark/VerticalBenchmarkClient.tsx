@@ -390,7 +390,7 @@ export default function VerticalBenchmarkClient({
                   if (e.key === 'Enter' && vertical.trim()) handleRun()
                 }}
                 placeholder="e.g. residential plumbing services"
-                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
+                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               />
             </div>
 
@@ -410,7 +410,7 @@ export default function VerticalBenchmarkClient({
                     }
                   }}
                   placeholder="example.com"
-                  className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
+                  className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                 />
                 <button
                   onClick={addCompetitor}

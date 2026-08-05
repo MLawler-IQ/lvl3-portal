@@ -73,14 +73,14 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded px-2 py-1.5 focus:outline-none focus:border-surface-500"
+              className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded px-2 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             />
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What changed? (e.g. Launched new landing pages)"
-              className="flex-1 bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus:outline-none focus:border-surface-500"
+              className="flex-1 bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             />
           </div>
           <textarea
@@ -88,7 +88,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
             onChange={(e) => setBody(e.target.value)}
             placeholder="Optional detail / expected impact"
             rows={2}
-            className="w-full bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus:outline-none focus:border-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           />
           {error && <p className="text-xs text-rose-400">{error}</p>}
           <div className="flex items-center gap-2">

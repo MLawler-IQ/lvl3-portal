@@ -341,7 +341,7 @@ export default function BlogImageGeneratorClient() {
           value={styleRules}
           onChange={(e) => setStyleRules(e.target.value)}
           rows={5}
-          className="w-full bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm resize-y focus:outline-none focus:border-surface-500"
+          className="w-full bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           placeholder="Enter style rules to append to every prompt..."
         />
       </div>

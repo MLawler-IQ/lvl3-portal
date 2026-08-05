@@ -9,7 +9,7 @@ import { reviewUrl } from '@/lib/review/helpers'
 import CopyLinkButton from './CopyLinkButton'
 
 const INPUT_CLASS =
-  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400'
+  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder-surface-400'
 
 type DraftRow = {
   key: string

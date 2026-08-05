@@ -190,16 +190,16 @@ export default function Sidebar({
       >
         <Link
           href="/"
-          className="flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-          style={{ color: pathname === "/" ? NAV_ACTIVE : NAV_TEXT }}
+          className={`flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${pathname === "/" ? "" : "text-surface-400 hover:text-surface-100"}`}
+          style={pathname === "/" ? { color: NAV_ACTIVE } : undefined}
         >
           <Home size={20} />
           <span className="text-[10px]">Home</span>
         </Link>
         <Link
           href="/deliverables"
-          className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-          style={{ color: pathname.startsWith("/deliverables") ? NAV_ACTIVE : NAV_TEXT }}
+          className={`relative flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${pathname.startsWith("/deliverables") ? "" : "text-surface-400 hover:text-surface-100"}`}
+          style={pathname.startsWith("/deliverables") ? { color: NAV_ACTIVE } : undefined}
         >
           <PackageOpen size={20} />
           {deliverableBadgeCount > 0 && (
@@ -209,8 +209,7 @@ export default function Sidebar({
         </Link>
         <button
           onClick={onSearchOpen}
-          className="flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-          style={{ color: NAV_TEXT }}
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-sm text-surface-400 transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           aria-label="Search"
         >
           <Search size={20} />

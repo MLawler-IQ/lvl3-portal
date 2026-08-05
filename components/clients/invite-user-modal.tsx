@@ -81,7 +81,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@company.com"
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 text-sm"
               />
             </div>
 

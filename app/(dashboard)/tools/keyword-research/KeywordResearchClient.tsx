@@ -58,7 +58,7 @@ export default function KeywordResearchClient() {
               placeholder={"best running shoes\nrunning shoes for flat feet\ntrail running shoes"}
               rows={5}
               required
-              className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400 resize-y"
+              className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder-surface-400 resize-y"
             />
           </div>
           <div className="flex flex-col gap-3">
@@ -67,7 +67,7 @@ export default function KeywordResearchClient() {
               <select
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400"
+                className="bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               >
                 <option value="us">US</option>
                 <option value="uk">UK</option>

@@ -298,7 +298,7 @@ export default function DashboardTabs({
             <select
               value={CALENDAR_PRESETS.some((p) => p.value === period) ? period : ""}
               onChange={(e) => e.target.value && navigate({ period: e.target.value })}
-              className="text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 focus:outline-none focus:border-surface-500"
+              className="text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
               <option value="">Calendar…</option>
               {CALENDAR_PRESETS.map((p) => (
@@ -310,7 +310,7 @@ export default function DashboardTabs({
             <select
               value={compare}
               onChange={(e) => navigate({ compare: e.target.value })}
-              className="text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 focus:outline-none focus:border-surface-500"
+              className="text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
               <option value="prior">vs. prior period</option>
               <option value="yoy">vs. prior year</option>
@@ -320,7 +320,7 @@ export default function DashboardTabs({
             <button
               type="button"
               onClick={() => window.print()}
-              className="print:hidden flex items-center gap-1.5 text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 hover:text-surface-100 hover:border-surface-500 transition-colors focus:outline-none focus:border-surface-500"
+              className="print:hidden flex items-center gap-1.5 text-xs bg-surface-800 border border-surface-600 text-surface-300 rounded px-2 py-1 hover:text-surface-100 hover:border-surface-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               title="Print this view or save it as a PDF"
             >
               <Printer size={12} aria-hidden="true" />

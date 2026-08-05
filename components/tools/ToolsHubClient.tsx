@@ -226,7 +226,7 @@ export default function ToolsHubClient({ tools, selectedClientId }: Props) {
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search tools…"
-            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
+            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           />
         </div>
 

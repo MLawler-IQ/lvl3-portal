@@ -58,7 +58,7 @@ function CommentInput({
         onChange={(e) => setBody(e.target.value)}
         placeholder={placeholder}
         disabled={loading}
-        className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 disabled:opacity-50"
+        className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50"
       />
       <button
         type="submit"
@@ -185,8 +185,8 @@ function Thread({
               disabled={resolving}
               className={`text-xs px-2 py-0.5 rounded-full border transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
                 thread.resolved
-                  ? "border-surface-500 text-surface-300 hover:border-surface-400 hover:text-surface-200"
-                  : "border-accent-700 text-accent-500 hover:bg-accent-500/10"
+                  ? "border-surface-700 text-surface-300 hover:border-surface-600 hover:text-surface-100"
+                  : "border-brand-700 text-brand-400 hover:bg-brand-400/10 hover:border-brand-400"
               }`}
             >
               {thread.resolved ? "Unresolve" : "Resolve"}

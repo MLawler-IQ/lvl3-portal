@@ -458,7 +458,7 @@ export default function TfkGeneratorClient() {
             <select
               value={selectedRowIndex}
               onChange={e => setSelectedRowIndex(Number(e.target.value))}
-              className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 appearance-none pr-8 focus:outline-none focus:border-surface-500"
+              className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 appearance-none pr-8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
               {outputRows.map((row, i) => (
                 <option key={i} value={i}>

@@ -194,7 +194,7 @@ export function ReportShell({ initialView }: { initialView: View }) {
                   }}
                   rows={1}
                   placeholder="Ask a question or add context…"
-                  className="max-h-28 min-h-[38px] flex-1 resize-none rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-[13px] text-surface-100 placeholder:text-surface-600 focus:border-brand-400 focus:outline-none"
+                  className="max-h-28 min-h-[38px] flex-1 resize-none rounded-lg border border-surface-800 bg-surface-900 px-3 py-2 text-[13px] text-surface-100 placeholder:text-surface-600 focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:outline-none"
                 />
                 <button
                   onClick={sendMessage}
