@@ -19,6 +19,11 @@ const newsreader = Newsreader({
   display: 'swap',
   weight: ['400', '500'],
   style: ['normal', 'italic'],
+  // Next 14's font-metrics table has no entry for Newsreader, so its automatic
+  // fallback adjustment logs an error on every render. Declare the fallback
+  // explicitly instead.
+  adjustFontFallback: false,
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
 })
 
 const jetbrainsMono = JetBrains_Mono({
