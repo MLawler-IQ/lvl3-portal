@@ -64,7 +64,7 @@ export default function LookerEmbed({ url, clientName, isActive = true }: Props)
           <div className="w-12 h-12 bg-brand-900/40 border border-brand-700/50 rounded-xl flex items-center justify-center mx-auto mb-4">
             <ExternalLink className="w-6 h-6 text-brand-400" />
           </div>
-          <h3 className="text-surface-100 font-semibold mb-1">
+          <h3 className="text-surface-100 font-medium mb-1">
             {clientName ? `${clientName} Dashboard` : "Analytics Dashboard"}
           </h3>
           <p className="text-surface-300 text-sm mb-5">

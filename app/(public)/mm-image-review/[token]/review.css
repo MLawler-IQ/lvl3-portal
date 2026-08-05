@@ -13,7 +13,7 @@
   --ink-500: #71717A;
   --ignite: #EF4444;
   --ignite-600: #DC2626;
-  --rv-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --rv-sans: var(--font-archivo), system-ui, -apple-system, sans-serif;
   --rv-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
   background: var(--canvas);
   color: var(--ink-1000);

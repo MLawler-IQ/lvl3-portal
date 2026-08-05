@@ -107,7 +107,7 @@ export default function RunHistory({ clientId, onLoadRun }: RunHistoryProps) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-surface-100">Run History</h3>
+        <h3 className="text-sm font-medium text-surface-100">Run History</h3>
         <button
           onClick={fetchRuns}
           disabled={loading}

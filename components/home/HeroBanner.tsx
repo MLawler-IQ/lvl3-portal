@@ -33,7 +33,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 {clientName && (
                   <p className="text-sm font-medium text-surface-300">{clientName}</p>
                 )}
-                <h1 className="text-2xl font-bold text-surface-100 leading-tight">
+                <h1 className="text-2xl font-medium text-surface-100 leading-tight">
                   This week at a glance
                 </h1>
               </div>
@@ -65,7 +65,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 {clientName && (
                   <p className="text-sm font-medium text-surface-300">{clientName}</p>
                 )}
-                <h1 className="text-2xl font-bold text-surface-100 leading-tight">
+                <h1 className="text-2xl font-medium text-surface-100 leading-tight">
                   This week at a glance
                 </h1>
               </div>

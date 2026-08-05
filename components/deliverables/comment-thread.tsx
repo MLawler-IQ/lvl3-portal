@@ -279,7 +279,7 @@ export default function CommentThread({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-surface-100 font-semibold text-sm">
+        <h3 className="text-surface-100 font-medium text-sm">
           Comments{" "}
           {!loading && comments.length > 0 && (
             <span className="text-surface-400 font-normal">({comments.length})</span>

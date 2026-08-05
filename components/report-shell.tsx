@@ -134,7 +134,7 @@ export function ReportShell({ initialView }: { initialView: View }) {
           <div className="flex h-[560px] max-h-[calc(100vh-120px)] w-[380px] max-w-[calc(100vw-40px)] flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 shadow-2xl">
             <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#e5484d]">
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[#e5484d]">
                   IgniteIQ
                 </div>
                 <div className="text-sm font-medium text-white">Ask about this evaluation</div>

@@ -346,7 +346,7 @@ export default function ClientSettingsForm({ client }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* ── Basic Info ─────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Basic Info</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Basic Info</h2>
 
         {/* Hero Image Upload */}
         <div>
@@ -443,7 +443,7 @@ export default function ClientSettingsForm({ client }: Props) {
       {/* ── Dashboard Type ───────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Dashboard Type</h2>
+          <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Dashboard Type</h2>
           <button
             type="button"
             onClick={handleAutoDetect}
@@ -508,7 +508,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Brand Context ────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Brand Context</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Brand Context</h2>
         <p className="text-surface-400 text-xs">
           Brand voice, tone, and style instructions for AI content generation. This auto-populates in the SEO Content Engine.
         </p>
@@ -523,7 +523,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Google Sheet ───────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Google Sheet</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Google Sheet</h2>
 
         <div>
           <label className="block text-surface-400 text-sm mb-1.5">Sheet URL or ID</label>
@@ -620,7 +620,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Looker Studio ──────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Looker Studio</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Looker Studio</h2>
 
         <div>
           <label className="block text-surface-400 text-sm mb-1.5">Embed URL</label>
@@ -636,7 +636,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Analytics ──────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Analytics</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Analytics</h2>
 
         <div>
           <label className="block text-surface-400 text-sm mb-1.5">GA4 Property</label>
@@ -720,7 +720,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Google Business Profile ──────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Google Business Profile</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Google Business Profile</h2>
         <p className="text-surface-400 text-xs">
           Maps this client to a GBP account for dashboard location insights.
         </p>
@@ -780,7 +780,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Branded Search, Key Events & Competitors ─────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">
           Branded Search, Key Events &amp; Competitors
         </h2>
 
@@ -865,7 +865,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
       {/* ── Monthly Goals ────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Monthly Goals</h2>
+        <h2 className="text-surface-100 font-medium text-sm uppercase tracking-wide">Monthly Goals</h2>
         <p className="text-surface-400 text-xs">
           Monthly targets that power the dashboard pacing module. Leave blank to skip a metric.
         </p>

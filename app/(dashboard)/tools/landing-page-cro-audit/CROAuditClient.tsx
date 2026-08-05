@@ -62,7 +62,7 @@ const IMPACT_COLOR: Record<'high' | 'medium' | 'low', string> = {
 function GradeBadge({ grade }: { grade: CROAuditScore['grade'] }) {
   return (
     <span
-      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold font-mono"
+      className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold font-serif tabular-nums"
       style={{ backgroundColor: statusTint(GRADE_LEVEL[grade], 13), color: GRADE_COLOR[grade] }}
     >
       {grade}
@@ -74,10 +74,10 @@ function SectionCard({ title, data }: { title: string; data: CROAuditScore }) {
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-surface-100">{title}</h3>
+        <h3 className="text-sm font-medium text-surface-100">{title}</h3>
         <div className="flex items-center gap-2">
           <GradeBadge grade={data.grade} />
-          <span className="text-lg font-bold font-mono" style={{ color: 'var(--color-accent)' }}>
+          <span className="text-lg font-bold font-serif tabular-nums" style={{ color: 'var(--color-accent)' }}>
             {data.score}
           </span>
         </div>
@@ -130,7 +130,7 @@ function AuditResult({ audit }: { audit: CROAudit }) {
         <div className="text-center">
           <p className="text-xs uppercase tracking-widest font-medium text-surface-400 mb-1">Overall Score</p>
           <p
-            className="text-5xl font-bold font-mono"
+            className="text-5xl font-bold font-serif tabular-nums"
             style={{ color: 'var(--color-accent)' }}
           >
             {audit.overallScore}
@@ -168,7 +168,7 @@ function AuditResult({ audit }: { audit: CROAudit }) {
             {audit.topFixes.map(fix => (
               <li key={fix.priority} className="flex items-start gap-3">
                 <span
-                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono"
+                  className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-serif tabular-nums"
                   style={{ backgroundColor: 'var(--active-bg)', color: 'var(--color-accent)' }}
                 >
                   {fix.priority}

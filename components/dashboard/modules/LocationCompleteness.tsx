@@ -71,7 +71,7 @@ function ScoreBadge({ score }: { score: number }) {
       className={`inline-flex items-baseline gap-1 rounded-lg border px-3 py-1.5 ${tone.chip}`}
       style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
     >
-      <span className="text-2xl font-bold leading-none">{score}</span>
+      <span className="text-2xl font-medium font-serif tabular-nums leading-none">{score}</span>
       <span className="text-xs opacity-70">/100</span>
     </div>
   )

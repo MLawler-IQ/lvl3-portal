@@ -114,7 +114,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
         className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 id="new-client-title" className="text-surface-100 font-semibold text-lg">New client</h2>
+          <h2 id="new-client-title" className="text-surface-100 font-medium text-lg">New client</h2>
           <button onClick={onClose} aria-label="Close dialog" className="text-surface-400 hover:text-surface-100 transition-colors">
             <X size={18} />
           </button>

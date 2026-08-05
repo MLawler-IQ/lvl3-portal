@@ -120,7 +120,7 @@ export default function DeliverableSlideOver({
             </p>
             <h2
               id={titleId}
-              className="text-surface-100 font-semibold text-lg leading-tight"
+              className="text-surface-100 font-medium text-lg leading-tight"
             >
               {deliverable.title}
             </h2>

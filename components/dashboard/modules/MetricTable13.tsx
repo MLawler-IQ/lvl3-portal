@@ -116,7 +116,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
           {COLUMNS.map((col) => (
             <div key={col.key} className="flex flex-col">
               <span className="text-xs text-surface-400">{col.label}</span>
-              <span className="font-mono text-base font-semibold text-brand-400">
+              <span className="font-serif tabular-nums text-base font-semibold text-brand-400">
                 {col.format(latest[col.key])}
               </span>
               <DeltaBadge pct={yoyPeer ? pctChange(latest[col.key], yoyPeer[col.key]) : null} />
@@ -171,7 +171,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
                   {COLUMNS.map((col) => (
                     <td key={col.key} className="py-2 pl-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <span className="font-mono text-surface-300">{col.format(row[col.key])}</span>
+                        <span className="font-serif tabular-nums text-surface-300">{col.format(row[col.key])}</span>
                         {isAnchor && (
                           <DeltaBadge pct={pctChange(row[col.key], prevMonth?.[col.key])} />
                         )}

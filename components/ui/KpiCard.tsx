@@ -32,7 +32,7 @@ export default function KpiCard({
     <div className="bg-surface-900 border border-surface-700 rounded-[10px] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
       <div className="flex items-start justify-between mb-2">
         <p
-          className="text-3xl font-bold leading-none"
+          className="text-3xl font-medium font-serif tabular-nums leading-none"
           style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-jetbrains-mono), monospace' }}
         >
           {value}

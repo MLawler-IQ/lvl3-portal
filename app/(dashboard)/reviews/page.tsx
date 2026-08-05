@@ -17,7 +17,7 @@ export default async function ReviewsPage() {
         <div className="flex items-center gap-3">
           <Images className="w-5 h-5 text-surface-400" />
           <div>
-            <h1 className="text-xl font-semibold text-surface-100">Reviews</h1>
+            <h1 className="text-xl font-medium text-surface-100">Reviews</h1>
             <p className="mt-0.5 text-sm text-surface-400">
               Client image-review batches and shareable approval links
             </p>

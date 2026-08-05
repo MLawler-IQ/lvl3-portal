@@ -48,7 +48,7 @@ export default function ReviewSummary({ review }: { review: DraftReview }) {
           </span>
 
           {/* Word Count */}
-          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-surface-800 text-surface-300 font-mono">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-surface-800 text-surface-300">
             {wordCount.toLocaleString()} words
           </span>
 

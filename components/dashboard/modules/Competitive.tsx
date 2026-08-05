@@ -43,7 +43,7 @@ function EmptyState() {
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-900 p-8 text-center">
       <Swords className="mx-auto mb-3 h-8 w-8 text-surface-400" aria-hidden="true" />
-      <h3 className="text-sm font-semibold text-surface-100">No competitors tracked</h3>
+      <h3 className="text-sm font-medium text-surface-100">No competitors tracked</h3>
       <p className="mx-auto mt-1.5 max-w-sm text-sm text-surface-400">
         Add competitor domains in client settings to benchmark organic visibility, keywords,
         traffic, and backlinks side by side.
@@ -73,7 +73,7 @@ export default function Competitive({ data }: { data: CompetitiveResult }) {
     <div className="rounded-xl border border-surface-700 bg-surface-900">
       <div className="flex items-center gap-2 border-b border-surface-700 px-5 py-3.5">
         <Swords className="h-4 w-4 text-accent-400" aria-hidden="true" />
-        <h3 className="text-sm font-semibold text-surface-100">Competitive Landscape</h3>
+        <h3 className="text-sm font-medium text-surface-100">Competitive Landscape</h3>
         <span className="text-xs text-surface-400">Latest Semrush snapshot · not period-linked</span>
       </div>
 

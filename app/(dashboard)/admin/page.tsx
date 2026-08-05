@@ -38,7 +38,7 @@ export default async function AdminPage({
       <div className="flex items-center gap-3">
         <ShieldCheck className="w-5 h-5 text-surface-400" />
         <div>
-          <h1 className="text-xl font-semibold text-surface-100">Admin</h1>
+          <h1 className="text-xl font-medium text-surface-100">Admin</h1>
           <p className="mt-0.5 text-sm text-surface-400">
             Client health and engagement overview
           </p>
@@ -65,7 +65,7 @@ export default async function AdminPage({
                   className="bg-surface-900 border border-surface-700 rounded-xl p-5"
                 >
                   <div className="flex items-start justify-between gap-2 mb-4">
-                    <h3 className="text-sm font-semibold text-surface-100">
+                    <h3 className="text-sm font-medium text-surface-100">
                       {client.name}
                     </h3>
                     <a

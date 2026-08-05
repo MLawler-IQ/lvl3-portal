@@ -263,7 +263,7 @@ export default function GBPAuditClient({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-base font-semibold text-surface-100">
+                  <h2 className="text-base font-medium text-surface-100">
                     {locations.length} Location{locations.length !== 1 ? 's' : ''}
                   </h2>
                   {avgScore !== null && (

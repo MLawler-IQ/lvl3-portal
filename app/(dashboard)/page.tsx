@@ -266,7 +266,7 @@ export default async function HomePage() {
                     className="block bg-surface-900 border border-surface-700 rounded-xl p-5 hover:border-surface-600 transition-colors"
                   >
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="text-sm font-semibold text-surface-100">
+                      <h3 className="text-sm font-medium text-surface-100">
                         {post.title}
                       </h3>
                       {post.category && (

@@ -235,7 +235,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
         <div className="space-y-6">
           {/* Topic input */}
           <div className="rounded-xl border border-surface-700 bg-surface-900 p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wider">
               Topics
             </h2>
             <TopicForm topics={topics} onTopicsChange={setTopics} />
@@ -246,7 +246,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
 
           {/* Mode selector */}
           <div className="rounded-xl border border-surface-700 bg-surface-900 p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wider">
               Pipeline Mode
             </h2>
             <div className="flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
 
           {/* Brand context */}
           <div className="rounded-xl border border-surface-700 bg-surface-900 p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wider">
               Brand Context
             </h2>
             <p className="text-xs text-surface-400">
@@ -327,7 +327,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
               {/* Preflight results */}
               {preflightResults.length > 0 && (
                 <div className="rounded-xl border border-surface-700 bg-surface-900 p-4 space-y-2">
-                  <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                  <h3 className="text-xs font-medium text-surface-400 uppercase tracking-wider">
                     Connection Preflight
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -368,7 +368,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                 ([, s]) => Object.keys(s.dataAvailability).length > 0
               ) && (
                 <div className="rounded-xl border border-surface-700 bg-surface-900 p-5 space-y-3">
-                  <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                  <h3 className="text-xs font-medium text-surface-400 uppercase tracking-wider">
                     Data Availability
                   </h3>
                   <DataAvailabilityPanel
@@ -522,7 +522,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                     className="rounded-xl border border-surface-700 bg-surface-900 p-5 space-y-6"
                   >
                     <div className="flex items-center justify-between">
-                      <h3 className="text-base font-semibold text-surface-100">
+                      <h3 className="text-base font-medium text-surface-100">
                         {topics[idx]?.title ?? `Topic ${idx + 1}`}
                       </h3>
                       <div className="flex items-center gap-2">

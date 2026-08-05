@@ -102,7 +102,7 @@ export default function PageSeoClient() {
           {/* Issues */}
           {result.issues.length > 0 && (
             <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-2">
-              <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Issues ({result.issues.length})</h2>
+              <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Issues ({result.issues.length})</h2>
               <ul className="space-y-1">
                 {result.issues.map((issue, i) => (
                   <li key={i} className="text-sm text-red-400 flex items-start gap-2">
@@ -121,7 +121,7 @@ export default function PageSeoClient() {
 
           {/* Meta */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Meta Tags</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Meta Tags</h2>
             <div className="space-y-2 text-sm">
               <div>
                 <span className="text-surface-400">Title:</span>{' '}
@@ -154,7 +154,7 @@ export default function PageSeoClient() {
 
           {/* Headings */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Headings ({result.headings.length})</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Headings ({result.headings.length})</h2>
             {result.headings.length > 0 ? (
               <ul className="space-y-1">
                 {result.headings.slice(0, 30).map((h, i) => (
@@ -174,7 +174,7 @@ export default function PageSeoClient() {
 
           {/* Images */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Images ({result.images.length})</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Images ({result.images.length})</h2>
             {result.images.length > 0 ? (
               <>
                 <p className="text-sm text-surface-300">
@@ -200,7 +200,7 @@ export default function PageSeoClient() {
 
           {/* Structured Data */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Structured Data ({result.structuredData.length})</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Structured Data ({result.structuredData.length})</h2>
             {result.structuredData.length > 0 ? (
               <ul className="space-y-1">
                 {result.structuredData.map((sd, i) => (

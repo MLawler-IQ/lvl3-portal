@@ -85,20 +85,20 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-2 min-w-0">
           <StatusIcon status={state.status} />
-          <h3 className="text-sm font-semibold text-surface-100 leading-tight line-clamp-2">
+          <h3 className="text-sm font-medium text-surface-100 leading-tight line-clamp-2">
             {title}
           </h3>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {stagePill && state.status === 'running' && (
             <span
-              className={`text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded ${stagePillColor(stagePill)}`}
+              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${stagePillColor(stagePill)}`}
             >
               {stagePill}
             </span>
           )}
           {state.status === 'running' && (
-            <span className="text-[11px] text-surface-400 font-mono tabular-nums">
+            <span className="text-[11px] text-surface-400 font-serif tabular-nums">
               {elapsed}s
             </span>
           )}

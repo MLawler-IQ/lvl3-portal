@@ -26,19 +26,19 @@ function renderMarkdown(text: string): string {
 
     // Headings
     if (trimmed.startsWith('#### ')) {
-      html.push(`<h4 class="text-base font-semibold text-surface-200 mt-5 mb-2">${inlineFormat(trimmed.slice(5))}</h4>`)
+      html.push(`<h4 class="text-base font-medium text-surface-200 mt-5 mb-2">${inlineFormat(trimmed.slice(5))}</h4>`)
       continue
     }
     if (trimmed.startsWith('### ')) {
-      html.push(`<h3 class="text-lg font-semibold text-surface-200 mt-6 mb-2">${inlineFormat(trimmed.slice(4))}</h3>`)
+      html.push(`<h3 class="text-lg font-medium text-surface-200 mt-6 mb-2">${inlineFormat(trimmed.slice(4))}</h3>`)
       continue
     }
     if (trimmed.startsWith('## ')) {
-      html.push(`<h2 class="text-xl font-bold text-surface-100 mt-8 mb-3">${inlineFormat(trimmed.slice(3))}</h2>`)
+      html.push(`<h2 class="text-xl font-medium text-surface-100 mt-8 mb-3">${inlineFormat(trimmed.slice(3))}</h2>`)
       continue
     }
     if (trimmed.startsWith('# ')) {
-      html.push(`<h1 class="text-2xl font-bold text-surface-100 mt-8 mb-4">${inlineFormat(trimmed.slice(2))}</h1>`)
+      html.push(`<h1 class="text-2xl font-medium text-surface-100 mt-8 mb-4">${inlineFormat(trimmed.slice(2))}</h1>`)
       continue
     }
 
@@ -101,7 +101,7 @@ export default function DraftPreview({ draft, wordCount, onDownload }: DraftPrev
     <div className="space-y-3">
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-500/15 text-brand-400 font-mono">
+        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-brand-500/15 text-brand-400">
           {computedWordCount.toLocaleString()} words
         </span>
         <div className="flex items-center gap-2">

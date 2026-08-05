@@ -400,7 +400,7 @@ export default function TfkGeneratorClient() {
               ].map(({ label, value, ok }) => (
                 <div key={label} className="bg-surface-800 rounded-lg p-3">
                   <p className="text-xs text-surface-400 mb-1">{label}</p>
-                  <p className={`text-xl font-bold font-mono ${ok ? 'text-emerald-400' : 'text-amber-400'}`}>{value}</p>
+                  <p className={`text-xl font-bold font-serif tabular-nums ${ok ? 'text-emerald-400' : 'text-amber-400'}`}>{value}</p>
                 </div>
               ))}
             </div>
@@ -526,7 +526,7 @@ export default function TfkGeneratorClient() {
             { label: 'No Coords', value: noCoords, color: noCoords > 0 ? 'text-red-400' : 'text-emerald-400' },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-surface-900 border border-surface-700 rounded-xl p-4 text-center">
-              <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
+              <p className={`text-2xl font-bold font-serif tabular-nums ${color}`}>{value}</p>
               <p className="text-xs text-surface-400 mt-1">{label}</p>
             </div>
           ))}
@@ -564,8 +564,8 @@ export default function TfkGeneratorClient() {
                           {row.hours_match ?? '—'}
                         </span>
                       </td>
-                      <td className={`px-4 py-3 font-mono ${titleOk ? 'text-emerald-400' : 'text-amber-400'}`}>{titleLen}</td>
-                      <td className={`px-4 py-3 font-mono ${metaOk  ? 'text-emerald-400' : 'text-amber-400'}`}>{metaLen}</td>
+                      <td className={`px-4 py-3 font-serif tabular-nums ${titleOk ? 'text-emerald-400' : 'text-amber-400'}`}>{titleLen}</td>
+                      <td className={`px-4 py-3 font-serif tabular-nums ${metaOk  ? 'text-emerald-400' : 'text-amber-400'}`}>{metaLen}</td>
                     </tr>
                   )
                 })}

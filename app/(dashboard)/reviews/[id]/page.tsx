@@ -58,7 +58,7 @@ export default async function ReviewBatchPage({
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-surface-100">{batch.title}</h1>
+              <h1 className="text-xl font-medium text-surface-100">{batch.title}</h1>
               <StatusPill status={batch.status} />
             </div>
             <p className="mt-1 text-sm text-surface-400">

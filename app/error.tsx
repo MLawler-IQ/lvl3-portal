@@ -17,7 +17,7 @@ export default function Error({
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
       <p className="eyebrow mb-3">Something went wrong</p>
-      <h1 className="text-2xl font-semibold text-surface-100 mb-2">
+      <h1 className="text-2xl font-medium text-surface-100 mb-2">
         This page hit an unexpected error
       </h1>
       <p className="text-sm text-surface-400 max-w-md mb-6">

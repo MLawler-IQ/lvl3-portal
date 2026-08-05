@@ -211,7 +211,7 @@ export default function ToolsHubClient({ tools, selectedClientId }: Props) {
           <Wrench className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
         </div>
         <div>
-          <h1 className="text-xl font-semibold text-surface-100">Tools</h1>
+          <h1 className="text-xl font-medium text-surface-100">Tools</h1>
           <p className="text-sm text-surface-400 mt-0.5">
             SEO analysis, content generation, and site auditing tools.
           </p>

@@ -88,7 +88,7 @@ export default async function InsightsPage() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
       <div>
-        <h1 className="text-xl font-semibold text-surface-100">Insights</h1>
+        <h1 className="text-xl font-medium text-surface-100">Insights</h1>
         <p className="mt-1 text-sm text-surface-400">
           {posts.length > 0
             ? `${posts.length} ${posts.length === 1 ? "post" : "posts"}`
@@ -147,7 +147,7 @@ export default async function InsightsPage() {
           {featured && (
             <div className="bg-surface-900 border border-surface-700 rounded-xl p-6">
               <div className="flex items-start justify-between gap-3 mb-3">
-                <h2 className="text-lg font-semibold text-surface-100">
+                <h2 className="text-lg font-medium text-surface-100">
                   {featured.title}
                 </h2>
                 <CategoryTag category={featured.category} />
@@ -175,7 +175,7 @@ export default async function InsightsPage() {
                   className="bg-surface-900 border border-surface-700 rounded-xl p-5 hover:border-surface-600 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-3 mb-1.5">
-                    <h3 className="text-sm font-semibold text-surface-100">
+                    <h3 className="text-sm font-medium text-surface-100">
                       {post.title}
                     </h3>
                     <CategoryTag category={post.category} />

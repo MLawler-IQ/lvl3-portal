@@ -71,7 +71,7 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
             {b.outline.map((section, i) => (
               <li key={i} className="text-sm">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-brand-400 font-mono font-bold text-xs">{i + 1}.</span>
+                  <span className="text-brand-400 font-bold text-xs">{i + 1}.</span>
                   <span className="font-semibold text-surface-200">{section.heading}</span>
                   <span className="text-xs text-surface-400 ml-auto">{section.estimated_word_count} words</span>
                 </div>

@@ -90,7 +90,7 @@ export default function ExecutiveSummaryBand({
                   Executive Summary
                 </p>
                 <h2
-                  className="mt-2 text-lg font-bold leading-snug text-surface-100"
+                  className="mt-2 text-lg font-medium leading-snug text-surface-100"
                   style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
                 >
                   {headline}

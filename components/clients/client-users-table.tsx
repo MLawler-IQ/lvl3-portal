@@ -40,7 +40,7 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
     <>
       <div className="bg-surface-900 border border-surface-700 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700">
-          <h2 className="text-surface-100 font-semibold">Users with access</h2>
+          <h2 className="text-surface-100 font-medium">Users with access</h2>
           <button
             onClick={() => setInviteOpen(true)}
             className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-xs font-semibold rounded-lg px-3 py-1.5 hover:bg-brand-500 transition-colors"

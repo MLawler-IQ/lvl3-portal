@@ -109,7 +109,7 @@ export default function LoginPage() {
             <form onSubmit={handlePasswordLogin} className="space-y-5">
               <div>
                 <h1
-                  className="text-xl font-bold text-surface-100 mb-1"
+                  className="text-xl font-medium text-surface-100 mb-1"
                   style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
                 >
                   Sign in
@@ -197,7 +197,7 @@ export default function LoginPage() {
             <form onSubmit={handleMagicLink} className="space-y-5">
               <div>
                 <h1
-                  className="text-xl font-bold text-surface-100 mb-1"
+                  className="text-xl font-medium text-surface-100 mb-1"
                   style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
                 >
                   Welcome back

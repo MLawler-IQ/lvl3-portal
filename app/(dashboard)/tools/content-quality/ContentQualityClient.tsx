@@ -102,7 +102,7 @@ export default function ContentQualityClient() {
           {/* Score + Issues */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Content Score</h2>
+              <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Content Score</h2>
               <span className="text-2xl font-bold" style={{ color: scoreColor }}>{result.score}/100</span>
             </div>
             {result.issues.length > 0 && (
@@ -120,7 +120,7 @@ export default function ContentQualityClient() {
 
           {/* Metrics */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Metrics</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Metrics</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-xs text-surface-400">Word Count</p>
@@ -148,7 +148,7 @@ export default function ContentQualityClient() {
 
           {/* Links */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Links</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Links</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-surface-400">Internal Links</p>
@@ -163,7 +163,7 @@ export default function ContentQualityClient() {
 
           {/* Heading Structure */}
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">
               Heading Structure ({result.headingStructure.length})
             </h2>
             {result.headingStructure.length > 0 ? (

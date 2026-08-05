@@ -92,7 +92,7 @@ export default function NotificationsPanel({
         className="fixed inset-y-0 right-0 w-full max-w-sm bg-surface-900 border-l border-surface-700 z-50 flex flex-col animate-slide-in-right"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700 shrink-0">
-          <h2 className="text-surface-100 font-semibold text-sm">Notifications</h2>
+          <h2 className="text-surface-100 font-medium text-sm">Notifications</h2>
           <div className="flex items-center gap-2">
             {hasNotifications && unviewedDeliverables.length > 0 && (
               <button

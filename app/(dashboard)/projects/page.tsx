@@ -71,7 +71,7 @@ export default async function ProjectsPage() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-surface-100">Projects</h1>
+          <h1 className="text-xl font-medium text-surface-100">Projects</h1>
           <p className="mt-1 text-surface-400 text-sm">{selectedClient.name}</p>
         </div>
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -122,7 +122,7 @@ export default async function ProjectsPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-surface-100">Projects</h1>
+          <h1 className="text-xl font-medium text-surface-100">Projects</h1>
           <p className="mt-1 text-surface-400 text-sm">{selectedClient.name}</p>
         </div>
       </div>

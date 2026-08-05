@@ -158,7 +158,7 @@ export default function DeliverablesClient({
       {/* Header */}
       <div className="flex items-center justify-between mb-6 max-w-7xl mx-auto">
         <div>
-          <h1 className="text-xl font-semibold text-surface-100">Deliverables</h1>
+          <h1 className="text-xl font-medium text-surface-100">Deliverables</h1>
           <p className="mt-1 text-surface-300 text-sm">
             {isAdmin ? "Manage and share files with clients" : "Your files and documents"}
           </p>

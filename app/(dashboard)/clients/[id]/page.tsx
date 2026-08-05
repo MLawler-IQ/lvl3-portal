@@ -55,7 +55,7 @@ export default async function ClientDetailPage({ params }: Props) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h1 className="text-surface-100 text-2xl font-bold">{client.name}</h1>
+          <h1 className="text-surface-100 text-2xl font-medium">{client.name}</h1>
           <p className="text-surface-400 text-sm font-mono">{client.slug}</p>
         </div>
       </div>
@@ -88,7 +88,7 @@ export default async function ClientDetailPage({ params }: Props) {
 
       {/* Settings */}
       <div className="mt-12">
-        <h2 className="text-surface-100 text-xl font-bold mb-1">Settings</h2>
+        <h2 className="text-surface-100 text-xl font-medium mb-1">Settings</h2>
         <p className="text-surface-400 text-sm mb-6">Update details and integrations for {client.name}.</p>
         <ClientSettingsForm
           client={{

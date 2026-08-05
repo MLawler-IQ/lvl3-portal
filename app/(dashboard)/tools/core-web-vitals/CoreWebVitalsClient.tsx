@@ -139,7 +139,7 @@ export default function CoreWebVitalsClient() {
           />
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Lighthouse Score</h2>
+              <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Lighthouse Score</h2>
               <span
                 className="text-2xl font-bold"
                 style={{ color: statusColor(result.lighthouse_score >= 90 ? 'success' : result.lighthouse_score >= 50 ? 'warning' : 'error') }}
@@ -159,7 +159,7 @@ export default function CoreWebVitalsClient() {
           </div>
 
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Field Data (CrUX)</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Field Data (CrUX)</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {result.crux.lcp && <MetricBadge label="LCP" value={result.crux.lcp.percentile} unit="ms" category={result.crux.lcp.category} />}
               {result.crux.cls && <MetricBadge label="CLS" value={result.crux.cls.percentile / 100} unit="" category={result.crux.cls.category} />}
@@ -173,7 +173,7 @@ export default function CoreWebVitalsClient() {
           </div>
 
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
-            <h2 className="text-sm font-semibold text-surface-100 uppercase tracking-wide">Lab Data (Lighthouse)</h2>
+            <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Lab Data (Lighthouse)</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <MetricBadge label="FCP" value={Math.round(result.lighthouse.fcp_ms)} unit="ms" category={null} />
               <MetricBadge label="LCP" value={Math.round(result.lighthouse.lcp_ms)} unit="ms" category={null} />

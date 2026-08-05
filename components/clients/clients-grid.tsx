@@ -16,7 +16,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
   return (
     <>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-surface-100 text-2xl font-bold">Clients</h1>
+        <h1 className="text-surface-100 text-2xl font-medium">Clients</h1>
         <button
           onClick={() => setNewOpen(true)}
           className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-brand-500 transition-colors"
@@ -60,7 +60,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h3 className="text-surface-100 font-semibold truncate group-hover:text-surface-100">
+                  <h3 className="text-surface-100 font-medium truncate group-hover:text-surface-100">
                     {client.name}
                   </h3>
                   <p className="text-surface-400 text-xs font-mono">{client.slug}</p>

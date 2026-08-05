@@ -1,28 +1,31 @@
 import type { Metadata } from 'next'
-import localFont from 'next/font/local'
+import { Archivo, JetBrains_Mono, Newsreader } from 'next/font/google'
 import './globals.css'
 
-const aeonik = localFont({
-  variable: '--font-inter',
+// LVL3 editorial system. Archivo carries all UI and body text; Newsreader
+// carries page titles and ledger/KPI numerals (with tabular-nums); JetBrains
+// Mono is retained ONLY for code, IDs, API keys, and log output.
+// The Aeonik faces this replaced remain in public/fonts/, unbound.
+const archivo = Archivo({
+  variable: '--font-archivo',
+  subsets: ['latin'],
   display: 'swap',
-  src: [
-    { path: '../public/fonts/Aeonik-Light.otf',   weight: '300', style: 'normal' },
-    { path: '../public/fonts/Aeonik-Regular.otf', weight: '400', style: 'normal' },
-    { path: '../public/fonts/Aeonik-Medium.otf',  weight: '500', style: 'normal' },
-    { path: '../public/fonts/Aeonik-Medium.otf',  weight: '600', style: 'normal' },
-    { path: '../public/fonts/Aeonik-Bold.otf',    weight: '700', style: 'normal' },
-  ],
+  weight: ['400', '500', '600', '700', '800'],
 })
 
-const aeonikFono = localFont({
-  variable: '--font-jetbrains-mono',
+const newsreader = Newsreader({
+  variable: '--font-newsreader',
+  subsets: ['latin'],
   display: 'swap',
-  src: [
-    { path: '../public/fonts/AeonikFono-Light.otf',  weight: '300', style: 'normal' },
-    { path: '../public/fonts/AeonikFono-Medium.otf', weight: '500', style: 'normal' },
-    { path: '../public/fonts/AeonikFono-Medium.otf', weight: '600', style: 'normal' },
-    { path: '../public/fonts/AeonikFono-Medium.otf', weight: '700', style: 'normal' },
-  ],
+  weight: ['400', '500'],
+  style: ['normal', 'italic'],
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jetbrains-mono',
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '700'],
 })
 
 export const metadata: Metadata = {
@@ -45,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${aeonik.variable} ${aeonikFono.variable} antialiased`}>
+      <body className={`${archivo.variable} ${newsreader.variable} ${jetbrainsMono.variable} antialiased`}>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-500 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"

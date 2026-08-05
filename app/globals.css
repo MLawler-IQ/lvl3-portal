@@ -122,16 +122,18 @@
 body {
   color:       var(--foreground);
   background:  var(--background);
-  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-archivo), system-ui, -apple-system, sans-serif;
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings — Inter 600, tight tracking (Aeonik fallback per IgniteIQ v4.2) */
+/* Headings — Newsreader 500 at app scale, per the editorial system.
+   Page titles and section headings are serif; everything else is Archivo. */
 h1, h2, h3, h4, h5, h6 {
-  font-family:    var(--font-inter), system-ui, -apple-system, sans-serif;
-  font-weight:    600;
-  letter-spacing: -0.02em;
+  font-family:    var(--font-newsreader), Georgia, serif;
+  font-weight:    500;
+  letter-spacing: -0.01em;
+  line-height:    1.12;
   color:          var(--foreground);
 }
 
@@ -148,14 +150,17 @@ h1, h2, h3, h4, h5, h6 {
 @layer utilities {
   .text-balance { text-wrap: balance; }
 
-  /* Eyebrow labels — uppercase mono caps above headings (Aeonik Fono role) */
+  /* Eyebrow labels — small Archivo caps above headings. Off mono per the
+     editorial system (mono is code/IDs/keys/logs only). The site's fuller
+     move is a parenthetical section label, e.g. "(The problem)" — that's a
+     copy change, deferred to stage 4. */
   .eyebrow {
-    font-family:    var(--font-jetbrains-mono), ui-monospace, monospace;
+    font-family:    var(--font-archivo), system-ui, sans-serif;
     font-size:      11px;
     font-weight:    500;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color:          var(--color-primary);
+    color:          var(--color-accent);
   }
 
   /* Two-tone declarative headline — primary clause + reflective clause */
@@ -171,7 +176,7 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom:   1px solid var(--color-border);
     border-radius:   0;
     color:           var(--foreground);
-    font-family:     var(--font-inter), sans-serif;
+    font-family:     var(--font-archivo), sans-serif;
     font-size:       15px;
     line-height:     1.45;
     transition:      border-color 140ms cubic-bezier(0.2, 0.0, 0.0, 1.0);
@@ -182,11 +187,11 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom:  1px solid var(--color-primary);
   }
   .iiq-label {
-    font-family:    var(--font-jetbrains-mono), ui-monospace, monospace;
-    font-size:      11px;
+    font-family:    var(--font-archivo), system-ui, sans-serif;
+    font-size:      13px;
     font-weight:    500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    letter-spacing: 0;
+    text-transform: none;
     color:          var(--color-muted);
     display:        block;
     margin-bottom:  6px;

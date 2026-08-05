@@ -33,7 +33,7 @@ export default async function ServicesPage() {
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6 pb-8">
       <div>
-        <h1 className="text-xl font-semibold text-surface-100">
+        <h1 className="text-xl font-medium text-surface-100">
           Services &amp; Opportunities
         </h1>
         <p className="mt-1 text-sm text-surface-400">
@@ -60,7 +60,7 @@ export default async function ServicesPage() {
                 className="bg-surface-900 border border-surface-700 rounded-xl p-5 flex flex-col"
               >
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <h3 className="text-sm font-semibold text-surface-100">
+                  <h3 className="text-sm font-medium text-surface-100">
                     {svc.title}
                   </h3>
                   {targeted && <StatusBadge status="opportunity" />}

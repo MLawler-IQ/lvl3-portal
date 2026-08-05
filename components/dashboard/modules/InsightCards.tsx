@@ -64,7 +64,7 @@ function InsightCardTile({ card }: { card: InsightCard }) {
       <div className={`flex items-center gap-1.5 mb-3 ${styles.accent}`}>
         <Arrow className="w-5 h-5" aria-hidden="true" />
         <span
-          className="text-2xl font-bold leading-none"
+          className="text-2xl font-medium font-serif tabular-nums leading-none"
           style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
         >
           {card.magnitude}

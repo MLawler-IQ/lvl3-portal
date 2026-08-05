@@ -123,7 +123,7 @@ export default function TopBar({
             value={selectedClientId ?? ""}
             onChange={handleClientChange}
             className="bg-transparent border-none text-sm focus:outline-none cursor-pointer truncate"
-            style={{ color: 'var(--nav-text-bright)', fontFamily: 'var(--font-inter)' }}
+            style={{ color: 'var(--nav-text-bright)', fontFamily: 'var(--font-archivo)' }}
           >
             <option value="" style={{ backgroundColor: 'var(--nav-bg)' }}>Select a client</option>
             {clientList.map((c) => (

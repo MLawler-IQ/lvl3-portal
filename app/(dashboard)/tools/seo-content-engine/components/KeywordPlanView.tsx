@@ -115,9 +115,9 @@ export default function KeywordPlanView({ plan }: { plan: KeywordPlan }) {
                     {CATEGORY_LABELS[row.category]}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-surface-300 font-mono">{row.msv.toLocaleString()}</td>
-                <td className="px-4 py-2.5 text-surface-300 font-mono">${row.cpc.toFixed(2)}</td>
-                <td className="px-4 py-2.5 text-surface-300 font-mono">{row.competition.toFixed(2)}</td>
+                <td className="px-4 py-2.5 text-surface-300 font-serif tabular-nums">{row.msv.toLocaleString()}</td>
+                <td className="px-4 py-2.5 text-surface-300 font-serif tabular-nums">${row.cpc.toFixed(2)}</td>
+                <td className="px-4 py-2.5 text-surface-300 font-serif tabular-nums">{row.competition.toFixed(2)}</td>
               </tr>
             ))}
             {sorted.length === 0 && (
@@ -146,7 +146,7 @@ export default function KeywordPlanView({ plan }: { plan: KeywordPlan }) {
           <div className="space-y-3">
             {(plan.clusters ?? []).map((cluster, i) => (
               <div key={i}>
-                <h5 className="text-sm font-semibold text-surface-200 mb-1">{cluster.cluster_name}</h5>
+                <h5 className="text-sm font-medium text-surface-200 mb-1">{cluster.cluster_name}</h5>
                 {cluster.target_section && (
                   <p className="text-xs text-surface-400 mb-1">Target: {cluster.target_section}</p>
                 )}

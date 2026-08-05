@@ -11,7 +11,7 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        // Zinc neutral scale — references CSS variables in globals.css
+        // Warm ink/paper neutral scale — references CSS variables in globals.css
         surface: {
           950: 'rgb(var(--surface-950) / <alpha-value>)',
           900: 'rgb(var(--surface-900) / <alpha-value>)',
@@ -25,7 +25,7 @@ const config: Config = {
           200: 'rgb(var(--surface-200) / <alpha-value>)',
           100: 'rgb(var(--surface-100) / <alpha-value>)',
         },
-        // Violet accent scale — references CSS variables in globals.css
+        // Burnt-sienna accent scale — references CSS variables in globals.css
         brand: {
           50:  'rgb(var(--brand-50) / <alpha-value>)',
           100: 'rgb(var(--brand-100) / <alpha-value>)',
@@ -38,17 +38,19 @@ const config: Config = {
           800: 'rgb(var(--brand-800) / <alpha-value>)',
           900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
-        // Accent mirrors brand for interactive elements
+        // Accent mirrors brand 1:1. The old map was deliberately skewed one
+        // step (accent-400 → brand-500) so accents landed on the paper accent;
+        // on ink the anchor is brand-400, so the skew is retired.
         accent: {
           50:  'rgb(var(--brand-50) / <alpha-value>)',
           100: 'rgb(var(--brand-100) / <alpha-value>)',
           200: 'rgb(var(--brand-200) / <alpha-value>)',
           300: 'rgb(var(--brand-300) / <alpha-value>)',
-          400: 'rgb(var(--brand-500) / <alpha-value>)',
-          500: 'rgb(var(--brand-600) / <alpha-value>)',
-          600: 'rgb(var(--brand-700) / <alpha-value>)',
-          700: 'rgb(var(--brand-800) / <alpha-value>)',
-          800: 'rgb(var(--brand-900) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
           900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
         // Status colors — semantic tokens
@@ -56,8 +58,26 @@ const config: Config = {
         warning: 'var(--color-warning)',
         success: 'var(--color-success)',
       },
+      // The editorial system is 2px everywhere; nothing rounder. Overriding the
+      // whole scale re-shapes all 127 files of rounded-* utilities without a
+      // class audit. rounded-full survives for avatars, dots, and pills.
+      borderRadius: {
+        none: '0',
+        sm: '2px',
+        DEFAULT: '2px',
+        md: '2px',
+        lg: '2px',
+        xl: '2px',
+        '2xl': '2px',
+        '3xl': '2px',
+        full: '9999px',
+      },
       fontFamily: {
-        sans:  ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
+        // Archivo: all UI and body text. Newsreader: page titles, section
+        // headings, and ledger/KPI numerals (pair with tabular-nums).
+        // JetBrains Mono: code, IDs, API keys, and log output only.
+        sans:  ['var(--font-archivo)', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['var(--font-newsreader)', 'Georgia', 'serif'],
         mono:  ['var(--font-jetbrains-mono)', 'monospace'],
       },
       animation: {

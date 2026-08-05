@@ -70,7 +70,7 @@ export function PageHeader({
             </div>
           )}
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl font-semibold text-surface-100">{title}</h1>
+            <h1 className="text-xl font-medium text-surface-100">{title}</h1>
             {badge}
           </div>
         </div>
