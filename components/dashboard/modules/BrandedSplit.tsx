@@ -129,7 +129,7 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
                 >
                   {pct(brandedClicks, totalClicks)}%
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-surface-500 mt-0.5">Branded</span>
+                <span className="text-[10px] uppercase tracking-wider text-surface-400 mt-0.5">Branded</span>
               </div>
             </div>
 
@@ -161,7 +161,7 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
           {/* Optional local-vs-general intent breakdown */}
           {hasIntent && (
             <div className="border-t border-surface-700 pt-4 mt-4">
-              <p className="text-xs font-medium uppercase tracking-wider text-surface-500 mb-2.5">
+              <p className="text-xs font-medium uppercase tracking-wider text-surface-400 mb-2.5">
                 Local vs General Intent
               </p>
               <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-surface-800">
@@ -188,12 +188,12 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
                     aria-hidden="true"
                   />
                   Local
-                  <span className="text-surface-500 tabular-nums">
+                  <span className="text-surface-400 tabular-nums">
                     {pct(localClicks, totalIntentClicks)}% · {fmtNum(localClicks)}
                   </span>
                 </span>
                 <span className="flex items-center gap-2 text-surface-300">
-                  <span className="text-surface-500 tabular-nums">
+                  <span className="text-surface-400 tabular-nums">
                     {fmtNum(generalClicks)} · {pct(generalClicks, totalIntentClicks)}%
                   </span>
                   General

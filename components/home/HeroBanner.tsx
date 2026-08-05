@@ -38,7 +38,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 </h1>
               </div>
             </div>
-            <p className="text-[10px] text-surface-500 uppercase tracking-wider shrink-0">LVL3 Portal</p>
+            <p className="text-[10px] text-surface-400 uppercase tracking-wider shrink-0">LVL3 Portal</p>
           </div>
         </div>
       ) : (
@@ -70,7 +70,7 @@ export default function HeroBanner({ clientName, heroImageUrl, clientLogoUrl }: 
                 </h1>
               </div>
             </div>
-            <p className="text-[10px] text-surface-500 uppercase tracking-wider shrink-0">LVL3 Portal</p>
+            <p className="text-[10px] text-surface-400 uppercase tracking-wider shrink-0">LVL3 Portal</p>
           </div>
         </div>
       )}

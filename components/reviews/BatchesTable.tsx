@@ -11,9 +11,9 @@ export default function BatchesTable({ batches }: { batches: BatchWithProgress[]
   if (batches.length === 0) {
     return (
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-10 text-center">
-        <Images size={24} className="mx-auto mb-3 text-surface-500" />
+        <Images size={24} className="mx-auto mb-3 text-surface-400" />
         <p className="text-sm text-surface-300">No review batches yet.</p>
-        <p className="mt-1 text-xs text-surface-500">
+        <p className="mt-1 text-xs text-surface-400">
           Create one to share images with a client for approval.
         </p>
       </div>
@@ -25,13 +25,13 @@ export default function BatchesTable({ batches }: { batches: BatchWithProgress[]
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-surface-700 text-left">
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Client</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Title</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Status</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Items</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Progress</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Created</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500 text-right">Actions</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Client</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Title</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Status</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Items</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Progress</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Created</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -59,7 +59,7 @@ export default function BatchesTable({ batches }: { batches: BatchWithProgress[]
                 <span className="text-surface-300 tabular-nums">
                   {batch.responded_count}/{batch.item_count}
                 </span>
-                <span className="ml-2 text-xs text-surface-500 tabular-nums">
+                <span className="ml-2 text-xs text-surface-400 tabular-nums">
                   <span className="text-emerald-400">{batch.approved_count} ✓</span>
                   {' · '}
                   <span className="text-rose-400">{batch.denied_count} ✗</span>

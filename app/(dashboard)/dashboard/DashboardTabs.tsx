@@ -155,7 +155,7 @@ function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
         ))}
       </div>
       {topIssues.length > 0 && (
-        <p className="mt-3 text-xs text-surface-500">
+        <p className="mt-3 text-xs text-surface-400">
           Top profile gaps: {topIssues.map(([issue, count]) => `${issue} (${count})`).join(" · ")}
         </p>
       )}
@@ -376,7 +376,7 @@ export default function DashboardTabs({
             {/* Context panel */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+                <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
                   Context
                 </p>
                 {isAdmin && (
@@ -389,7 +389,7 @@ export default function DashboardTabs({
                   <p className="text-sm font-semibold text-surface-100 mb-2">Takeaways</p>
                   <p
                     className={`text-sm leading-relaxed ${
-                      snapshotInsights?.takeaways ? "text-surface-300" : "text-surface-500 italic"
+                      snapshotInsights?.takeaways ? "text-surface-300" : "text-surface-400 italic"
                     }`}
                   >
                     {snapshotInsights?.takeaways ||
@@ -414,7 +414,7 @@ export default function DashboardTabs({
               </>
             ) : (
               <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-                <p className="text-sm text-surface-500 italic">
+                <p className="text-sm text-surface-400 italic">
                   Connect a Google Business Profile account in client settings to see location performance.
                 </p>
               </div>
@@ -429,7 +429,7 @@ export default function DashboardTabs({
               <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
                 <div className="mb-3 flex items-baseline justify-between gap-3">
                   <p className="text-sm font-semibold text-surface-100">Sessions trend</p>
-                  <p className="text-xs text-surface-500">Last 13 full months · excludes the current month (MTD)</p>
+                  <p className="text-xs text-surface-400">Last 13 full months · excludes the current month (MTD)</p>
                 </div>
                 <TrendChart data={metricTrend} label="Sessions" granularity="monthly" />
               </div>

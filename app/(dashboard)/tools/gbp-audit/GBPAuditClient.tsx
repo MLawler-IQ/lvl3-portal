@@ -36,7 +36,7 @@ function StatusIcon({ status }: { status: LocationAudit['openStatus'] }) {
   if (status === 'OPEN') return <CheckCircle className="w-3.5 h-3.5 text-success" />
   if (status === 'CLOSED_PERMANENTLY') return <XCircle className="w-3.5 h-3.5 text-error" />
   if (status === 'CLOSED_TEMPORARILY') return <AlertCircle className="w-3.5 h-3.5 text-warning" />
-  return <AlertCircle className="w-3.5 h-3.5 text-surface-500" />
+  return <AlertCircle className="w-3.5 h-3.5 text-surface-400" />
 }
 
 export default function GBPAuditClient({
@@ -207,7 +207,7 @@ export default function GBPAuditClient({
                   ))}
                 </select>
                 {clientName && (
-                  <p className="text-xs text-surface-500">Auditing for: {clientName}</p>
+                  <p className="text-xs text-surface-400">Auditing for: {clientName}</p>
                 )}
               </div>
 
@@ -309,7 +309,7 @@ export default function GBPAuditClient({
                               <div>
                                 <p className="font-medium text-surface-100 text-sm">{loc.title}</p>
                                 {loc.addressFormatted && (
-                                  <p className="text-xs text-surface-500 mt-0.5">{loc.addressFormatted}</p>
+                                  <p className="text-xs text-surface-400 mt-0.5">{loc.addressFormatted}</p>
                                 )}
                               </div>
                             </div>

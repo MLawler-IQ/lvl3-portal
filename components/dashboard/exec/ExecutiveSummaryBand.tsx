@@ -99,7 +99,7 @@ export default function ExecutiveSummaryBand({
             )}
           </div>
           {updatedAt && (
-            <p className="shrink-0 text-xs text-surface-500">
+            <p className="shrink-0 text-xs text-surface-400">
               Insights refreshed{' '}
               {new Date(updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
@@ -126,7 +126,7 @@ export default function ExecutiveSummaryBand({
       {/* (c) Health scorecard */}
       {health.length > 0 && (
         <div>
-          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-surface-500">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-surface-400">
             Health
           </p>
           <HealthScorecard items={health} />
@@ -136,7 +136,7 @@ export default function ExecutiveSummaryBand({
       {/* (d) Activity feed */}
       {activity.length > 0 && (
         <div>
-          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-surface-500">
+          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-surface-400">
             What we did → what happened
           </p>
           <ActivityFeed items={activity} />

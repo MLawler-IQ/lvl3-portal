@@ -27,7 +27,7 @@ export default function SeoTab({ ga4, gsc, gscError, isAdmin, trendGranularity, 
     return (
       <div className="p-6 space-y-3">
         <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-8 text-center">
-          <p className="text-sm text-surface-500 italic">No SEO data available. Configure GA4 and/or GSC in client settings.</p>
+          <p className="text-sm text-surface-400 italic">No SEO data available. Configure GA4 and/or GSC in client settings.</p>
         </div>
         {isAdmin && gscError && (
           <div className="rounded-xl border border-rose-900/50 bg-rose-950/30 px-5 py-3">
@@ -75,7 +75,7 @@ export default function SeoTab({ ga4, gsc, gscError, isAdmin, trendGranularity, 
         <div className="space-y-3">
           <SectionHeader title="Search Console" />
           <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-            <p className="text-sm text-surface-500 italic">
+            <p className="text-sm text-surface-400 italic">
               {gscError && !isAdmin
                 ? 'Search Console data is unavailable. Contact your admin.'
                 : 'Configure a GSC Site URL in client settings to see Search Console data.'}

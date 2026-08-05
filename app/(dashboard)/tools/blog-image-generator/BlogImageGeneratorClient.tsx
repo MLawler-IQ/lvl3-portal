@@ -282,9 +282,9 @@ export default function BlogImageGeneratorClient() {
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="w-8 h-8 mx-auto mb-3 text-surface-500" />
+            <Upload className="w-8 h-8 mx-auto mb-3 text-surface-400" />
             <p className="text-sm text-surface-300">Drop a CSV or TSV file here, or click to browse</p>
-            <p className="text-xs text-surface-500 mt-1">
+            <p className="text-xs text-surface-400 mt-1">
               Needs two columns: <span className="text-surface-400">post title</span> and <span className="text-surface-400">prompt</span>
             </p>
             <input
@@ -303,7 +303,7 @@ export default function BlogImageGeneratorClient() {
             </div>
             <button
               onClick={clearFile}
-              className="text-surface-500 hover:text-surface-300 transition-colors"
+              className="text-surface-400 hover:text-surface-300 transition-colors"
               aria-label="Remove file"
             >
               <X className="w-4 h-4" />
@@ -436,12 +436,12 @@ export default function BlogImageGeneratorClient() {
                       ? 'text-surface-300'
                       : img.status === 'error'
                       ? 'text-red-400'
-                      : 'text-surface-500'
+                      : 'text-surface-400'
                   }
                 >
                   {img.filename}
                   {img.cached && (
-                    <span className="ml-2 text-xs text-surface-500">— cached</span>
+                    <span className="ml-2 text-xs text-surface-400">— cached</span>
                   )}
                   {img.status === 'error' && img.error && (
                     <span className="ml-2 text-xs text-red-400">— {img.error}</span>

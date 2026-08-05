@@ -78,18 +78,18 @@ export default function ClientSummary({
 
       {/* Summary */}
       <div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="mb-2 text-xs font-medium uppercase tracking-widest text-surface-400">
           Monthly Brief
         </p>
         {summary ? (
           <p className="text-sm leading-relaxed text-surface-300 whitespace-pre-wrap">{summary}</p>
         ) : (
-          <p className="text-sm text-surface-500 italic">
+          <p className="text-sm text-surface-400 italic">
             No summary yet. Sync the project sheet to generate one.
           </p>
         )}
         {updatedLabel && (
-          <p className="mt-3 text-xs text-surface-500">Last updated {updatedLabel}</p>
+          <p className="mt-3 text-xs text-surface-400">Last updated {updatedLabel}</p>
         )}
       </div>
     </div>

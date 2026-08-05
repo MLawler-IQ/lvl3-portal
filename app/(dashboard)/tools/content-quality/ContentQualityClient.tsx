@@ -56,7 +56,7 @@ export default function ContentQualityClient() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/blog/post"
             required
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400"
           />
         </div>
         <button
@@ -170,12 +170,12 @@ export default function ContentQualityClient() {
               <ul className="space-y-1">
                 {result.headingStructure.slice(0, 20).map((h, i) => (
                   <li key={i} className="text-sm text-surface-200" style={{ paddingLeft: `${(h.level - 1) * 16}px` }}>
-                    <span className="text-surface-500 text-xs mr-2">H{h.level}</span>
+                    <span className="text-surface-400 text-xs mr-2">H{h.level}</span>
                     {h.text}
                   </li>
                 ))}
                 {result.headingStructure.length > 20 && (
-                  <li className="text-xs text-surface-500">...and {result.headingStructure.length - 20} more</li>
+                  <li className="text-xs text-surface-400">...and {result.headingStructure.length - 20} more</li>
                 )}
               </ul>
             ) : (

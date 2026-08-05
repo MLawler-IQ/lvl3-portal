@@ -260,7 +260,7 @@ export default function AskLvl3Chat({
         <MessageCircle className="w-5 h-5 text-surface-400" />
         <div>
           <h1 className="text-lg font-semibold text-surface-100">Ask LVL3</h1>
-          <p className="text-xs text-surface-500">
+          <p className="text-xs text-surface-400">
             {clientName
               ? `Advising on ${clientName}`
               : 'Select a client from the top bar to start'}
@@ -294,7 +294,7 @@ export default function AskLvl3Chat({
             <button
               onClick={() => handleDeleteThread(conversationId)}
               title="Delete this conversation"
-              className="text-surface-500 hover:text-red-400 transition-colors"
+              className="text-surface-400 hover:text-red-400 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -303,7 +303,7 @@ export default function AskLvl3Chat({
           {(messages.length > 0 || conversationId) && (
             <button
               onClick={handleNewChat}
-              className="text-xs text-surface-500 hover:text-surface-300 transition-colors"
+              className="text-xs text-surface-400 hover:text-surface-300 transition-colors"
             >
               New chat
             </button>
@@ -319,7 +319,7 @@ export default function AskLvl3Chat({
               <p className="text-surface-100 font-medium mb-1">
                 What do you want to know about {clientName ?? 'this client'}?
               </p>
-              <p className="text-xs text-surface-500">
+              <p className="text-xs text-surface-400">
                 I have access to their analytics summary and live GSC data.
               </p>
             </div>
@@ -339,7 +339,7 @@ export default function AskLvl3Chat({
 
         {empty && !clientId && (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-surface-500">
+            <p className="text-sm text-surface-400">
               Select a client from the top bar to start chatting.
             </p>
           </div>
@@ -385,9 +385,9 @@ export default function AskLvl3Chat({
                   <FileSpreadsheet className="w-5 h-5 text-brand-400 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-surface-100 truncate">{a.filename}</p>
-                    <p className="text-xs text-surface-500">.xlsx spreadsheet</p>
+                    <p className="text-xs text-surface-400">.xlsx spreadsheet</p>
                   </div>
-                  <Download className="w-4 h-4 text-surface-500 group-hover:text-brand-400 transition-colors" />
+                  <Download className="w-4 h-4 text-surface-400 group-hover:text-brand-400 transition-colors" />
                 </button>
               ))}
             </div>
@@ -428,7 +428,7 @@ export default function AskLvl3Chat({
             placeholder={clientId ? 'Ask anything about this client...' : 'Select a client first'}
             disabled={!clientId || loading}
             rows={1}
-            className="flex-1 bg-surface-900 border border-surface-600 text-surface-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 bg-surface-900 border border-surface-600 text-surface-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ minHeight: '44px', maxHeight: '160px' }}
             onInput={(e) => {
               const el = e.currentTarget

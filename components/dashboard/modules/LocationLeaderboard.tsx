@@ -74,7 +74,7 @@ function SortHeader({ col, active, onSort }: SortHeaderProps) {
   return (
     <th
       className={`pb-2 pl-3 text-right text-xs font-medium uppercase tracking-wider ${
-        active ? 'text-accent-400' : 'text-surface-500'
+        active ? 'text-accent-400' : 'text-surface-400'
       }`}
     >
       <button
@@ -103,7 +103,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center gap-2">
-        <MapPin className="h-4 w-4 text-surface-500" aria-hidden="true" />
+        <MapPin className="h-4 w-4 text-surface-400" aria-hidden="true" />
         <p className="text-sm font-semibold text-surface-100">Location Leaderboard</p>
       </div>
       {children}
@@ -181,7 +181,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-surface-500" aria-hidden="true" />
+          <MapPin className="h-4 w-4 text-surface-400" aria-hidden="true" />
           <p className="text-sm font-semibold text-surface-100">Location Leaderboard</p>
         </div>
         <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
               {insights.errorCount} location{insights.errorCount === 1 ? '' : 's'}: data unavailable
             </span>
           )}
-          <span className="text-xs text-surface-500">
+          <span className="text-xs text-surface-400">
             {insights.locationCount} location{insights.locationCount === 1 ? '' : 's'}
           </span>
         </div>
@@ -201,7 +201,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-surface-700">
-              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-500">
+              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
                 Location
               </th>
               {COLUMNS.map((col) => (
@@ -223,7 +223,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
                 <td className="py-2 pr-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-5 shrink-0 text-right text-xs text-surface-500"
+                      className="w-5 shrink-0 text-right text-xs text-surface-400"
                       style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
                     >
                       {i + 1}
@@ -268,7 +268,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
       </div>
 
       {hidden > 0 && (
-        <p className="mt-3 text-xs text-surface-500">
+        <p className="mt-3 text-xs text-surface-400">
           + {hidden} more location{hidden === 1 ? '' : 's'} not shown
         </p>
       )}

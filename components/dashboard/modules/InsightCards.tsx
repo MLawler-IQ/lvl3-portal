@@ -69,13 +69,13 @@ function InsightCardTile({ card }: { card: InsightCard }) {
         >
           {card.magnitude}
         </span>
-        <span className="text-xs text-surface-500 self-end mb-0.5">{card.period}</span>
+        <span className="text-xs text-surface-400 self-end mb-0.5">{card.period}</span>
       </div>
 
       <p className="text-sm text-surface-200 leading-relaxed mb-2">{card.statement}</p>
       <p className="text-xs text-surface-400 leading-relaxed">{card.whyItMatters}</p>
       {card.action && (
-        <p className="mt-2 pt-2 border-t border-surface-800 text-xs text-surface-500 leading-relaxed">
+        <p className="mt-2 pt-2 border-t border-surface-800 text-xs text-surface-400 leading-relaxed">
           <span className="font-medium uppercase tracking-[0.1em] text-[10px] text-surface-400 mr-1.5">
             Next
           </span>

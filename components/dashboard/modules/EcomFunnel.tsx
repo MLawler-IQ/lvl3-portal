@@ -66,7 +66,7 @@ export default function EcomFunnel({ funnel }: EcomFunnelProps) {
             return (
               <div key={stage.label}>
                 {stepConv != null && (
-                  <div className="flex items-center gap-1.5 pb-1.5 pl-0.5 text-[11px] text-surface-500">
+                  <div className="flex items-center gap-1.5 pb-1.5 pl-0.5 text-[11px] text-surface-400">
                     <span aria-hidden="true">↳</span>
                     <span>{stepConv.toFixed(1)}% step conversion</span>
                   </div>
@@ -96,7 +96,7 @@ export default function EcomFunnel({ funnel }: EcomFunnelProps) {
           {/* Overall view-to-purchase conversion */}
           {top > 0 && (
             <div className="flex items-center justify-between border-t border-surface-700 pt-3 mt-1">
-              <span className="text-xs font-medium uppercase tracking-wider text-surface-500">
+              <span className="text-xs font-medium uppercase tracking-wider text-surface-400">
                 View → Purchase
               </span>
               <span

@@ -132,7 +132,7 @@ export default async function HomePage() {
         <>
           {/* Analytics KPI strip (compact) */}
           <section>
-            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+            <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
               Key Metrics <span className="text-surface-600">· Last 28 days</span>
             </p>
             {hasAnalytics ? (
@@ -143,7 +143,7 @@ export default async function HomePage() {
               />
             ) : (
               <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-                <p className="text-sm text-surface-500 italic">
+                <p className="text-sm text-surface-400 italic">
                   KPI cards will appear here once configured by your admin.
                 </p>
               </div>
@@ -153,7 +153,7 @@ export default async function HomePage() {
           {/* Attention + Open loops */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <section>
-              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
                 Needs Your Review
               </p>
               <AttentionQueueCard
@@ -162,7 +162,7 @@ export default async function HomePage() {
               />
             </section>
             <section>
-              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
                 Open Loops
               </p>
               <OpenLoopsCard
@@ -175,7 +175,7 @@ export default async function HomePage() {
           {/* Key movements narrative */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+              <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
                 Key Movements
               </p>
               {isAdmin && (
@@ -189,7 +189,7 @@ export default async function HomePage() {
                 maxChars={280}
                 footer={
                   selectedClient.ai_summary_updated_at ? (
-                    <p className="text-xs text-surface-500">
+                    <p className="text-xs text-surface-400">
                       Last updated{" "}
                       {new Date(
                         selectedClient.ai_summary_updated_at
@@ -204,7 +204,7 @@ export default async function HomePage() {
               />
             ) : (
               <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-                <p className="text-sm text-surface-500 italic">
+                <p className="text-sm text-surface-400 italic">
                   No summary yet. Sync the project sheet to generate one.
                 </p>
               </div>
@@ -215,7 +215,7 @@ export default async function HomePage() {
           {(selectedClient.analytics_summary || isAdmin) && (
             <section>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+                <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
                   Analytics Insights
                 </p>
                 {isAdmin && (
@@ -229,7 +229,7 @@ export default async function HomePage() {
                   maxChars={280}
                   footer={
                     selectedClient.analytics_summary_updated_at ? (
-                      <p className="text-xs text-surface-500">
+                      <p className="text-xs text-surface-400">
                         Last updated{" "}
                         {new Date(
                           selectedClient.analytics_summary_updated_at
@@ -244,7 +244,7 @@ export default async function HomePage() {
                 />
               ) : (
                 <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-                  <p className="text-sm text-surface-500 italic">
+                  <p className="text-sm text-surface-400 italic">
                     No analytics insights yet. Configure GA4/GSC in client settings and click &quot;Refresh analytics&quot;.
                   </p>
                 </div>
@@ -255,7 +255,7 @@ export default async function HomePage() {
           {/* Recent insights */}
           {recentPosts.length > 0 && (
             <section>
-              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+              <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
                 Recent Insights
               </p>
               <div className="space-y-3">
@@ -278,7 +278,7 @@ export default async function HomePage() {
                     <p className="text-sm text-surface-400 line-clamp-2">
                       {post.body.slice(0, 160)}
                     </p>
-                    <p className="text-xs text-surface-500 mt-2">
+                    <p className="text-xs text-surface-400 mt-2">
                       {new Date(post.created_at).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -295,7 +295,7 @@ export default async function HomePage() {
 
       {/* Quick nav — below fold */}
       <section>
-        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
           Quick Nav
         </p>
         <NavCards compact />

@@ -45,7 +45,7 @@ export default async function DashboardPage({
   if (!selectedClient && showSelector) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
-        <BarChart2 className="w-10 h-10 text-surface-500 mb-3" />
+        <BarChart2 className="w-10 h-10 text-surface-400 mb-3" />
         <p className="text-surface-400">
           Select a client from the workspace selector to view their dashboard.
         </p>
@@ -56,7 +56,7 @@ export default async function DashboardPage({
   if (!selectedClient) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
-        <BarChart2 className="w-10 h-10 text-surface-500 mb-3" />
+        <BarChart2 className="w-10 h-10 text-surface-400 mb-3" />
         <p className="text-surface-400">No client assigned to your account.</p>
       </div>
     );

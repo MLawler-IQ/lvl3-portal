@@ -55,11 +55,11 @@ export default function RankedBarChart({ title, rows, valueLabel = 'Value', max 
           />
           <Tooltip
             formatter={(v) => [Number(v ?? 0).toLocaleString(), valueLabel]}
-            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 8 }}
+            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
             labelStyle={{ color: 'var(--chart-label)' }}
             itemStyle={{ color: 'var(--chart-tick)' }}
           />
-          <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+          <Bar dataKey="value" radius={[0, 2, 2, 0]}>
             {data.map((_, i) => (
               <Cell key={i} fill={i === 0 ? 'var(--chart-line)' : 'var(--chart-bar-secondary)'} />
             ))}

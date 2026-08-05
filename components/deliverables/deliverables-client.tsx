@@ -244,7 +244,7 @@ export default function DeliverablesClient({
       {/* Content */}
       <div className="max-w-7xl mx-auto">
         {filteredAndSorted.length === 0 ? (
-          <div className="text-center py-24 text-surface-500">
+          <div className="text-center py-24 text-surface-400">
             {deliverables.length === 0 ? (
               <>
                 <p className="text-sm">No deliverables yet.</p>
@@ -319,7 +319,7 @@ export default function DeliverablesClient({
                           Open threads
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-500">—</span>
+                        <span className="text-xs text-surface-400">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs">
@@ -332,7 +332,7 @@ export default function DeliverablesClient({
                           {d.totalCommentCount} total
                         </span>
                       ) : (
-                        <span className="text-surface-500">—</span>
+                        <span className="text-surface-400">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-surface-400">

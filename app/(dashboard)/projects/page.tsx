@@ -49,7 +49,7 @@ export default async function ProjectsPage() {
   if (!selectedClient && showSelector) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
-        <FileSpreadsheet className="w-10 h-10 text-surface-500 mb-3" />
+        <FileSpreadsheet className="w-10 h-10 text-surface-400 mb-3" />
         <p className="text-surface-400">
           Select a client from the workspace selector to view their project
           tracker.
@@ -61,7 +61,7 @@ export default async function ProjectsPage() {
   if (!selectedClient) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
-        <FileSpreadsheet className="w-10 h-10 text-surface-500 mb-3" />
+        <FileSpreadsheet className="w-10 h-10 text-surface-400 mb-3" />
         <p className="text-surface-400">No client assigned to your account.</p>
       </div>
     );
@@ -75,12 +75,12 @@ export default async function ProjectsPage() {
           <p className="mt-1 text-surface-400 text-sm">{selectedClient.name}</p>
         </div>
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <FileSpreadsheet className="w-10 h-10 text-surface-500 mb-3" />
+          <FileSpreadsheet className="w-10 h-10 text-surface-400 mb-3" />
           <p className="text-surface-400">
             No Google Sheet has been connected for this client yet.
           </p>
           {isAdmin && (
-            <p className="text-surface-500 text-sm mt-1">
+            <p className="text-surface-400 text-sm mt-1">
               Set the Google Sheet ID in{" "}
               <a
                 href={`/clients/${selectedClient.id}/settings`}
@@ -112,7 +112,7 @@ export default async function ProjectsPage() {
   if (sheetData.rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
-        <FileSpreadsheet className="w-10 h-10 text-surface-500 mb-3" />
+        <FileSpreadsheet className="w-10 h-10 text-surface-400 mb-3" />
         <p className="text-surface-400">The connected sheet has no task rows yet.</p>
       </div>
     );

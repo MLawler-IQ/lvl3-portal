@@ -70,16 +70,16 @@ export default function GoogleConnectionPanel({ googleParam }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-surface-100">Google Account</p>
-          <p className="text-xs text-surface-500 mt-0.5">
+          <p className="text-xs text-surface-400 mt-0.5">
             Powers GA4, Search Console, and Google Sheets access across all clients.
           </p>
         </div>
         {loading ? (
-          <Loader2 size={16} className="text-surface-500 animate-spin" />
+          <Loader2 size={16} className="text-surface-400 animate-spin" />
         ) : connected ? (
           <CheckCircle size={16} className="text-accent-400" />
         ) : (
-          <XCircle size={16} className="text-surface-500" />
+          <XCircle size={16} className="text-surface-400" />
         )}
       </div>
 

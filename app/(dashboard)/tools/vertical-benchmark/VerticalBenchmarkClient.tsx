@@ -182,7 +182,7 @@ export default function VerticalBenchmarkClient({
               >
                 {c.domain}
                 {c.pagesAnalyzed > 0 && (
-                  <span className="ml-1 text-surface-500">({c.pagesAnalyzed}p)</span>
+                  <span className="ml-1 text-surface-400">({c.pagesAnalyzed}p)</span>
                 )}
               </span>
             ))}
@@ -194,7 +194,7 @@ export default function VerticalBenchmarkClient({
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
             <p className="text-sm font-semibold text-surface-100">
               Table Stakes{' '}
-              <span className="text-xs font-normal text-surface-500">(60%+ of competitors)</span>
+              <span className="text-xs font-normal text-surface-400">(60%+ of competitors)</span>
             </p>
             <ul className="space-y-1.5">
               {report.tableStakes.map((s, i) => (
@@ -212,7 +212,7 @@ export default function VerticalBenchmarkClient({
           <div className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-3">
             <p className="text-sm font-semibold text-surface-100">
               Differentiators{' '}
-              <span className="text-xs font-normal text-surface-500">(top performers only)</span>
+              <span className="text-xs font-normal text-surface-400">(top performers only)</span>
             </p>
             <ul className="space-y-1.5">
               {report.differentiators.map((d, i) => (
@@ -245,7 +245,7 @@ export default function VerticalBenchmarkClient({
                           }}
                         />
                       </div>
-                      <span className="text-surface-500 w-16 text-right">
+                      <span className="text-surface-400 w-16 text-right">
                         {count}/{citationTotal} q
                       </span>
                     </div>
@@ -260,7 +260,7 @@ export default function VerticalBenchmarkClient({
           <p className="text-sm font-semibold text-surface-100">Competitor Detail</p>
           <table className="w-full text-xs text-surface-400 border-collapse">
             <thead>
-              <tr className="text-left text-surface-500 border-b border-surface-700">
+              <tr className="text-left text-surface-400 border-b border-surface-700">
                 <th className="pb-2 pr-4 font-medium">Domain</th>
                 <th className="pb-2 pr-4 font-medium">Avg Words</th>
                 <th className="pb-2 pr-4 font-medium">Schema</th>
@@ -390,7 +390,7 @@ export default function VerticalBenchmarkClient({
                   if (e.key === 'Enter' && vertical.trim()) handleRun()
                 }}
                 placeholder="e.g. residential plumbing services"
-                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:border-surface-600"
+                className="w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
               />
             </div>
 
@@ -410,7 +410,7 @@ export default function VerticalBenchmarkClient({
                     }
                   }}
                   placeholder="example.com"
-                  className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:border-surface-600"
+                  className="flex-1 bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
                 />
                 <button
                   onClick={addCompetitor}
@@ -429,7 +429,7 @@ export default function VerticalBenchmarkClient({
                       {d}
                       <button
                         onClick={() => removeCompetitor(d)}
-                        className="text-surface-500 hover:text-surface-300"
+                        className="text-surface-400 hover:text-surface-300"
                       >
                         <X size={10} />
                       </button>

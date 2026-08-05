@@ -43,7 +43,7 @@ export default function CollapsibleSection({
             <ChevronRight className="w-4 h-4 text-surface-400" />
           )}
           <span className="font-medium text-surface-100">{label}</span>
-          <span className="text-xs text-surface-500">{completed}/{total} completed</span>
+          <span className="text-xs text-surface-400">{completed}/{total} completed</span>
         </div>
         <div className="w-40">
           <ProgressBar value={completed} total={total} />

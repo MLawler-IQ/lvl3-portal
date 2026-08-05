@@ -4,10 +4,10 @@ import AdminTriageStrip from '@/components/home/AdminTriageStrip'
 function TriageHeader() {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-3">
-      <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+      <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
         Portfolio · Needs Attention
       </p>
-      <p className="text-[11px] text-surface-500">Sessions · last 28 days vs prior</p>
+      <p className="text-[11px] text-surface-400">Sessions · last 28 days vs prior</p>
     </div>
   )
 }
@@ -15,7 +15,7 @@ function TriageHeader() {
 function QuietLine({ children }: { children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-      <p className="text-sm text-surface-500 italic">{children}</p>
+      <p className="text-sm text-surface-400 italic">{children}</p>
     </div>
   )
 }

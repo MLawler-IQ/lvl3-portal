@@ -33,19 +33,19 @@ export default function ContentPerformance({ rows, maxRows = 25 }: ContentPerfor
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700">
-                <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-500">
+                <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
                   Page
                 </th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                   Clicks
                 </th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                   Impressions
                 </th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                   CTR
                 </th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                   Avg Pos.
                 </th>
               </tr>

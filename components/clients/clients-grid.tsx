@@ -63,16 +63,16 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
                   <h3 className="text-surface-100 font-semibold truncate group-hover:text-surface-100">
                     {client.name}
                   </h3>
-                  <p className="text-surface-500 text-xs font-mono">{client.slug}</p>
+                  <p className="text-surface-400 text-xs font-mono">{client.slug}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5 text-surface-500 text-xs">
+                <div className="flex items-center gap-1.5 text-surface-400 text-xs">
                   <Users size={12} />
                   <span>{client.user_count}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-surface-500 text-xs">
+                <div className="flex items-center gap-1.5 text-surface-400 text-xs">
                   <PackageOpen size={12} />
                   <span>{client.deliverable_count}</span>
                 </div>

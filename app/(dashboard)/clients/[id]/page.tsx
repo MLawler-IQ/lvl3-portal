@@ -33,7 +33,7 @@ export default async function ClientDetailPage({ params }: Props) {
       {/* Back nav */}
       <Link
         href="/clients"
-        className="flex items-center gap-1.5 text-surface-500 hover:text-surface-100 text-sm transition-colors mb-6"
+        className="flex items-center gap-1.5 text-surface-400 hover:text-surface-100 text-sm transition-colors mb-6"
       >
         <ChevronLeft size={15} />
         All clients
@@ -56,7 +56,7 @@ export default async function ClientDetailPage({ params }: Props) {
         )}
         <div className="flex-1 min-w-0">
           <h1 className="text-surface-100 text-2xl font-bold">{client.name}</h1>
-          <p className="text-surface-500 text-sm font-mono">{client.slug}</p>
+          <p className="text-surface-400 text-sm font-mono">{client.slug}</p>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export default async function ClientDetailPage({ params }: Props) {
             key={label}
             className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4"
           >
-            <p className="text-surface-500 text-xs mb-1">{label}</p>
+            <p className="text-surface-400 text-xs mb-1">{label}</p>
             <p className="text-surface-100 font-semibold">{value}</p>
           </div>
         ))}

@@ -72,7 +72,7 @@ export default function SerpDistributionChart({ distribution }: Props) {
             allowDecimals={false}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-          <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+          <Bar dataKey="count" radius={[2, 2, 0, 0]}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}

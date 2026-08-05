@@ -48,7 +48,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
       <div className="relative bg-surface-900 border border-surface-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-surface-100 font-semibold text-lg">Add access</h2>
-          <button onClick={onClose} className="text-surface-500 hover:text-surface-100 transition-colors">
+          <button onClick={onClose} className="text-surface-400 hover:text-surface-100 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -81,7 +81,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@company.com"
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
               />
             </div>
 
@@ -111,7 +111,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
                   Member
                 </button>
               </div>
-              <p className="mt-1.5 text-xs text-surface-500">
+              <p className="mt-1.5 text-xs text-surface-400">
                 {role === 'client'
                   ? 'External client — read-only access to this workspace only.'
                   : 'Internal LVL3 team — can be added to multiple client workspaces.'}

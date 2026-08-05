@@ -143,7 +143,7 @@ export default function RunHistory({ clientId, onLoadRun }: RunHistoryProps) {
               </>
             ) : runs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-sm text-surface-500">
+                <td colSpan={6} className="py-8 text-center text-sm text-surface-400">
                   No previous runs found
                 </td>
               </tr>

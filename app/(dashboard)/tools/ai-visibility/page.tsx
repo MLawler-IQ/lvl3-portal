@@ -96,7 +96,7 @@ export default async function AIVisibilityPage() {
             ))}
           </div>
 
-          <p className="text-xs text-surface-500">
+          <p className="text-xs text-surface-400">
             {result.termsSource === 'configured'
               ? 'Branded queries match the brand terms configured in client settings — the same terms the dashboard’s Branded Search module uses (over its selected period).'
               : 'No brand terms configured — brand detection falls back to the client name, slug, and domain. Set brand terms in client settings to match the dashboard’s Branded Search module.'}{' '}

@@ -120,7 +120,7 @@ export default function XlsxUploader({ onTopicsParsed, disabled }: XlsxUploaderP
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-surface-500"
+            className="text-surface-400"
           >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
@@ -130,7 +130,7 @@ export default function XlsxUploader({ onTopicsParsed, disabled }: XlsxUploaderP
             Drop an <span className="font-medium text-surface-100">.xlsx</span> file here or{' '}
             <span className="text-brand-500 font-medium">browse</span>
           </p>
-          <p className="text-xs text-surface-500">
+          <p className="text-xs text-surface-400">
             Expects columns: title, target_audience, angle, existing_url
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function XlsxUploader({ onTopicsParsed, disabled }: XlsxUploaderP
                 </li>
               ))}
               {parsedCount > 3 && (
-                <li className="text-xs text-surface-500">
+                <li className="text-xs text-surface-400">
                   +{parsedCount - 3} more...
                 </li>
               )}

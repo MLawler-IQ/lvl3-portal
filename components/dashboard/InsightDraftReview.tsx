@@ -36,7 +36,7 @@ function fmtGeneratedAt(iso: string | undefined): string {
 }
 
 const inputClass =
-  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 placeholder:text-surface-500 focus:outline-none focus:border-surface-500 transition-colors'
+  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 placeholder:text-surface-400 focus:outline-none focus:border-surface-500 transition-colors'
 const labelClass =
   'text-[11px] font-medium uppercase tracking-[0.14em] text-brand-500'
 
@@ -103,7 +103,7 @@ export default function InsightDraftReview({ clientId, draft }: InsightDraftRevi
             <AlertTriangle className="h-3 w-3" aria-hidden="true" />
             Draft — pending review
           </span>
-          <span className="text-xs text-surface-500">Generated {fmtGeneratedAt(draft.generatedAt)}</span>
+          <span className="text-xs text-surface-400">Generated {fmtGeneratedAt(draft.generatedAt)}</span>
         </div>
       </div>
 

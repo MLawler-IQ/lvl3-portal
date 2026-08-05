@@ -63,7 +63,7 @@ export default function ProjectsView({
     { label: "Completed", color: "text-accent-400", count: rows.filter((r) => r.status === "Completed").length },
     { label: "In Progress", color: "text-brand-400", count: rows.filter((r) => r.status === "In Progress").length },
     { label: "Blocked", color: "text-amber-400", count: rows.filter((r) => r.status === "Blocked").length },
-    { label: "Not Started", color: "text-surface-500", count: rows.filter((r) => !["Completed", "In Progress", "Blocked"].includes(r.status)).length },
+    { label: "Not Started", color: "text-surface-400", count: rows.filter((r) => !["Completed", "In Progress", "Blocked"].includes(r.status)).length },
   ].filter((s) => s.count > 0);
 
   const blockedCount = rows.filter((r) => r.status === "Blocked").length;
@@ -140,7 +140,7 @@ export default function ProjectsView({
       )}
       {!aiSummary && (
         <div className="bg-surface-900/50 border border-surface-700 rounded-xl px-5 py-3">
-          <p className="text-sm text-surface-500 italic">
+          <p className="text-sm text-surface-400 italic">
             Sync the project sheet to generate a summary.
           </p>
         </div>
@@ -162,7 +162,7 @@ export default function ProjectsView({
       <div className="bg-surface-900 border border-surface-700 rounded-xl overflow-hidden">
         {/* Card header with sync */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-surface-700">
-          <span className="text-xs font-medium uppercase tracking-widest text-surface-500">
+          <span className="text-xs font-medium uppercase tracking-widest text-surface-400">
             Project Status
           </span>
           <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export default function ProjectsView({
               className={`text-xs px-2 py-0.5 rounded-full border ${
                 minutesAgo < 5
                   ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                  : "bg-surface-800 border-surface-600 text-surface-500"
+                  : "bg-surface-800 border-surface-600 text-surface-400"
               }`}
             >
               {minutesAgo === 0
@@ -194,19 +194,19 @@ export default function ProjectsView({
         <div className={`grid divide-surface-700 ${hasFees ? "grid-cols-3 divide-x" : "grid-cols-2 divide-x"}`}>
           {/* This month */}
           <div className="px-5 py-4">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-surface-500 mb-3">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-surface-400 mb-3">
               This Month
             </p>
             {heroGroup ? (
               <>
-                <p className="text-xs text-surface-500 mb-1">{heroGroup.month}</p>
+                <p className="text-xs text-surface-400 mb-1">{heroGroup.month}</p>
                 <p className="text-2xl font-semibold text-surface-100 tabular-nums">
                   {thisMonthCompleted}
-                  <span className="text-sm font-normal text-surface-500">
+                  <span className="text-sm font-normal text-surface-400">
                     /{thisMonthRows.length}
                   </span>
                 </p>
-                <p className="text-xs text-surface-500 mt-0.5">tasks done</p>
+                <p className="text-xs text-surface-400 mt-0.5">tasks done</p>
                 {thisMonthBlocked > 0 && (
                   <p className="text-xs text-amber-400 mt-2">
                     {thisMonthBlocked} blocked
@@ -214,13 +214,13 @@ export default function ProjectsView({
                 )}
               </>
             ) : (
-              <p className="text-xs text-surface-500 italic">No data</p>
+              <p className="text-xs text-surface-400 italic">No data</p>
             )}
           </div>
 
           {/* Status breakdown */}
           <div className="px-5 py-4">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-surface-500 mb-3">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-surface-400 mb-3">
               All Tasks
             </p>
             <div className="space-y-1.5">
@@ -236,7 +236,7 @@ export default function ProjectsView({
           {/* Fees by category */}
           {hasFees && (
             <div className="px-5 py-4">
-              <p className="text-[10px] font-medium uppercase tracking-widest text-surface-500 mb-3">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-surface-400 mb-3">
                 Fees by Category
               </p>
               <div className="space-y-1.5">

@@ -292,7 +292,7 @@ export default function TfkGeneratorClient() {
         {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-surface-700" />
-          <span className="text-xs uppercase tracking-widest text-surface-500">Or</span>
+          <span className="text-xs uppercase tracking-widest text-surface-400">Or</span>
           <div className="flex-1 h-px bg-surface-700" />
         </div>
 
@@ -419,7 +419,7 @@ export default function TfkGeneratorClient() {
                   <StepIcon step={loc.step} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-surface-200 truncate">{loc.store} · {loc.city}, {loc.state}</p>
-                    <p className="text-xs text-surface-500">{stepLabel(loc.step)}</p>
+                    <p className="text-xs text-surface-400">{stepLabel(loc.step)}</p>
                   </div>
                   {loc.step === 'done' && (
                     <div className="flex items-center gap-2 flex-shrink-0">
@@ -480,7 +480,7 @@ export default function TfkGeneratorClient() {
               { label: 'Validation', value: selectedRow.validation_notes ?? '—' },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p className="text-xs text-surface-500 mb-0.5">{label}</p>
+                <p className="text-xs text-surface-400 mb-0.5">{label}</p>
                 <p className="text-xs text-surface-200 truncate">{String(value)}</p>
               </div>
             ))}
@@ -527,7 +527,7 @@ export default function TfkGeneratorClient() {
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-surface-900 border border-surface-700 rounded-xl p-4 text-center">
               <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
-              <p className="text-xs text-surface-500 mt-1">{label}</p>
+              <p className="text-xs text-surface-400 mt-1">{label}</p>
             </div>
           ))}
         </div>
@@ -588,7 +588,7 @@ export default function TfkGeneratorClient() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab
                 ? 'bg-surface-800 text-surface-100'
-                : 'text-surface-500 hover:text-surface-300'
+                : 'text-surface-400 hover:text-surface-300'
             }`}
           >
             {tab}

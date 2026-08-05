@@ -63,7 +63,7 @@ function PacingRowItem({ row }: { row: PacingRow }) {
         </div>
         <div className="shrink-0 text-right text-sm" style={MONO}>
           <span className="text-surface-100 font-semibold">{formatValue(row.actual)}</span>
-          <span className="text-surface-500"> / {formatValue(row.target)}</span>
+          <span className="text-surface-400"> / {formatValue(row.target)}</span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ function PacingRowItem({ row }: { row: PacingRow }) {
       </div>
 
       {row.projected !== null && (
-        <p className="mt-1.5 text-xs text-surface-500">
+        <p className="mt-1.5 text-xs text-surface-400">
           Projected month-end:{' '}
           <span className="text-surface-300" style={MONO}>
             {formatValue(row.projected)}
@@ -102,7 +102,7 @@ export default function Targets({ pacing, isAdmin = false, clientId }: TargetsPr
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <TargetIcon className="h-4 w-4 text-surface-500" aria-hidden="true" />
+            <TargetIcon className="h-4 w-4 text-surface-400" aria-hidden="true" />
             <p className="text-sm font-semibold text-surface-100">Monthly Goals</p>
           </div>
           <Link
@@ -112,7 +112,7 @@ export default function Targets({ pacing, isAdmin = false, clientId }: TargetsPr
             Set monthly goals →
           </Link>
         </div>
-        <p className="mt-2 text-xs text-surface-500">
+        <p className="mt-2 text-xs text-surface-400">
           No targets configured for this client yet — goal pacing appears here once monthly goals are set.
         </p>
       </div>
@@ -122,9 +122,9 @@ export default function Targets({ pacing, isAdmin = false, clientId }: TargetsPr
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center gap-2">
-        <TargetIcon className="h-4 w-4 text-surface-500" aria-hidden="true" />
+        <TargetIcon className="h-4 w-4 text-surface-400" aria-hidden="true" />
         <p className="text-sm font-semibold text-surface-100">Monthly Goals</p>
-        <span className="ml-auto text-xs text-surface-500">Month to date</span>
+        <span className="ml-auto text-xs text-surface-400">Month to date</span>
       </div>
 
       <ul>

@@ -49,7 +49,7 @@ export default async function ReviewBatchPage({
       <div>
         <Link
           href="/reviews"
-          className="inline-flex items-center gap-1.5 text-xs text-surface-500 hover:text-surface-200 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-surface-400 hover:text-surface-200 transition-colors"
         >
           <ArrowLeft size={13} />
           Back to reviews

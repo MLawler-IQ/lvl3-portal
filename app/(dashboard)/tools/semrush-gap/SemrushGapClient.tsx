@@ -380,7 +380,7 @@ export default function SemrushGapClient({
   }
 
   const inputClass =
-    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-brand-400 placeholder:text-surface-500'
+    'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:border-brand-400 placeholder:text-surface-400'
   const selectClass =
     'bg-surface-800 border border-surface-600 text-surface-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-400'
 
@@ -420,7 +420,7 @@ export default function SemrushGapClient({
                   <button
                     type="button"
                     onClick={() => setCompetitors(competitors.filter((_, j) => j !== i))}
-                    className="text-surface-500 hover:text-surface-300 shrink-0"
+                    className="text-surface-400 hover:text-surface-300 shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -472,7 +472,7 @@ export default function SemrushGapClient({
           <p className="text-xs font-medium text-surface-400 mb-2 uppercase tracking-wide">Pre-Filters</p>
           <div className="flex flex-wrap gap-4">
             <div style={{ maxWidth: 160 }}>
-              <label className="block text-xs text-surface-500 mb-1">Min Volume</label>
+              <label className="block text-xs text-surface-400 mb-1">Min Volume</label>
               <input
                 type="number"
                 value={minVolumeInput}
@@ -482,7 +482,7 @@ export default function SemrushGapClient({
               />
             </div>
             <div style={{ maxWidth: 260 }}>
-              <label className="block text-xs text-surface-500 mb-1">Include Terms (comma-sep)</label>
+              <label className="block text-xs text-surface-400 mb-1">Include Terms (comma-sep)</label>
               <input
                 type="text"
                 value={includeTermsInput}
@@ -492,7 +492,7 @@ export default function SemrushGapClient({
               />
             </div>
             <div style={{ maxWidth: 260 }}>
-              <label className="block text-xs text-surface-500 mb-1">Exclude Terms (comma-sep)</label>
+              <label className="block text-xs text-surface-400 mb-1">Exclude Terms (comma-sep)</label>
               <input
                 type="text"
                 value={excludeTermsInput}
@@ -550,14 +550,14 @@ export default function SemrushGapClient({
                   {', '}
                   {new Date(r.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                 </span>
-                <span className="text-surface-500 mx-2">·</span>
+                <span className="text-surface-400 mx-2">·</span>
                 {r.competitors.length} competitor{r.competitors.length !== 1 ? 's' : ''}
-                <span className="text-surface-500 mx-2">·</span>
+                <span className="text-surface-400 mx-2">·</span>
                 {r.keyword_count.toLocaleString()} keywords
                 {r.page_section !== 'all' && (
                   <>
-                    <span className="text-surface-500 mx-2">·</span>
-                    <span className="text-surface-500">{PAGE_SECTIONS.find((s) => s.value === r.page_section)?.label}</span>
+                    <span className="text-surface-400 mx-2">·</span>
+                    <span className="text-surface-400">{PAGE_SECTIONS.find((s) => s.value === r.page_section)?.label}</span>
                   </>
                 )}
               </div>
@@ -572,7 +572,7 @@ export default function SemrushGapClient({
                 <button
                   type="button"
                   onClick={() => handleDeleteReport(r.id)}
-                  className="text-surface-500 hover:text-red-400 transition-colors"
+                  className="text-surface-400 hover:text-red-400 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -655,7 +655,7 @@ export default function SemrushGapClient({
                 </div>
               )}
               <div className="relative" style={{ maxWidth: 260 }}>
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-500" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" />
                 <input
                   type="text"
                   value={search}
@@ -676,7 +676,7 @@ export default function SemrushGapClient({
             </div>
           </div>
 
-          <div className="text-xs text-surface-500">
+          <div className="text-xs text-surface-400">
             {clientKeywordCount.toLocaleString()} client keywords indexed
             {pageSection !== 'all' && (
               <span className="ml-2 text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 rounded-full bg-surface-800 text-surface-400 border border-surface-600">
@@ -730,7 +730,7 @@ export default function SemrushGapClient({
                                       ? 'text-success'
                                       : pos.position <= 20
                                         ? 'text-warning'
-                                        : 'text-surface-500'
+                                        : 'text-surface-400'
                                     : 'text-surface-300'
                                 }`}>
                                   {pos.position}
@@ -748,7 +748,7 @@ export default function SemrushGapClient({
                 </tbody>
               </table>
               {filteredMatrix.length === 0 && search && (
-                <p className="text-xs text-surface-500 text-center py-4">No keywords match the filter.</p>
+                <p className="text-xs text-surface-400 text-center py-4">No keywords match the filter.</p>
               )}
             </div>
           )}
@@ -787,7 +787,7 @@ export default function SemrushGapClient({
                           <span className="text-amber-400">–</span>
                         ) : (
                           <div className="flex flex-col items-end">
-                            <span className="text-surface-500 tabular-nums">{g.clientPosition}</span>
+                            <span className="text-surface-400 tabular-nums">{g.clientPosition}</span>
                             {g.clientUrl && <UrlLink url={g.clientUrl} />}
                           </div>
                         )}
@@ -813,7 +813,7 @@ export default function SemrushGapClient({
               </table>
 
               {filteredGaps.length === 0 && (search || minRelevance > 0) && (
-                <p className="text-xs text-surface-500 text-center py-4">
+                <p className="text-xs text-surface-400 text-center py-4">
                   No keywords match the current filters.{' '}
                   {minRelevance > 0 && (
                     <button className="underline hover:text-surface-300" onClick={() => setMinRelevance(0)}>Show all relevance levels</button>
@@ -880,7 +880,7 @@ export default function SemrushGapClient({
                 </tbody>
               </table>
               {filteredUrls.length === 0 && search && (
-                <p className="text-xs text-surface-500 text-center py-4">No URLs match the filter.</p>
+                <p className="text-xs text-surface-400 text-center py-4">No URLs match the filter.</p>
               )}
             </div>
           )}
@@ -898,7 +898,7 @@ function UrlLink({ url }: { url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-[10px] text-surface-500 hover:text-brand-400 truncate max-w-[180px] block"
+      className="text-[10px] text-surface-400 hover:text-brand-400 truncate max-w-[180px] block"
       title={url}
     >
       {display || '/'}

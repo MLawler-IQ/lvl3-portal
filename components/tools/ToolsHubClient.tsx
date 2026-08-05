@@ -221,12 +221,12 @@ export default function ToolsHubClient({ tools, selectedClientId }: Props) {
       {/* Search + filter bar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-surface-400" />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search tools…"
-            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:border-surface-600"
+            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-8 pr-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600"
           />
         </div>
 

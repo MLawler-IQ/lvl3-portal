@@ -5,7 +5,7 @@ import type { SheetRow } from '@/app/actions/projects'
 import { getStatusStyle, formatFee } from './project-helpers'
 
 function NoteCell({ note }: { note: string | null }) {
-  if (!note) return <span className="text-surface-500">—</span>
+  if (!note) return <span className="text-surface-400">—</span>
   if (note.startsWith('http')) {
     return (
       <a href={note} target="_blank" rel="noopener noreferrer"
@@ -44,7 +44,7 @@ export default function TaskTable({
           {cols.map((c) => (
             <th
               key={c.key}
-              className={`text-left px-4 py-2 text-surface-500 font-medium ${onSort && c.key !== 'note' ? 'cursor-pointer hover:text-surface-200 select-none' : ''}`}
+              className={`text-left px-4 py-2 text-surface-400 font-medium ${onSort && c.key !== 'note' ? 'cursor-pointer hover:text-surface-200 select-none' : ''}`}
               onClick={() => onSort && c.key !== 'note' && onSort(c.key)}
             >
               <span className="inline-flex items-center gap-1">
@@ -60,14 +60,14 @@ export default function TaskTable({
       <tbody>
         {rows.length === 0 ? (
           <tr>
-            <td colSpan={cols.length} className="px-4 py-8 text-center text-surface-500 text-xs">
+            <td colSpan={cols.length} className="px-4 py-8 text-center text-surface-400 text-xs">
               No tasks match the current filters.
             </td>
           </tr>
         ) : (
           rows.map((row, i) => (
             <tr key={i} className="border-b border-surface-800/50 last:border-0 hover:bg-surface-800/30 transition-colors">
-              {showMonth && <td className="px-4 py-3 text-surface-500 text-xs">{row.month}</td>}
+              {showMonth && <td className="px-4 py-3 text-surface-400 text-xs">{row.month}</td>}
               <td className="px-4 py-3 text-surface-400">{row.category || '—'}</td>
               <td className="px-4 py-3 text-surface-100">{row.task}</td>
               <td className="px-4 py-3">

@@ -137,7 +137,7 @@ function Thread({
           <ChevronRight size={13} className="shrink-0" />
           <span className="truncate">Resolved: {thread.body}</span>
           {thread.replies.length > 0 && (
-            <span className="shrink-0 ml-auto text-surface-500">
+            <span className="shrink-0 ml-auto text-surface-400">
               {thread.replies.length}{" "}
               {thread.replies.length === 1 ? "reply" : "replies"}
             </span>
@@ -160,7 +160,7 @@ function Thread({
             <span className="text-xs font-medium text-surface-200 truncate">
               {thread.users.email}
             </span>
-            <span className="text-xs text-surface-500 shrink-0">
+            <span className="text-xs text-surface-400 shrink-0">
               {formatDate(thread.created_at)}
             </span>
           </div>
@@ -168,14 +168,14 @@ function Thread({
             {thread.resolved && (
               <button
                 onClick={() => setExpanded(false)}
-                className="text-xs text-surface-500 hover:text-surface-300 transition-colors"
+                className="text-xs text-surface-400 hover:text-surface-300 transition-colors"
               >
                 Collapse
               </button>
             )}
             <button
               onClick={handleCopyLink}
-              className="text-xs text-surface-500 hover:text-surface-300 transition-colors"
+              className="text-xs text-surface-400 hover:text-surface-300 transition-colors"
               aria-label="Copy link to thread"
             >
               #
@@ -204,7 +204,7 @@ function Thread({
                 <span className="text-xs font-medium text-surface-200">
                   {reply.users.email}
                 </span>
-                <span className="text-xs text-surface-500">
+                <span className="text-xs text-surface-400">
                   {formatDate(reply.created_at)}
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function CommentThread({
       {loading ? (
         <p className="text-surface-400 text-sm">Loading comments…</p>
       ) : visibleThreads.length === 0 ? (
-        <p className="text-surface-500 text-sm">
+        <p className="text-surface-400 text-sm">
           {threads.length === 0
             ? "No comments yet. Be the first to leave one."
             : "No unresolved threads."}

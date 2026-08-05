@@ -37,14 +37,14 @@ export default function KpiCard({
         >
           {value}
         </p>
-        {Icon && <Icon className="w-4 h-4 text-surface-500" />}
+        {Icon && <Icon className="w-4 h-4 text-surface-400" />}
       </div>
       <div className="flex items-center gap-1.5 mb-2">
         <p className="text-xs font-medium uppercase tracking-widest text-surface-400">{label}</p>
         {tooltip && (
           <div className="relative group">
             <button
-              className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-500 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-700"
+              className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-400 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-700"
               aria-label={`More info about ${label}`}
             >
               ?

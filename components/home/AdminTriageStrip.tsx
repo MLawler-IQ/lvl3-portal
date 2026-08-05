@@ -87,7 +87,7 @@ export default function AdminTriageStrip({ rows }: { rows: TriageRow[] }) {
           </span>
 
           {row.error && (
-            <span className="shrink-0 text-[11px] italic text-surface-500">
+            <span className="shrink-0 text-[11px] italic text-surface-400">
               data unavailable
             </span>
           )}

@@ -61,7 +61,7 @@ export default function DeliverableCard({
         <p className="text-surface-400 text-xs mb-1">{deliverable.clients.name}</p>
       )}
 
-      <p className="text-surface-500 text-xs">
+      <p className="text-surface-400 text-xs">
         {new Date(deliverable.created_at).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",

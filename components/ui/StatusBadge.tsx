@@ -78,8 +78,8 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   const variantClasses: Record<Exclude<RunStatus, "stable" | "running" | "complete" | "failed">, string> = {
     new: "bg-brand-400/15 text-brand-400 border border-brand-400/20",
     beta: "bg-surface-700 text-surface-300 border border-surface-600",
-    deprecated: "bg-surface-800 text-surface-500 border border-surface-700",
-    "coming-soon": "bg-surface-800 text-surface-500 border border-surface-700",
+    deprecated: "bg-surface-800 text-surface-400 border border-surface-700",
+    "coming-soon": "bg-surface-800 text-surface-400 border border-surface-700",
     partial: "bg-surface-700 text-surface-300 border border-surface-600",
     queued: "bg-surface-700 text-surface-400 border border-surface-600",
   };

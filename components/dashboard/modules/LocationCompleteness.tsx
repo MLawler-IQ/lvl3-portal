@@ -56,7 +56,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center gap-2">
-        <ClipboardCheck className="h-4 w-4 text-surface-500" aria-hidden="true" />
+        <ClipboardCheck className="h-4 w-4 text-surface-400" aria-hidden="true" />
         <p className="text-sm font-semibold text-surface-100">Profile Completeness</p>
       </div>
       {children}
@@ -145,10 +145,10 @@ export default function LocationCompleteness({
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <ClipboardCheck className="h-4 w-4 text-surface-500" aria-hidden="true" />
+          <ClipboardCheck className="h-4 w-4 text-surface-400" aria-hidden="true" />
           <p className="text-sm font-semibold text-surface-100">Profile Completeness</p>
         </div>
-        <span className="text-xs text-surface-500">
+        <span className="text-xs text-surface-400">
           {audit.locationCount} location{audit.locationCount === 1 ? '' : 's'}
         </span>
       </div>
@@ -156,7 +156,7 @@ export default function LocationCompleteness({
       {/* Average score + distribution -------------------------------------- */}
       <div className="mb-5 flex items-start gap-5">
         <div className="shrink-0">
-          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-widest text-surface-400">
             Avg score
           </p>
           <ScoreBadge score={audit.avgScore} />
@@ -189,7 +189,7 @@ export default function LocationCompleteness({
 
       {/* Top issues -------------------------------------------------------- */}
       <div className="mb-5">
-        <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+        <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-surface-400">
           Top issues
         </p>
         {topIssues.length === 0 ? (
@@ -210,7 +210,7 @@ export default function LocationCompleteness({
                     {issue}
                   </span>
                 </span>
-                <span className="shrink-0 text-xs text-surface-500">
+                <span className="shrink-0 text-xs text-surface-400">
                   {count} location{count === 1 ? '' : 's'}
                 </span>
               </li>
@@ -221,7 +221,7 @@ export default function LocationCompleteness({
 
       {/* Locations needing attention --------------------------------------- */}
       <div>
-        <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+        <p className="mb-2 text-[10px] font-medium uppercase tracking-widest text-surface-400">
           Needs attention
         </p>
         {attention.length === 0 ? (
@@ -248,7 +248,7 @@ export default function LocationCompleteness({
                     <p className="truncate text-sm text-surface-200" title={loc.addressFormatted || loc.title}>
                       {label}
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-surface-500" title={loc.issues.join(', ')}>
+                    <p className="mt-0.5 truncate text-xs text-surface-400" title={loc.issues.join(', ')}>
                       {loc.issues.length > 0
                         ? loc.issues.join(' · ')
                         : 'No issues'}

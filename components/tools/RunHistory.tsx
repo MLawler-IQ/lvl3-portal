@@ -60,7 +60,7 @@ export default function RunHistory({ runs, onLoad, emptyMessage = 'No previous r
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <RunStatusBadge variant={run.status as 'queued' | 'running' | 'complete' | 'failed' | 'partial'} />
-              <span className="text-xs text-surface-500">{relativeTime(run.created_at)}</span>
+              <span className="text-xs text-surface-400">{relativeTime(run.created_at)}</span>
             </div>
             {run.error && (
               <p className="text-xs text-error mt-0.5 truncate">{run.error}</p>

@@ -36,10 +36,10 @@ export default function TopProducts({ products }: TopProductsProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700">
-                <th className="pb-2 w-8 text-left text-xs font-medium uppercase tracking-wider text-surface-500">#</th>
-                <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-500">Product</th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">Revenue</th>
-                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">Units</th>
+                <th className="pb-2 w-8 text-left text-xs font-medium uppercase tracking-wider text-surface-400">#</th>
+                <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-400">Product</th>
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">Revenue</th>
+                <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">Units</th>
               </tr>
             </thead>
             <tbody>
@@ -48,7 +48,7 @@ export default function TopProducts({ products }: TopProductsProps) {
                   key={`${product.itemName}-${i}`}
                   className="border-b border-surface-700/50 hover:bg-surface-800/30 transition-colors"
                 >
-                  <td className="py-2 text-surface-500 tabular-nums">{i + 1}</td>
+                  <td className="py-2 text-surface-400 tabular-nums">{i + 1}</td>
                   <td className="py-2 text-surface-300 max-w-[14rem] truncate" title={product.itemName}>
                     {product.itemName}
                   </td>

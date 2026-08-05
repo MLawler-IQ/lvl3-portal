@@ -43,11 +43,11 @@ export default function ChannelBarChart({ channels }: Props) {
           />
           <Tooltip
             formatter={(v) => [Number(v ?? 0).toLocaleString(), 'Sessions']}
-            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 8 }}
+            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
             labelStyle={{ color: 'var(--chart-label)' }}
             itemStyle={{ color: 'var(--chart-tick)' }}
           />
-          <Bar dataKey="sessions" radius={[0, 4, 4, 0]}>
+          <Bar dataKey="sessions" radius={[0, 2, 2, 0]}>
             {data.map((_, i) => (
               <Cell key={i} fill={i === 0 ? 'var(--chart-line)' : 'var(--chart-bar-secondary)'} />
             ))}
@@ -60,9 +60,9 @@ export default function ChannelBarChart({ channels }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-surface-700">
-              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-500">Channel</th>
-              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">Sessions</th>
-              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">vs Prior</th>
+              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-400">Channel</th>
+              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">Sessions</th>
+              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">vs Prior</th>
             </tr>
           </thead>
           <tbody>
@@ -83,7 +83,7 @@ export default function ChannelBarChart({ channels }: Props) {
       </div>
 
       {hasUnassigned && (
-        <p className="mt-3 text-xs text-surface-500">
+        <p className="mt-3 text-xs text-surface-400">
           &ldquo;Unassigned&rdquo; is traffic GA4 couldn&rsquo;t attribute to a channel &mdash;
           usually missing or stripped tracking parameters, not a real marketing channel.
         </p>

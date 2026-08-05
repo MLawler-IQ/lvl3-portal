@@ -4,88 +4,115 @@
 
 :root {
   /* ═══════════════════════════════════════════════════════════
-     SINGLE SOURCE OF TRUTH — IgniteIQ palette (Brand v4.2)
-     Light canvas · neutral ink ramp · single red accent.
+     SINGLE SOURCE OF TRUTH — LVL3 editorial system (Aug 2026)
+     Warm ink surfaces · hairline rules · single burnt-sienna accent.
+     Supersedes the IgniteIQ light palette (Brand v4.2, March 2026)
+     and the violet/zinc portal guide before it.
+
      Variable names preserved (surface-*, brand-*) so existing
      components track automatically. RGB channels enable
      Tailwind opacity modifiers.
+
+     Ink-first: there is no paper (light) mode in this pass. The
+     light end of the scale ships for future use; the chart palette
+     is validated for dark only.
      ═══════════════════════════════════════════════════════════ */
 
-  /* ── Surface scale → IgniteIQ ink ramp ────────────────────
-     surface-950 = lightest (page canvas), surface-100 = darkest (text)
-     Names kept inverted-from-color so the rest of the codebase
-     (which assumes surface-950=bg, surface-100=fg) keeps working. */
-  --surface-950: 252 251 249;    /* ink-50    page canvas */
-  --surface-900: 247 246 244;    /* ink-100   sunken surface / cards */
-  --surface-850: 241 240 237;    /* ink-150   card hover */
-  --surface-800: 229 228 225;    /* ink-200   border-default / hairlines */
-  --surface-700: 209 208 205;    /* ink-300   strong border / input rule */
-  --surface-600: 165 164 161;    /* ink-400   disabled */
-  --surface-500: 124 123 120;    /* ink-500   reflective clause / captions */
-  --surface-400: 92 91 89;       /* ink-600   fg-secondary (body prose) */
-  --surface-300: 60 59 57;       /* ink-800   strong text */
-  --surface-200: 30 29 28;       /* ink-900   near-black */
-  --surface-100: 10 10 10;       /* ink-1000  primary text / CTA band */
+  /* ── Warm neutral scale (dark → light) ───────────────────
+     surface-950 = app background, surface-100 = primary text.
+     Maps to the lvl3.com ink sections (--d-bg … --paper). */
+  --surface-950: 23 20 16;       /* #171410  app background (site --d-bg) */
+  --surface-900: 30 26 20;       /* #1E1A14  panels, cards (site --d-panel) */
+  --surface-850: 38 33 26;       /* #26211A  elevated panels, hover bg */
+  --surface-800: 58 52 40;       /* #3A3428  hairline rules, borders (site --d-rule) */
+  --surface-700: 74 67 54;       /* #4A4336  strong borders, disabled */
+  --surface-600: 92 84 67;       /* #5C5443  subtle icons, disabled text */
+  --surface-500: 107 99 83;      /* #6B6353  muted on LIGHT — paper-mode only, not for text on ink */
+  --surface-400: 167 158 140;    /* #A79E8C  muted text on dark (site --d-muted) */
+  --surface-300: 201 192 173;    /* #C9C0AD  soft borders on light */
+  --surface-200: 216 209 192;    /* #D8D1C0  hairlines on light (site --rule) */
+  --surface-100: 245 242 234;    /* #F5F2EA  primary text on dark / paper bg (site --paper) */
 
-  /* ── Brand scale → IgniteIQ ignite ramp ──────────────────
-     brand-500 = #EF4444 (the only accent outside the neutral ramp). */
-  --brand-50:  254 242 242;
-  --brand-100: 254 226 226;      /* diagram pill bg */
-  --brand-200: 254 202 202;
-  --brand-300: 252 165 165;
-  --brand-400: 248 113 113;      /* eyebrow on dark */
-  --brand-500: 239 68 68;        /* #EF4444  brand red — CTAs, accents */
-  --brand-600: 220 38 38;        /* hover */
-  --brand-700: 185 28 28;
-  --brand-800: 153 27 27;
-  --brand-900: 127 29 29;
+  /* ── Burnt-sienna brand ramp ─────────────────────────────
+     brand-400 = #E0703F, the accent on ink (5.7:1). One accent only. */
+  --brand-50:  251 240 232;      /* #FBF0E8 */
+  --brand-100: 245 223 207;      /* #F5DFCF */
+  --brand-200: 235 194 166;      /* #EBC2A6 */
+  --brand-300: 229 155 112;      /* #E59B70  hover-lighter on ink */
+  --brand-400: 224 112 63;       /* #E0703F  accent on dark (site --d-accent) */
+  --brand-500: 197 84 39;        /* #C55427 */
+  --brand-600: 172 62 25;        /* #AC3E19  accent on paper (site --accent) */
+  --brand-700: 143 51 20;        /* #8F3314  hover-deep (site --accent-deep) */
+  --brand-800: 110 40 16;        /* #6E2810 */
+  --brand-900: 74 27 11;         /* #4A1B0B */
 
   /* ── Semantic aliases ────────────────────────────────── */
-  --background:      rgb(var(--surface-950));         /* light page */
-  --foreground:      rgb(var(--surface-100));         /* near-black ink */
-  --color-ink:       rgb(var(--surface-100));
-  --color-cream:     rgb(var(--surface-950));
-  --color-cream-alt: rgb(var(--surface-900));
-  --color-card:      255 255 255;                     /* pure white on warm canvas */
-  --color-accent:    rgb(var(--brand-500));           /* red — large text / non-text accents only */
-  --color-primary:   rgb(var(--brand-600));           /* darker red — AA-compliant for body-size text/links */
-  --color-muted:     rgb(var(--surface-500));
+  --background:      rgb(var(--surface-950));         /* ink page */
+  --foreground:      rgb(var(--surface-100));         /* paper text on ink */
+  --color-accent:    rgb(var(--brand-400));           /* the single ink accent (5.7:1) */
+  --color-primary:   rgb(var(--brand-400));           /* same anchor on ink; paper split retired */
+  --color-muted:     rgb(var(--surface-400));         /* the one muted tone on ink */
   --color-border:    rgb(var(--surface-800));
 
-  /* ── Status colors (light-canvas tuned) ─────────────── */
-  --color-error:   #DC2626;   /* red-600   */
-  --color-warning: #D97706;   /* amber-600 */
-  --color-success: #059669;   /* emerald-600 */
+  /* Unused aliases (zero consumers as of this rebrand — see
+     REBRAND-NOTES.md). Re-pointed to ink values rather than deleted
+     so wiring them up later can't reintroduce the light theme. */
+  --color-ink:       rgb(var(--surface-950));         /* ink surface, was surface-100 */
+  --color-cream:     rgb(var(--surface-900));         /* panel; login's card surface */
+  --color-cream-alt: rgb(var(--surface-850));         /* elevated panel */
+  --color-card:      var(--surface-900);              /* was hardcoded white */
 
-  /* ── Nav tokens (light) ─────────────────────────────── */
-  --nav-bg:          rgb(255 255 255);
-  --nav-hover:       rgb(var(--surface-900));
+  /* ── Status colors (ink-tuned; never reused as chart series;
+     always shipped with an icon AND a label) ─────────── */
+  --color-error:   #F2555A;   /* 5.1:1 on surface-900 */
+  --color-warning: #E3B341;   /* 8.9:1 on surface-900 */
+  --color-success: #7FB069;   /* 6.9:1 on surface-900 */
+
+  /* ── Nav tokens (ink) ───────────────────────────────── */
+  --nav-bg:          rgb(var(--surface-950));  /* unified with the sidebar + canvas; the hairline separates */
+  --nav-hover:       rgb(var(--surface-850));
   --nav-text:        rgb(var(--surface-400));
   --nav-text-bright: rgb(var(--surface-100));
-  --nav-active:      rgb(var(--brand-600));   /* AA-compliant red for active nav text */
+  --nav-active:      rgb(var(--brand-400));
   --nav-border:      rgb(var(--surface-800));
 
-  /* ── Sidebar tokens (light) ─────────────────────────── */
+  /* ── Sidebar tokens (ink) ───────────────────────────── */
   --sidebar-bg:          rgb(var(--surface-950));
-  --sidebar-hover:       rgb(var(--surface-900));
+  --sidebar-hover:       rgb(var(--surface-850));
   --sidebar-text:        rgb(var(--surface-400));
   --sidebar-text-bright: rgb(var(--surface-100));
-  --sidebar-active:      rgb(var(--brand-600));   /* AA-compliant red for active sidebar text */
+  --sidebar-active:      rgb(var(--brand-400));
   --sidebar-border:      rgb(var(--surface-800));
 
-  /* ── Chart tokens (light) ───────────────────────────── */
-  --chart-tooltip-bg:     rgb(255 255 255);
-  --chart-tooltip-border: rgb(var(--surface-800));
-  --chart-grid:           rgb(var(--surface-800));
-  --chart-tick:           rgb(var(--surface-500));
+  /* ── Chart series (validated categorical set, dark surface; see
+     tokens/chart-palette.json). Assign BY ENTITY in this fixed
+     order, never cycle; series 5+ folds into Other. Single-series
+     charts use --chart-1 only. ─────────────────────────── */
+  --chart-1: #E0703F;          /* sienna (brand anchor) */
+  --chart-2: #2FA396;          /* teal */
+  --chart-3: #5B8DE8;          /* blue */
+  --chart-4: #B08A28;          /* gold */
+  --chart-other: #A79E8C;      /* overflow + "Other" bucket (= surface-400) */
+
+  /* ── Chart chrome ───────────────────────────────────── */
+  --chart-grid:           #3A3428;                    /* = surface-800, 1px */
+  --chart-tick:           rgb(var(--surface-400));
   --chart-label:          rgb(var(--surface-400));
-  --chart-line:           rgb(var(--brand-500));
-  --chart-line-secondary: rgb(var(--surface-400));
+  --chart-tooltip-bg:     #F5F2EA;                    /* paper tooltip on ink, per chart-palette.json */
+  --chart-tooltip-fg:     #181510;                    /* ink text on the paper tooltip */
+  --chart-tooltip-border: #D8D1C0;
+  --chart-line:           var(--chart-1);
+  --chart-line-secondary: var(--chart-other);
   --chart-bar-secondary:  rgb(var(--surface-800));
 
   /* ── Active-state backgrounds (with alpha) ──────────── */
-  --active-bg:       rgb(var(--brand-500) / 0.10);
-  --active-bg-bold:  rgb(var(--brand-500) / 0.14);
+  --active-bg:       rgb(var(--brand-400) / 0.10);
+  --active-bg-bold:  rgb(var(--brand-400) / 0.14);
+}
+
+::selection {
+  background: rgb(var(--brand-400));
+  color:      rgb(var(--surface-950));
 }
 
 * {

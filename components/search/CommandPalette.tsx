@@ -165,7 +165,7 @@ export default function CommandPalette({ onClose }: Props) {
               className="flex-1 bg-transparent text-surface-100 placeholder-surface-400 text-sm focus:outline-none"
               aria-label="Search"
             />
-            <kbd className="text-[10px] text-surface-500 bg-surface-800 border border-surface-600 rounded px-1.5 py-0.5">
+            <kbd className="text-[10px] text-surface-400 bg-surface-800 border border-surface-600 rounded px-1.5 py-0.5">
               esc
             </kbd>
           </div>
@@ -178,7 +178,7 @@ export default function CommandPalette({ onClose }: Props) {
             ) : (
               Object.entries(grouped).map(([category, items]) => (
                 <div key={category}>
-                  <p className="px-4 py-1.5 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+                  <p className="px-4 py-1.5 text-[10px] font-medium uppercase tracking-widest text-surface-400">
                     {category}
                   </p>
                   {items.map((item) => {
@@ -204,13 +204,13 @@ export default function CommandPalette({ onClose }: Props) {
                           {item.label}
                         </span>
                         {item.sublabel && (
-                          <span className="text-xs text-surface-500 shrink-0">
+                          <span className="text-xs text-surface-400 shrink-0">
                             {item.sublabel}
                           </span>
                         )}
                         <ArrowRight
                           size={13}
-                          className="text-surface-500 shrink-0"
+                          className="text-surface-400 shrink-0"
                         />
                       </button>
                     );
@@ -220,7 +220,7 @@ export default function CommandPalette({ onClose }: Props) {
             )}
           </div>
 
-          <div className="border-t border-surface-700 px-4 py-2 flex items-center gap-4 text-[10px] text-surface-500">
+          <div className="border-t border-surface-700 px-4 py-2 flex items-center gap-4 text-[10px] text-surface-400">
             <span>
               <kbd className="bg-surface-800 border border-surface-600 rounded px-1 py-0.5">↑↓</kbd>{" "}
               navigate

@@ -51,16 +51,16 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
         </div>
 
         {users.length === 0 ? (
-          <div className="px-5 py-10 text-center text-surface-500 text-sm">
+          <div className="px-5 py-10 text-center text-surface-400 text-sm">
             No users yet. Invite a client or team member to get started.
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700">
-                <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Email</th>
-                <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Role</th>
-                <th className="text-left text-xs font-medium text-surface-500 px-5 py-3">Added</th>
+                <th className="text-left text-xs font-medium text-surface-400 px-5 py-3">Email</th>
+                <th className="text-left text-xs font-medium text-surface-400 px-5 py-3">Role</th>
+                <th className="text-left text-xs font-medium text-surface-400 px-5 py-3">Added</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -75,7 +75,7 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-surface-500">
+                  <td className="px-5 py-3 text-surface-400">
                     {new Date(u.granted_at).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
@@ -86,7 +86,7 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
                     <button
                       onClick={() => handleRevoke(u.id)}
                       disabled={revoking === u.id}
-                      className="text-xs text-surface-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                      className="text-xs text-surface-400 hover:text-red-400 transition-colors disabled:opacity-50"
                     >
                       {revoking === u.id ? 'Removing…' : 'Revoke'}
                     </button>

@@ -44,7 +44,7 @@ function rowLabel(row: MetricTableRow): string {
 
 function DeltaBadge({ pct }: { pct: number | null }) {
   if (pct === null) {
-    return <span className="text-xs text-surface-500">—</span>
+    return <span className="text-xs text-surface-400">—</span>
   }
   const up = pct > 0
   const flat = pct === 0
@@ -100,7 +100,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-sm font-semibold text-surface-100">13-Month Metrics</p>
-        <p className="text-xs text-surface-500">
+        <p className="text-xs text-surface-400">
           Fixed 13-month window · MoM Δ on latest full month · in-progress month marked MTD, no Δ
         </p>
       </div>
@@ -129,13 +129,13 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-surface-700">
-              <th className="pb-2 pr-4 text-left text-xs font-medium uppercase tracking-wider text-surface-500">
+              <th className="pb-2 pr-4 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
                 Month
               </th>
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
-                  className="pb-2 pl-4 text-right text-xs font-medium uppercase tracking-wider text-surface-500"
+                  className="pb-2 pl-4 text-right text-xs font-medium uppercase tracking-wider text-surface-400"
                 >
                   {col.label}
                 </th>
@@ -186,7 +186,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
       </div>
 
       {hasSuspect && (
-        <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-surface-500">
+        <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-surface-400">
           <AlertTriangle className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
           Flagged months had sessions or clicks far below this client&apos;s typical month — likely a tracking gap, not a real drop.
         </p>

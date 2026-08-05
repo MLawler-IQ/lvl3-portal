@@ -96,7 +96,7 @@ export default function CoreWebVitalsClient() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com"
             required
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400"
           />
         </div>
         <div>

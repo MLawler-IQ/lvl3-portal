@@ -150,7 +150,7 @@ export default function ExportTool({
 
   return (
     <div className="flex flex-wrap items-center gap-2 print:hidden">
-      <span className="text-xs text-surface-500 mr-1">Export</span>
+      <span className="text-xs text-surface-400 mr-1">Export</span>
       {formats.map((format) => {
         const meta = FORMAT_META[format]
         const Icon = meta.icon
@@ -169,7 +169,7 @@ export default function ExportTool({
         )
       })}
       {saving && (
-        <span className="flex items-center gap-1 text-xs text-surface-500">
+        <span className="flex items-center gap-1 text-xs text-surface-400">
           <Loader2 size={12} className="animate-spin" /> Saving…
         </span>
       )}

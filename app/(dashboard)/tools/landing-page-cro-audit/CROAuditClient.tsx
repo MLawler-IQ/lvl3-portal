@@ -85,7 +85,7 @@ function SectionCard({ title, data }: { title: string; data: CROAuditScore }) {
 
       {data.issues.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-widest font-medium text-surface-500">Issues</p>
+          <p className="text-xs uppercase tracking-widest font-medium text-surface-400">Issues</p>
           <ul className="space-y-1">
             {data.issues.map((issue, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-surface-300">
@@ -99,7 +99,7 @@ function SectionCard({ title, data }: { title: string; data: CROAuditScore }) {
 
       {data.suggestions.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-widest font-medium text-surface-500">Suggestions</p>
+          <p className="text-xs uppercase tracking-widest font-medium text-surface-400">Suggestions</p>
           <ul className="space-y-1">
             {data.suggestions.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-surface-400">
@@ -128,17 +128,17 @@ function AuditResult({ audit }: { audit: CROAudit }) {
       {/* Overall score */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 flex items-center gap-6">
         <div className="text-center">
-          <p className="text-xs uppercase tracking-widest font-medium text-surface-500 mb-1">Overall Score</p>
+          <p className="text-xs uppercase tracking-widest font-medium text-surface-400 mb-1">Overall Score</p>
           <p
             className="text-5xl font-bold font-mono"
             style={{ color: 'var(--color-accent)' }}
           >
             {audit.overallScore}
           </p>
-          <p className="text-xs text-surface-500 mt-1">/100</p>
+          <p className="text-xs text-surface-400 mt-1">/100</p>
         </div>
         <div className="border-l border-surface-700 pl-6 min-w-0">
-          <p className="text-xs uppercase tracking-widest font-medium text-surface-500 mb-1">URL</p>
+          <p className="text-xs uppercase tracking-widest font-medium text-surface-400 mb-1">URL</p>
           <a
             href={audit.url}
             target="_blank"

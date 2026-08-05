@@ -108,7 +108,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Q1 Performance Report"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-1 focus:ring-surface-500"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-1 focus:ring-surface-500"
             />
           </div>
 
@@ -145,7 +145,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
                   <p className="text-sm text-surface-100 font-medium">{file.name}</p>
                 ) : (
                   <div className="space-y-1.5">
-                    <Upload size={20} className="mx-auto text-surface-500" />
+                    <Upload size={20} className="mx-auto text-surface-400" />
                     <p className="text-sm text-surface-400">Click to select a PDF</p>
                   </div>
                 )}
@@ -166,7 +166,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder={currentConfig.placeholder ?? 'https://'}
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-1 focus:ring-surface-500"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-1 focus:ring-surface-500"
               />
             </div>
           )}

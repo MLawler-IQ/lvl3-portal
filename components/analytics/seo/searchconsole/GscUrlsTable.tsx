@@ -26,7 +26,7 @@ const columns: ColumnDef<Row>[] = [
     render: (v) => {
       const n = Number(v)
       return (
-        <span className={`text-xs ${n > 0 ? 'text-accent-400' : n < 0 ? 'text-rose-400' : 'text-surface-500'}`}>
+        <span className={`text-xs ${n > 0 ? 'text-accent-400' : n < 0 ? 'text-rose-400' : 'text-surface-400'}`}>
           {n > 0 ? '+' : ''}{n.toLocaleString()}
         </span>
       )

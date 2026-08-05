@@ -80,7 +80,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="What changed? (e.g. Launched new landing pages)"
-              className="flex-1 bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-500 focus:outline-none focus:border-surface-500"
+              className="flex-1 bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus:outline-none focus:border-surface-500"
             />
           </div>
           <textarea
@@ -88,7 +88,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
             onChange={(e) => setBody(e.target.value)}
             placeholder="Optional detail / expected impact"
             rows={2}
-            className="w-full bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-500 focus:outline-none focus:border-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus:outline-none focus:border-surface-500"
           />
           {error && <p className="text-xs text-rose-400">{error}</p>}
           <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
       )}
 
       {annotations.length === 0 ? (
-        <p className="text-sm text-surface-500 italic">
+        <p className="text-sm text-surface-400 italic">
           {isAdmin ? 'No notes yet — add what changed this period.' : 'Recent agency activity notes will appear here.'}
         </p>
       ) : (
@@ -125,7 +125,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
                 <div>
                   <p className="text-sm text-surface-200 font-medium">{a.title}</p>
                   {a.body && <p className="text-sm text-surface-400 mt-0.5">{a.body}</p>}
-                  <p className="mt-1 flex items-center gap-1 text-xs text-surface-500">
+                  <p className="mt-1 flex items-center gap-1 text-xs text-surface-400">
                     <CalendarDays className="w-3 h-3" />
                     {fmtDate(a.annotation_date)}
                   </p>

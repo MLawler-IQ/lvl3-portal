@@ -19,12 +19,12 @@ function StatusIcon({ status }: { status: TopicState['status'] }) {
       return <XCircle className="h-4 w-4 text-red-400 shrink-0" />
     case 'pending':
     default:
-      return <Clock className="h-4 w-4 text-surface-500 shrink-0" />
+      return <Clock className="h-4 w-4 text-surface-400 shrink-0" />
   }
 }
 
 function stagePillColor(step: string): string {
-  if (!step) return 'bg-surface-800 text-surface-500'
+  if (!step) return 'bg-surface-800 text-surface-400'
   const s = step.toLowerCase()
   if (s.includes('keyword') || s.includes('metric') || s.includes('cluster') || s.includes('finaliz'))
     return 'bg-red-100 text-red-700'
@@ -98,7 +98,7 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
             </span>
           )}
           {state.status === 'running' && (
-            <span className="text-[11px] text-surface-500 font-mono tabular-nums">
+            <span className="text-[11px] text-surface-400 font-mono tabular-nums">
               {elapsed}s
             </span>
           )}
@@ -129,13 +129,13 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
           <span className="text-[11px] font-medium text-surface-400 truncate max-w-[75%]">
             {state.currentStep || 'Waiting...'}
           </span>
-          <span className="text-[11px] text-surface-500 tabular-nums">
+          <span className="text-[11px] text-surface-400 tabular-nums">
             {Math.round(state.pct * 100)}%
           </span>
         </div>
         {/* Latest detail line */}
         {latestDetail && (
-          <p className="text-[11px] text-surface-500 leading-snug mb-1.5">
+          <p className="text-[11px] text-surface-400 leading-snug mb-1.5">
             {latestDetail}
           </p>
         )}
@@ -155,7 +155,7 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
               <span className="text-[10px] font-mono text-surface-600 shrink-0 tabular-nums w-10 text-right pt-px">
                 {formatElapsed(entry.elapsed)}
               </span>
-              <p className="text-[11px] text-surface-500 leading-snug">
+              <p className="text-[11px] text-surface-400 leading-snug">
                 <span className="text-surface-400 font-medium">{entry.step}</span>
                 {entry.detail ? ` — ${entry.detail}` : ''}
               </p>

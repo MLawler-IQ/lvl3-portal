@@ -58,7 +58,7 @@ export default function KeywordResearchClient() {
               placeholder={"best running shoes\nrunning shoes for flat feet\ntrail running shoes"}
               rows={5}
               required
-              className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500 resize-y"
+              className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400 resize-y"
             />
           </div>
           <div className="flex flex-col gap-3">
@@ -156,7 +156,7 @@ export default function KeywordResearchClient() {
                           })}
                         </div>
                       ) : (
-                        <span className="text-xs text-surface-500">—</span>
+                        <span className="text-xs text-surface-400">—</span>
                       )}
                     </td>
                   </tr>

@@ -125,7 +125,7 @@ export default function NotificationsPanel({
             <div className="py-2">
               {unviewedDeliverables.length > 0 && (
                 <div>
-                  <p className="px-5 py-2 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+                  <p className="px-5 py-2 text-[10px] font-medium uppercase tracking-widest text-surface-400">
                     New deliverables
                   </p>
                   {unviewedDeliverables.map((d) => (
@@ -146,7 +146,7 @@ export default function NotificationsPanel({
                           {d.title}
                         </p>
                       </div>
-                      <span className="text-[10px] text-surface-500 shrink-0 mt-1">
+                      <span className="text-[10px] text-surface-400 shrink-0 mt-1">
                         Open
                       </span>
                     </Link>
@@ -156,7 +156,7 @@ export default function NotificationsPanel({
 
               {openThreadDeliverables.length > 0 && (
                 <div>
-                  <p className="px-5 py-2 text-[10px] font-medium uppercase tracking-widest text-surface-500">
+                  <p className="px-5 py-2 text-[10px] font-medium uppercase tracking-widest text-surface-400">
                     Open threads
                   </p>
                   {openThreadDeliverables.map((d) => (
@@ -178,7 +178,7 @@ export default function NotificationsPanel({
                           {d.title}
                         </p>
                       </div>
-                      <span className="text-[10px] text-surface-500 shrink-0 mt-1">
+                      <span className="text-[10px] text-surface-400 shrink-0 mt-1">
                         Open
                       </span>
                     </Link>

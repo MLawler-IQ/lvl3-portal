@@ -26,11 +26,11 @@ export default function ActivityFeed({ items }: { items: ActivityItem[] }) {
             <p className="truncate text-sm text-surface-200">{item.title}</p>
             <div className="mt-0.5 flex items-center gap-2">
               {item.type && (
-                <span className="text-[10px] font-medium uppercase tracking-widest text-surface-500">
+                <span className="text-[10px] font-medium uppercase tracking-widest text-surface-400">
                   {item.type}
                 </span>
               )}
-              <span className="text-xs text-surface-500">{formatDate(item.date)}</span>
+              <span className="text-xs text-surface-400">{formatDate(item.date)}</span>
             </div>
           </div>
         </li>

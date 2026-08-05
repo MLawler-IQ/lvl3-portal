@@ -9,7 +9,7 @@ import { reviewUrl } from '@/lib/review/helpers'
 import CopyLinkButton from './CopyLinkButton'
 
 const INPUT_CLASS =
-  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500'
+  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400'
 
 type DraftRow = {
   key: string
@@ -185,7 +185,7 @@ export default function NewBatchForm() {
     <div className="space-y-6">
       {/* Step 1 — batch details */}
       <section className="bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4">
-        <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
           Step 1 · Batch details
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -242,7 +242,7 @@ export default function NewBatchForm() {
       <section
         className={`bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4 ${!batch ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
           Step 2 · Upload images
         </p>
         <div className="flex flex-wrap items-center gap-3">
@@ -281,12 +281,12 @@ export default function NewBatchForm() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-surface-700 text-left">
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500">Image</th>
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500 w-16">#</th>
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500">Title</th>
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500">Copy</th>
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500">Copy URL</th>
-                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-500">Handle</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400">Image</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400 w-16">#</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400">Title</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400">Copy</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400">Copy URL</th>
+                  <th className="px-2 py-2 text-xs font-medium uppercase tracking-widest text-surface-400">Handle</th>
                   <th className="px-2 py-2" />
                 </tr>
               </thead>
@@ -355,7 +355,7 @@ export default function NewBatchForm() {
                         onClick={() => removeRow(row.key)}
                         title="Remove item"
                         aria-label={`Remove ${row.title}`}
-                        className="p-1.5 rounded text-surface-500 hover:text-rose-400 transition-colors"
+                        className="p-1.5 rounded text-surface-400 hover:text-rose-400 transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -379,7 +379,7 @@ export default function NewBatchForm() {
           </button>
           {jsonOpen && (
             <div className="mt-3 space-y-3">
-              <p className="text-xs text-surface-500">
+              <p className="text-xs text-surface-400">
                 Paste an array of {'{ order, handle, title, copy, image }'} — entries are merged
                 onto uploaded rows by matching image filename.
               </p>
@@ -410,7 +410,7 @@ export default function NewBatchForm() {
       <section
         className={`bg-surface-900 border border-surface-700 rounded-xl p-5 space-y-4 ${!batch || !rows.length ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
           Step 3 · Save
         </p>
         {saveError && <p className="text-sm text-rose-400">{saveError}</p>}

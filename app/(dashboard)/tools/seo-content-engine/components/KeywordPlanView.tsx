@@ -122,7 +122,7 @@ export default function KeywordPlanView({ plan }: { plan: KeywordPlan }) {
             ))}
             {sorted.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-surface-500">
+                <td colSpan={5} className="px-4 py-8 text-center text-surface-400">
                   No keywords in plan
                 </td>
               </tr>
@@ -148,7 +148,7 @@ export default function KeywordPlanView({ plan }: { plan: KeywordPlan }) {
               <div key={i}>
                 <h5 className="text-sm font-semibold text-surface-200 mb-1">{cluster.cluster_name}</h5>
                 {cluster.target_section && (
-                  <p className="text-xs text-surface-500 mb-1">Target: {cluster.target_section}</p>
+                  <p className="text-xs text-surface-400 mb-1">Target: {cluster.target_section}</p>
                 )}
                 <div className="flex flex-wrap gap-1.5">
                   {(cluster.keywords ?? []).map((kw, j) => (

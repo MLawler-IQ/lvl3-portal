@@ -28,9 +28,9 @@ function Section({
       >
         <span className="text-sm font-semibold text-surface-200">{title}</span>
         {open ? (
-          <ChevronDown className="w-4 h-4 text-surface-500" />
+          <ChevronDown className="w-4 h-4 text-surface-400" />
         ) : (
-          <ChevronRight className="w-4 h-4 text-surface-500" />
+          <ChevronRight className="w-4 h-4 text-surface-400" />
         )}
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
@@ -53,7 +53,7 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
           <p className="text-sm text-surface-300 mb-2">{b.intent}</p>
           {b.sub_intents && b.sub_intents.length > 0 && (
             <div>
-              <p className="text-xs text-surface-500 uppercase tracking-wider mb-1">Sub-intents</p>
+              <p className="text-xs text-surface-400 uppercase tracking-wider mb-1">Sub-intents</p>
               <ul className="list-disc list-inside text-sm text-surface-400 space-y-0.5">
                 {b.sub_intents.map((si, i) => (
                   <li key={i}>{toStr(si)}</li>
@@ -73,7 +73,7 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-brand-400 font-mono font-bold text-xs">{i + 1}.</span>
                   <span className="font-semibold text-surface-200">{section.heading}</span>
-                  <span className="text-xs text-surface-500 ml-auto">{section.estimated_word_count} words</span>
+                  <span className="text-xs text-surface-400 ml-auto">{section.estimated_word_count} words</span>
                 </div>
                 {(section.key_points ?? []).length > 0 && (
                   <ul className="list-disc list-inside text-surface-400 ml-5 space-y-0.5 text-xs">
@@ -150,19 +150,19 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
           <div className="space-y-3 text-sm">
             {b.editorial_guidance.angle && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Angle</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Angle</p>
                 <p className="text-surface-300">{b.editorial_guidance.angle}</p>
               </div>
             )}
             {b.editorial_guidance.tone && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Tone</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Tone</p>
                 <p className="text-surface-300">{b.editorial_guidance.tone}</p>
               </div>
             )}
             {b.editorial_guidance.what_to_emphasize && b.editorial_guidance.what_to_emphasize.length > 0 && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Emphasize</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Emphasize</p>
                 <ul className="list-disc list-inside text-surface-300 space-y-0.5">
                   {b.editorial_guidance.what_to_emphasize.map((e, i) => (
                     <li key={i}>{toStr(e)}</li>
@@ -172,7 +172,7 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
             )}
             {b.editorial_guidance.what_to_avoid && b.editorial_guidance.what_to_avoid.length > 0 && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Avoid</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Avoid</p>
                 <ul className="list-disc list-inside text-surface-300 space-y-0.5">
                   {b.editorial_guidance.what_to_avoid.map((a, i) => (
                     <li key={i}>{toStr(a)}</li>
@@ -182,7 +182,7 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
             )}
             {b.editorial_guidance.differentiation_notes && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Differentiation</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Differentiation</p>
                 <p className="text-surface-300">{b.editorial_guidance.differentiation_notes}</p>
               </div>
             )}
@@ -196,13 +196,13 @@ export default function BriefPreview({ brief }: BriefPreviewProps) {
           <div className="space-y-2 text-sm">
             {b.meta_title && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Meta Title</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Meta Title</p>
                 <p className="text-surface-200 font-medium">{b.meta_title}</p>
               </div>
             )}
             {b.meta_description && (
               <div>
-                <p className="text-xs text-surface-500 uppercase tracking-wider mb-0.5">Meta Description</p>
+                <p className="text-xs text-surface-400 uppercase tracking-wider mb-0.5">Meta Description</p>
                 <p className="text-surface-300">{b.meta_description}</p>
               </div>
             )}

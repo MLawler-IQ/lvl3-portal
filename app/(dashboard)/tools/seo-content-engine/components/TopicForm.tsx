@@ -45,7 +45,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
   }
 
   const inputClass =
-    'w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder:text-surface-500 focus:outline-none focus:border-brand-500'
+    'w-full bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus:outline-none focus:border-brand-500'
 
   return (
     <div className="space-y-4">
@@ -138,7 +138,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
                     </span>
                   )}
                   {topic.angle && (
-                    <span className="text-xs text-surface-500 italic">
+                    <span className="text-xs text-surface-400 italic">
                       {topic.angle}
                     </span>
                   )}
@@ -148,7 +148,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
                 type="button"
                 onClick={() => handleRemove(i)}
                 disabled={disabled}
-                className="shrink-0 text-surface-500 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="shrink-0 text-surface-400 hover:text-red-400 transition-colors disabled:opacity-50"
                 aria-label={`Remove ${topic.title}`}
               >
                 <svg

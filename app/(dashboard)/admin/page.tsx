@@ -47,11 +47,11 @@ export default async function AdminPage({
 
       {/* Client health grid */}
       <div>
-        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-500">
+        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-surface-400">
           Client Health
         </p>
         {clients.length === 0 ? (
-          <p className="text-sm text-surface-500">No clients yet.</p>
+          <p className="text-sm text-surface-400">No clients yet.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {clients.map((client) => {
@@ -70,7 +70,7 @@ export default async function AdminPage({
                     </h3>
                     <a
                       href={`/clients/${client.id}`}
-                      className="text-xs text-surface-500 hover:text-surface-200 transition-colors"
+                      className="text-xs text-surface-400 hover:text-surface-200 transition-colors"
                     >
                       Manage →
                     </a>
@@ -81,23 +81,23 @@ export default async function AdminPage({
                       <p className="text-lg font-bold text-surface-100">
                         {client.unread_count}
                       </p>
-                      <p className="text-xs text-surface-500">Unread deliverables</p>
+                      <p className="text-xs text-surface-400">Unread deliverables</p>
                     </div>
                     <div className="bg-surface-800/50 rounded-lg px-3 py-2">
                       <p className="text-lg font-bold text-surface-100">{openThreads}</p>
-                      <p className="text-xs text-surface-500">Open threads</p>
+                      <p className="text-xs text-surface-400">Open threads</p>
                     </div>
                     <div className="bg-surface-800/50 rounded-lg px-3 py-2">
                       <p className="text-lg font-bold text-surface-100">
                         {client.deliverable_count}
                       </p>
-                      <p className="text-xs text-surface-500">Deliverables</p>
+                      <p className="text-xs text-surface-400">Deliverables</p>
                     </div>
                     <div className="bg-surface-800/50 rounded-lg px-3 py-2">
                       <p className="text-lg font-bold text-surface-100">
                         {client.user_count}
                       </p>
-                      <p className="text-xs text-surface-500">Users</p>
+                      <p className="text-xs text-surface-400">Users</p>
                     </div>
                   </div>
 
@@ -107,9 +107,9 @@ export default async function AdminPage({
                       {hasSheet ? (
                         <CheckCircle size={12} className="text-accent-400" />
                       ) : (
-                        <XCircle size={12} className="text-surface-500" />
+                        <XCircle size={12} className="text-surface-400" />
                       )}
-                      <span className={hasSheet ? "text-surface-300" : "text-surface-500"}>
+                      <span className={hasSheet ? "text-surface-300" : "text-surface-400"}>
                         Google Sheet {hasSheet ? "connected" : "not set"}
                       </span>
                     </div>
@@ -117,13 +117,13 @@ export default async function AdminPage({
                       {hasLooker ? (
                         <CheckCircle size={12} className="text-accent-400" />
                       ) : (
-                        <XCircle size={12} className="text-surface-500" />
+                        <XCircle size={12} className="text-surface-400" />
                       )}
-                      <span className={hasLooker ? "text-surface-300" : "text-surface-500"}>
+                      <span className={hasLooker ? "text-surface-300" : "text-surface-400"}>
                         Looker embed {hasLooker ? "connected" : "not set"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-surface-500">
+                    <div className="flex items-center gap-2 text-xs text-surface-400">
                       <span className="w-3 h-3 rounded-full border border-surface-600 flex-shrink-0" />
                       Last login: Coming soon
                     </div>

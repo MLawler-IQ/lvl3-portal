@@ -394,7 +394,7 @@ export default async function AnalyticsSection({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center p-8">
         <div className="bg-surface-800 border border-surface-700 rounded-xl p-8 max-w-md">
-          <BarChart2 className="w-10 h-10 text-surface-500 mb-3 mx-auto" />
+          <BarChart2 className="w-10 h-10 text-surface-400 mb-3 mx-auto" />
           <h3 className="text-surface-100 font-semibold mb-2">Dashboard Coming Soon</h3>
           <p className="text-surface-400 text-sm">
             Your dashboard is being set up — check back soon.

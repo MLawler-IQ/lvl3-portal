@@ -110,7 +110,7 @@ export default function TrendChart({
           contentStyle={{
             background: 'var(--chart-tooltip-bg)',
             border: '1px solid var(--chart-tooltip-border)',
-            borderRadius: 8,
+            borderRadius: 2,
           }}
           labelStyle={{ color: 'var(--chart-label)' }}
           itemStyle={{ color: 'var(--chart-tick)' }}

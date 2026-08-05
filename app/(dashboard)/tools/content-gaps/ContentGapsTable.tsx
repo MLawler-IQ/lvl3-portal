@@ -114,7 +114,7 @@ export default function ContentGapsTable({ gaps, clientId, runs = [] }: Props) {
                   <p className="text-xs text-surface-300 leading-relaxed mb-2">
                     {gap.recommendation}
                   </p>
-                  <div className="flex gap-4 text-xs text-surface-500">
+                  <div className="flex gap-4 text-xs text-surface-400">
                     <span>CTR: {gap.ctr}%</span>
                     <span>Position: #{gap.position}</span>
                     <span>Impressions: {gap.impressions.toLocaleString()}</span>

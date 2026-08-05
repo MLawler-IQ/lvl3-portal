@@ -83,13 +83,13 @@ export default function SourceMediumTable({ rows }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-surface-700">
-              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-500">
+              <th className="pb-2 text-left text-xs font-medium uppercase tracking-wider text-surface-400">
                 Source / Medium
               </th>
-              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                 Sessions
               </th>
-              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-500">
+              <th className="pb-2 text-right text-xs font-medium uppercase tracking-wider text-surface-400">
                 Users
               </th>
             </tr>
@@ -101,7 +101,7 @@ export default function SourceMediumTable({ rows }: Props) {
                 <span className="inline-flex items-center gap-1.5 font-medium text-accent-400">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   AI Search
-                  <span className="text-xs font-normal text-surface-500">
+                  <span className="text-xs font-normal text-surface-400">
                     ({aiRows.length} source{aiRows.length === 1 ? '' : 's'})
                   </span>
                 </span>

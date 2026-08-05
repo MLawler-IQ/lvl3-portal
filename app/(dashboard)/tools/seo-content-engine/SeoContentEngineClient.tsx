@@ -284,7 +284,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
               onChange={(e) => setBrandContext(e.target.value)}
               placeholder="e.g. Professional, authoritative tone. Avoid first person. Focus on residential services..."
               rows={4}
-              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-y"
+              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-y"
             />
           </div>
 

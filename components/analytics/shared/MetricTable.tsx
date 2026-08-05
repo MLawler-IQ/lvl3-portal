@@ -28,7 +28,7 @@ export default function MetricTable<T extends Record<string, unknown>>({
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`pb-2 text-xs font-medium uppercase tracking-wider text-surface-500 ${
+                className={`pb-2 text-xs font-medium uppercase tracking-wider text-surface-400 ${
                   col.align === 'right' ? 'text-right' : 'text-left'
                 }`}
               >

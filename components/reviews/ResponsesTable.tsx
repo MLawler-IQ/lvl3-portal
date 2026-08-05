@@ -16,7 +16,7 @@ function DecisionPill({ decision }: { decision: ReviewResponse['decision'] | und
     )
   }
   return (
-    <span className={`${base} bg-surface-800 text-surface-500 border-surface-700`}>Pending</span>
+    <span className={`${base} bg-surface-800 text-surface-400 border-surface-700`}>Pending</span>
   )
 }
 
@@ -53,13 +53,13 @@ export default function ResponsesTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-surface-700 text-left">
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Image</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">#</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Title</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Rating</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Decision</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Note</th>
-            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-500">Updated</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Image</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">#</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Title</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Rating</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Decision</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Note</th>
+            <th className="px-4 py-3 text-xs font-medium uppercase tracking-widest text-surface-400">Updated</th>
           </tr>
         </thead>
         <tbody>

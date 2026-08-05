@@ -32,7 +32,7 @@ export default async function BacklinkOverviewPage() {
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
           <p className="text-sm text-error">Semrush request failed for {client?.name ?? 'this client'}: {error}</p>
-          <p className="text-xs text-surface-500 mt-1">
+          <p className="text-xs text-surface-400 mt-1">
             This is an API error, not an empty backlink profile — check the Semrush key/quota if it persists.
           </p>
         </div>

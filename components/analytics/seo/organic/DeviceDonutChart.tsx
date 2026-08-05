@@ -39,7 +39,7 @@ export default function DeviceDonutChart({ mobile, desktop, tablet }: Props) {
           </Pie>
           <Tooltip
             formatter={(v) => [Number(v ?? 0).toLocaleString(), 'Sessions']}
-            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 8 }}
+            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
             itemStyle={{ color: 'var(--chart-tick)' }}
           />
           <Legend

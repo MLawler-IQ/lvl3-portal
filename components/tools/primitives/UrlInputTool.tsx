@@ -52,7 +52,7 @@ export default function UrlInputTool({
       )}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
-          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-500" />
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
           <input
             type="text"
             value={value}
@@ -61,7 +61,7 @@ export default function UrlInputTool({
             placeholder={placeholder}
             aria-label={label}
             disabled={isRunning}
-            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:border-surface-600 disabled:opacity-50"
+            className="w-full bg-surface-800 border border-surface-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:border-surface-600 disabled:opacity-50"
           />
         </div>
         <button

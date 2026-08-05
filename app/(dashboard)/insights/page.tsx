@@ -100,7 +100,7 @@ export default async function InsightsPage() {
       {(analyticsSummary || isAdmin) && selectedClient && (
         <section>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-medium uppercase tracking-widest text-surface-500">
+            <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
               Analytics Insights
             </p>
             {isAdmin && (
@@ -114,7 +114,7 @@ export default async function InsightsPage() {
               maxChars={400}
               footer={
                 analyticsSummaryUpdatedAt ? (
-                  <p className="text-xs text-surface-500">
+                  <p className="text-xs text-surface-400">
                     Last updated{" "}
                     {new Date(analyticsSummaryUpdatedAt).toLocaleDateString(
                       "en-US",
@@ -126,7 +126,7 @@ export default async function InsightsPage() {
             />
           ) : (
             <div className="rounded-xl border border-surface-700 bg-surface-900/50 px-5 py-4">
-              <p className="text-sm text-surface-500 italic">
+              <p className="text-sm text-surface-400 italic">
                 No analytics insights yet. Configure GA4/GSC in client settings and click &quot;Refresh analytics&quot;.
               </p>
             </div>
@@ -136,7 +136,7 @@ export default async function InsightsPage() {
 
       {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Lightbulb className="w-10 h-10 text-surface-500 mb-3" />
+          <Lightbulb className="w-10 h-10 text-surface-400 mb-3" />
           <p className="text-surface-400">
             No insights published yet. Check back soon.
           </p>
@@ -156,7 +156,7 @@ export default async function InsightsPage() {
                 {featured.body.slice(0, 400)}
                 {featured.body.length > 400 && "…"}
               </p>
-              <p className="text-xs text-surface-500">
+              <p className="text-xs text-surface-400">
                 {new Date(featured.created_at).toLocaleDateString("en-US", {
                   month: "long",
                   day: "numeric",
@@ -183,7 +183,7 @@ export default async function InsightsPage() {
                   <p className="text-sm text-surface-400 line-clamp-2">
                     {post.body}
                   </p>
-                  <p className="text-xs text-surface-500 mt-2">
+                  <p className="text-xs text-surface-400 mt-2">
                     {new Date(post.created_at).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",

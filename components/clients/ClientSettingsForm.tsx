@@ -367,7 +367,7 @@ export default function ClientSettingsForm({ client }: Props) {
             disabled={heroUploading}
             className="block w-full text-sm text-surface-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-surface-800 file:text-surface-300 hover:file:bg-surface-700 disabled:opacity-50"
           />
-          {heroUploading && <p className="text-xs text-surface-500 mt-1">Uploading…</p>}
+          {heroUploading && <p className="text-xs text-surface-400 mt-1">Uploading…</p>}
           <input type="hidden" name="hero_image_url" value={heroImageUrl} />
         </div>
 
@@ -401,7 +401,7 @@ export default function ClientSettingsForm({ client }: Props) {
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="acme.com"
-              className="flex-1 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+              className="flex-1 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
             />
             <button
               type="button"
@@ -423,7 +423,7 @@ export default function ClientSettingsForm({ client }: Props) {
               value={logoUrl}
               onChange={(e) => setLogoUrl(e.target.value)}
               placeholder="https://..."
-              className="flex-1 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+              className="flex-1 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
             />
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -453,7 +453,7 @@ export default function ClientSettingsForm({ client }: Props) {
             Auto-detect
           </button>
         </div>
-        <p className="text-surface-500 text-xs">
+        <p className="text-surface-400 text-xs">
           Archetype that drives which modules this client&rsquo;s dashboard shows by default.
           Leave as Generic for the core module set.
         </p>
@@ -509,7 +509,7 @@ export default function ClientSettingsForm({ client }: Props) {
       {/* ── Brand Context ────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
         <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Brand Context</h2>
-        <p className="text-surface-500 text-xs">
+        <p className="text-surface-400 text-xs">
           Brand voice, tone, and style instructions for AI content generation. This auto-populates in the SEO Content Engine.
         </p>
         <textarea
@@ -517,7 +517,7 @@ export default function ClientSettingsForm({ client }: Props) {
           onChange={(e) => setBrandContext(e.target.value)}
           placeholder="e.g., Professional, authoritative tone. Avoid first person. Focus on residential services. Emphasize 24/7 availability and licensed technicians..."
           rows={6}
-          className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500 resize-y"
+          className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400 resize-y"
         />
       </div>
 
@@ -532,9 +532,9 @@ export default function ClientSettingsForm({ client }: Props) {
             value={sheetIdOrUrl}
             onChange={(e) => setSheetIdOrUrl(e.target.value)}
             placeholder="https://docs.google.com/spreadsheets/d/SHEET_ID/edit"
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
-          <p className="text-surface-500 text-xs mt-1.5">
+          <p className="text-surface-400 text-xs mt-1.5">
             Paste the full URL or just the Sheet ID — both work.
           </p>
         </div>
@@ -580,7 +580,7 @@ export default function ClientSettingsForm({ client }: Props) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {COLUMN_FIELDS.map(({ key, label }) => (
                 <div key={key}>
-                  <label className="block text-surface-500 text-xs mb-1">{label}</label>
+                  <label className="block text-surface-400 text-xs mb-1">{label}</label>
                   <select
                     value={columnMap[key as ColumnField] ?? ''}
                     onChange={(e) =>
@@ -611,7 +611,7 @@ export default function ClientSettingsForm({ client }: Props) {
 
         {headers.length === 0 && client.sheet_column_map && Object.keys(client.sheet_column_map).length > 0 && (
           <div>
-            <p className="text-surface-500 text-xs">
+            <p className="text-surface-400 text-xs">
               Current mapping saved. Click &ldquo;Load Headers&rdquo; to edit column mapping.
             </p>
           </div>
@@ -629,7 +629,7 @@ export default function ClientSettingsForm({ client }: Props) {
             value={lookerUrl}
             onChange={(e) => setLookerUrl(e.target.value)}
             placeholder="https://lookerstudio.google.com/embed/reporting/..."
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
         </div>
       </div>
@@ -721,7 +721,7 @@ export default function ClientSettingsForm({ client }: Props) {
       {/* ── Google Business Profile ──────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
         <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Google Business Profile</h2>
-        <p className="text-surface-500 text-xs">
+        <p className="text-surface-400 text-xs">
           Maps this client to a GBP account for dashboard location insights.
         </p>
 
@@ -754,7 +754,7 @@ export default function ClientSettingsForm({ client }: Props) {
             </button>
           </div>
           {gbpAccountsError && <p className="text-red-400 text-xs mt-1.5">{gbpAccountsError}</p>}
-          <p className="text-surface-500 text-xs mt-1.5">
+          <p className="text-surface-400 text-xs mt-1.5">
             Click Load to pick from connected accounts, or paste a resource name (e.g. accounts/123456) below.
           </p>
           <input
@@ -762,7 +762,7 @@ export default function ClientSettingsForm({ client }: Props) {
             value={gbpAccountId}
             onChange={(e) => setGbpAccountId(e.target.value)}
             placeholder="accounts/123456"
-            className="w-full mt-2 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500 font-mono"
+            className="w-full mt-2 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400 font-mono"
           />
         </div>
 
@@ -773,7 +773,7 @@ export default function ClientSettingsForm({ client }: Props) {
             value={gbpLocationGroup}
             onChange={(e) => setGbpLocationGroup(e.target.value)}
             placeholder="Group / label that scopes which locations belong to this client"
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
         </div>
       </div>
@@ -794,9 +794,9 @@ export default function ClientSettingsForm({ client }: Props) {
             value={brandTerms}
             onChange={(e) => setBrandTerms(e.target.value)}
             placeholder="brand name, brandname, brand co"
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
-          <p className="text-surface-500 text-xs mt-1.5">
+          <p className="text-surface-400 text-xs mt-1.5">
             {recHints.brand ||
               'Case-insensitive matchers. Comma-separated. Blank = auto-derive from the domain.'}
           </p>
@@ -818,7 +818,7 @@ export default function ClientSettingsForm({ client }: Props) {
                 </button>
               ))}
             </div>
-            <span className="text-surface-500 text-xs">
+            <span className="text-surface-400 text-xs">
               {brandMatchMode === 'contains'
                 ? 'query contains a term anywhere'
                 : 'query equals a term exactly'}
@@ -836,9 +836,9 @@ export default function ClientSettingsForm({ client }: Props) {
             value={keyEventNames}
             onChange={(e) => setKeyEventNames(e.target.value)}
             placeholder="generate_lead, phone_call, form_submit"
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
-          <p className="text-surface-500 text-xs mt-1.5">
+          <p className="text-surface-400 text-xs mt-1.5">
             {recHints.keyEvents ||
               'GA4 key-event (conversion) names that count as this client’s north-star leads. Comma-separated.'}
           </p>
@@ -854,9 +854,9 @@ export default function ClientSettingsForm({ client }: Props) {
             value={competitors}
             onChange={(e) => setCompetitors(e.target.value)}
             placeholder="competitor-a.com, competitor-b.com"
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400"
           />
-          <p className="text-surface-500 text-xs mt-1.5">
+          <p className="text-surface-400 text-xs mt-1.5">
             {recHints.competitors ||
               'Competitor domains tracked in the competitive module. Comma-separated.'}
           </p>
@@ -866,7 +866,7 @@ export default function ClientSettingsForm({ client }: Props) {
       {/* ── Monthly Goals ────────────────────────────────────────────── */}
       <div className="bg-surface-900 border border-surface-700 rounded-xl p-6 space-y-4">
         <h2 className="text-surface-100 font-semibold text-sm uppercase tracking-wide">Monthly Goals</h2>
-        <p className="text-surface-500 text-xs">
+        <p className="text-surface-400 text-xs">
           Monthly targets that power the dashboard pacing module. Leave blank to skip a metric.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -884,7 +884,7 @@ export default function ClientSettingsForm({ client }: Props) {
                   setTargets((prev) => ({ ...prev, [metricId]: e.target.value }))
                 }
                 placeholder="—"
-                className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-500 font-mono"
+                className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400 font-mono"
               />
             </div>
           ))}

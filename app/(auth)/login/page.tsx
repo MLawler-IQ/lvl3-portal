@@ -100,7 +100,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setSubmitted(false); setEmail('') }}
-                className="text-xs text-surface-500 hover:text-surface-400 transition-colors mt-2"
+                className="text-xs text-surface-400 hover:text-surface-400 transition-colors mt-2"
               >
                 Use a different email
               </button>
@@ -188,7 +188,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(false); setError(null) }}
-                className="w-full text-xs text-surface-500 hover:text-surface-400 transition-colors py-1"
+                className="w-full text-xs text-surface-400 hover:text-surface-400 transition-colors py-1"
               >
                 Use magic link instead →
               </button>
@@ -249,7 +249,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(true); setError(null) }}
-                className="w-full text-xs text-surface-500 hover:text-surface-400 transition-colors py-1"
+                className="w-full text-xs text-surface-400 hover:text-surface-400 transition-colors py-1"
               >
                 Sign in with password instead →
               </button>

@@ -53,7 +53,7 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
         <p className="text-sm font-semibold text-surface-100">New-customer revenue share</p>
         <div className="relative group">
           <button
-            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-500 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-700"
+            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-400 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-700"
             aria-label="About new vs returning revenue"
           >
             ?
@@ -62,7 +62,7 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
             {TOOLTIP}
           </div>
         </div>
-        <span className="ml-auto rounded border border-surface-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-surface-500">
+        <span className="ml-auto rounded border border-surface-700 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-surface-400">
           Admin
         </span>
       </div>

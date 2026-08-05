@@ -34,7 +34,7 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <p className="text-sm font-semibold text-surface-100">Clicks & Impressions Trend</p>
-        {periodLabel && <p className="text-xs text-surface-500">{periodLabel}</p>}
+        {periodLabel && <p className="text-xs text-surface-400">{periodLabel}</p>}
       </div>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
@@ -67,7 +67,7 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
           <Tooltip
             formatter={(v, name) => [Number(v ?? 0).toLocaleString(), name ?? '']}
             labelFormatter={(key) => axisFormatter(String(key))}
-            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 8 }}
+            contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
             labelStyle={{ color: 'var(--chart-label)' }}
             itemStyle={{ color: 'var(--chart-tick)' }}
           />

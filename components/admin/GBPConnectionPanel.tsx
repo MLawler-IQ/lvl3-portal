@@ -70,17 +70,17 @@ export default function GBPConnectionPanel({ gbpParam }: Props) {
           <MapPin size={14} className="text-surface-400" />
           <div>
             <p className="text-sm font-semibold text-surface-100">Google Business Profile</p>
-            <p className="text-xs text-surface-500 mt-0.5">
+            <p className="text-xs text-surface-400 mt-0.5">
               Powers the GBP Audit tool. Connect the Google account that manages your GBP locations.
             </p>
           </div>
         </div>
         {loading ? (
-          <Loader2 size={16} className="text-surface-500 animate-spin" />
+          <Loader2 size={16} className="text-surface-400 animate-spin" />
         ) : connected ? (
           <CheckCircle size={16} className="text-accent-400" />
         ) : (
-          <XCircle size={16} className="text-surface-500" />
+          <XCircle size={16} className="text-surface-400" />
         )}
       </div>
 

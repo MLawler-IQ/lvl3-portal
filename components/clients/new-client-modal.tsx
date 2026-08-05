@@ -115,7 +115,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
       >
         <div className="flex items-center justify-between mb-5">
           <h2 id="new-client-title" className="text-surface-100 font-semibold text-lg">New client</h2>
-          <button onClick={onClose} aria-label="Close dialog" className="text-surface-500 hover:text-surface-100 transition-colors">
+          <button onClick={onClose} aria-label="Close dialog" className="text-surface-400 hover:text-surface-100 transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -134,13 +134,13 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Acme Corp"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Slug <span className="text-surface-500 text-xs font-normal">(auto-generated)</span>
+              Slug <span className="text-surface-400 text-xs font-normal">(auto-generated)</span>
             </label>
             <input
               type="text"
@@ -151,13 +151,13 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 setSlug(e.target.value)
               }}
               placeholder="acme-corp"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm font-mono"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm font-mono"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Website <span className="text-surface-500 text-xs font-normal">(optional)</span>
+              Website <span className="text-surface-400 text-xs font-normal">(optional)</span>
             </label>
             <div className="flex gap-2">
               <input
@@ -165,7 +165,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="acme.com"
-                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
               />
               <button
                 type="button"
@@ -181,7 +181,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Logo URL <span className="text-surface-500 text-xs font-normal">(optional)</span>
+              Logo URL <span className="text-surface-400 text-xs font-normal">(optional)</span>
             </label>
             <div className="flex gap-2 items-center">
               <input
@@ -189,7 +189,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
                 placeholder="https://..."
-                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
               />
               {logoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element

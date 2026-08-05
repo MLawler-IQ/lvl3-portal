@@ -23,7 +23,7 @@ export default function DeltaChip({
       <span className="inline-flex items-center gap-1 text-xs text-surface-400">
         <span aria-hidden="true">→</span>
         <span>Flat</span>
-        {absolute && <span className="text-surface-500">({absolute})</span>}
+        {absolute && <span className="text-surface-400">({absolute})</span>}
       </span>
     );
   }
@@ -38,7 +38,7 @@ export default function DeltaChip({
       <span>
         {direction === "up" ? wording.up : wording.down} {percent}
       </span>
-      {absolute && <span className="text-surface-500">({absolute})</span>}
+      {absolute && <span className="text-surface-400">({absolute})</span>}
     </span>
   );
 }

@@ -51,7 +51,7 @@ export default function PageSeoClient() {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com/page"
             required
-            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400"
           />
         </div>
         <button
@@ -126,12 +126,12 @@ export default function PageSeoClient() {
               <div>
                 <span className="text-surface-400">Title:</span>{' '}
                 <span className="text-surface-100">{result.title || '(empty)'}</span>
-                <span className="text-xs text-surface-500 ml-2">({result.title.length} chars)</span>
+                <span className="text-xs text-surface-400 ml-2">({result.title.length} chars)</span>
               </div>
               <div>
                 <span className="text-surface-400">Meta Description:</span>{' '}
                 <span className="text-surface-100">{result.metaDescription || '(empty)'}</span>
-                <span className="text-xs text-surface-500 ml-2">({result.metaDescription.length} chars)</span>
+                <span className="text-xs text-surface-400 ml-2">({result.metaDescription.length} chars)</span>
               </div>
               <div>
                 <span className="text-surface-400">Canonical:</span>{' '}
@@ -159,12 +159,12 @@ export default function PageSeoClient() {
               <ul className="space-y-1">
                 {result.headings.slice(0, 30).map((h, i) => (
                   <li key={i} className="text-sm text-surface-200" style={{ paddingLeft: `${(h.level - 1) * 16}px` }}>
-                    <span className="text-surface-500 text-xs mr-2">H{h.level}</span>
+                    <span className="text-surface-400 text-xs mr-2">H{h.level}</span>
                     {h.text}
                   </li>
                 ))}
                 {result.headings.length > 30 && (
-                  <li className="text-xs text-surface-500">...and {result.headings.length - 30} more</li>
+                  <li className="text-xs text-surface-400">...and {result.headings.length - 30} more</li>
                 )}
               </ul>
             ) : (

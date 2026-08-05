@@ -44,7 +44,7 @@ export function PageHeader({
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span className="text-xs text-surface-500">{crumb.label}</span>
+                  <span className="text-xs text-surface-400">{crumb.label}</span>
                 )}
               </span>
             ))}

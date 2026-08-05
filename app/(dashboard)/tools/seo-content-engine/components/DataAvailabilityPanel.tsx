@@ -96,7 +96,7 @@ export default function DataAvailabilityPanel({
                   </p>
                 )}
                 {source.latency_ms != null && (
-                  <p className="text-xs text-surface-500">
+                  <p className="text-xs text-surface-400">
                     {formatLatency(source.latency_ms)}
                   </p>
                 )}
@@ -108,7 +108,7 @@ export default function DataAvailabilityPanel({
                       </p>
                     )}
                     {source.total_tokens != null && (
-                      <p className="text-xs text-surface-500">
+                      <p className="text-xs text-surface-400">
                         {source.total_tokens.toLocaleString()} tokens
                       </p>
                     )}
@@ -124,7 +124,7 @@ export default function DataAvailabilityPanel({
             )}
 
             {source && status === 'skipped' && source.reason && (
-              <p className="text-xs text-surface-500 leading-tight line-clamp-2">
+              <p className="text-xs text-surface-400 leading-tight line-clamp-2">
                 {source.reason}
               </p>
             )}

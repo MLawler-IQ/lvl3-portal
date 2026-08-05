@@ -44,7 +44,7 @@ export default function FiltersBar({
             <button
               key={s}
               onClick={() => onToggleStatus(s)}
-              className={`text-xs px-3 py-1 rounded-full border transition-colors ${active ? getStatusStyle(s) + ' opacity-100' : 'bg-surface-800/50 text-surface-500 border-surface-600/50 hover:text-surface-200'}`}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${active ? getStatusStyle(s) + ' opacity-100' : 'bg-surface-800/50 text-surface-400 border-surface-600/50 hover:text-surface-200'}`}
             >
               {s}
             </button>
