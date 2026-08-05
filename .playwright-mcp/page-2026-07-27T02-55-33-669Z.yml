@@ -1,0 +1,316 @@
+- generic [active] [ref=f6e1]:
+  - banner [ref=f6e2]:
+    - generic [ref=f6e3]:
+      - link "Pasha Health home" [ref=f6e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f6e5]
+      - navigation "Primary" [ref=f6e6]:
+        - button "Services" [ref=f6e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f6e8]: 
+        - button "Care by condition" [ref=f6e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f6e10]: 
+        - button "Service areas" [ref=f6e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f6e12]: 
+        - button "About" [ref=f6e13] [cursor=pointer]
+        - button "Resources" [ref=f6e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f6e15]: 
+      - generic [ref=f6e16]:
+        - link "(971) 369-4522" [ref=f6e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f6e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f6e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f6e20]:
+    - generic [ref=f6e21]:
+      - generic [ref=f6e23]:
+        - navigation "Breadcrumb" [ref=f6e24]:
+          - link "Home" [ref=f6e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f6e26]: /
+          - link "Resources" [ref=f6e27] [cursor=pointer]:
+            - /url: /resources/
+          - generic [ref=f6e28]: /
+          - generic [ref=f6e29]: Blog
+        - generic [ref=f6e30]: From the blog
+        - heading "Notes on caring for the people you love" [level=1] [ref=f6e31]
+        - paragraph [ref=f6e32]: "Practical writing from our care team: dementia and memory care, staying active, holidays, and the daily details that make life at home safer and warmer."
+      - generic [ref=f6e35]:
+        - generic [ref=f6e36]:
+          - img "Holidays with elder family members." [ref=f6e38]
+          - generic [ref=f6e39]:
+            - generic [ref=f6e40]: December 15, 2025
+            - heading "7 Meaningful Ways to Support Elders in Your Family and Community During the Holidays" [level=3] [ref=f6e41]
+            - paragraph [ref=f6e42]: The holiday season is a time of warmth, connection, and reflection, but for many older adults, it can also bring feelings of loneliness, stress, or physical exhaustion.
+            - link "Read post →" [ref=f6e44] [cursor=pointer]:
+              - /url: /resources/blog/7-meaningful-ways-to-support-elders-in-your-family-and-community-during-the-holidays/
+        - generic [ref=f6e45]:
+          - img "Pasha Caregiver helping with Thanksgiving dinner." [ref=f6e47]
+          - generic [ref=f6e48]:
+            - generic [ref=f6e49]: November 27, 2025
+            - 'heading "Caring Beyond the Season: How PASHA HEALTH Supports Clients During Thanksgiving" [level=3] [ref=f6e50]'
+            - paragraph [ref=f6e51]: As the holiday season arrives, many families gather to rest, reconnect, and reflect on what truly matters. At PASHA HEALTH, that spirit of care and gratitude extends far beyond a single day.
+            - link "Read post →" [ref=f6e53] [cursor=pointer]:
+              - /url: /resources/blog/caring-beyond-the-season-how-pasha-health-supports-clients-during-thanksgiving/
+        - generic [ref=f6e54]:
+          - img "Pasha Health in-home caregiver helping a man with dementia" [ref=f6e56]
+          - generic [ref=f6e57]:
+            - generic [ref=f6e58]: November 5, 2025
+            - 'heading "Living with Dignity: How Specialized Dementia & Alzheimer’s Care Makes a Difference" [level=3] [ref=f6e59]'
+            - paragraph [ref=f6e60]: When a loved one is diagnosed with Alzheimer’s or another form of dementia, families are faced with a new, often overwhelming journey. It’s a path filled with questions, adjustments, and deeply emotional decisions.
+            - link "Read post →" [ref=f6e62] [cursor=pointer]:
+              - /url: /resources/blog/living-with-dignity-how-specialized-dementia-alzheimers-care-makes-a-difference/
+        - generic [ref=f6e63]:
+          - img "A Pasha Health Care Provider and senior client working on an art project together." [ref=f6e65]
+          - generic [ref=f6e66]:
+            - generic [ref=f6e67]: October 8, 2025
+            - 'heading "The Healing Power of Creativity: Why Seniors in Oregon Should Embrace Fine Arts & Crafts" [level=3] [ref=f6e68]'
+            - paragraph [ref=f6e69]: At PASHA HEALTH, we believe in nurturing the whole person. Body, mind, and spirit. While physical well-being is essential, the role of mental health and cognitive function becomes increasingly important as we age.
+            - link "Read post →" [ref=f6e71] [cursor=pointer]:
+              - /url: /resources/blog/the-healing-power-of-creativity-why-seniors-in-oregon-should-embrace-fine-arts-crafts/
+        - generic [ref=f6e72]:
+          - img "Pasha Health caregiver providing care for someone in their home" [ref=f6e74]
+          - generic [ref=f6e75]:
+            - generic [ref=f6e76]: September 19, 2025
+            - 'heading "CARE is Where You Call Home: Home is Where We CARE" [level=3] [ref=f6e77]'
+            - paragraph [ref=f6e78]: At Pasha Health, we believe that care begins long before a medical chart is opened or a home visit is scheduled. It begins with heart, with listening, showing up, and being present.
+            - link "Read post →" [ref=f6e80] [cursor=pointer]:
+              - /url: /resources/blog/care-is-where-you-call-home-home-is-where-we-care/
+        - generic [ref=f6e81]:
+          - img "Two people laughing" [ref=f6e83]
+          - generic [ref=f6e84]:
+            - generic [ref=f6e85]: September 4, 2025
+            - 'heading "Laughter: The Best Medicine at PASHA HEALTH" [level=3] [ref=f6e86]'
+            - paragraph [ref=f6e87]: At PASHA HEALTH, we know that caring for our elderly clients goes beyond medications, daily routines, and physical support. It’s also about nurturing the heart and spirit.
+            - link "Read post →" [ref=f6e89] [cursor=pointer]:
+              - /url: /resources/blog/laughter-the-best-medicine-at-pasha-health/
+        - generic [ref=f6e90]:
+          - img "Pasha Health caring for seniors during a Portland heatwave." [ref=f6e92]
+          - generic [ref=f6e93]:
+            - generic [ref=f6e94]: August 26, 2025
+            - 'heading "Staying Cool and Hydrated: Protecting Elderly Clients During Heat Waves" [level=3] [ref=f6e95]'
+            - paragraph [ref=f6e96]: At PASHA HEALTH, the safety and comfort of our elderly clients are always our top priority, especially during the extreme heat waves that have become increasingly common in recent years.
+            - link "Read post →" [ref=f6e98] [cursor=pointer]:
+              - /url: /resources/blog/staying-cool-and-hydrated-protecting-elderly-clients-during-heat-waves/
+        - generic [ref=f6e99]:
+          - img "Pasha Health Caregiver and senior cleaning the floor together." [ref=f6e101]
+          - generic [ref=f6e102]:
+            - generic [ref=f6e103]: July 11, 2025
+            - 'heading "The Importance of a Clean Home for Senior Well-being: Pasha Health’s Commitment to Comfort and Care" [level=3] [ref=f6e104]'
+            - paragraph [ref=f6e105]: At Pasha Health, we believe that a clean, well-organized home is essential to the health, safety, and emotional well-being of our clients.
+            - link "Read post →" [ref=f6e107] [cursor=pointer]:
+              - /url: /resources/blog/the-importance-of-a-clean-home-for-senior-well-being-pasha-healths-commitment-to-comfort-and-care/
+        - generic [ref=f6e108]:
+          - img "Caregiver walking with a man in a wheelchair." [ref=f6e110]
+          - generic [ref=f6e111]:
+            - generic [ref=f6e112]: July 3, 2025
+            - 'heading "Keeping Consistency During the Holidays: How PASH HEALTH Supports Seniors in Portland Over the 4th of July" [level=3] [ref=f6e113]'
+            - paragraph [ref=f6e114]: The 4th of July is a time for celebration, family gatherings, fireworks, and summer fun, but for seniors, the excitement of the holiday can also bring unexpected disruptions to their daily routines.
+            - link "Read post →" [ref=f6e116] [cursor=pointer]:
+              - /url: /resources/blog/keeping-consistency-during-the-holidays-how-pash-health-supports-seniors-in-portland-over-the-4th-of-july/
+        - generic [ref=f6e117]:
+          - img "A Pasha Health caregiver assists an elderly women with Alzheimer’s Disease in her home." [ref=f6e119]
+          - generic [ref=f6e120]:
+            - generic [ref=f6e121]: June 27, 2025
+            - 'heading "Embracing Excellence: Why Pasha Health is the Leading Choice for Dementia & Alzheimer’s Care in Portland, Oregon" [level=3] [ref=f6e122]'
+            - paragraph [ref=f6e123]: Caring for a loved one with dementia or Alzheimer’s is not just a responsibility. It’s a journey that demands compassion, expertise, and unwavering attention to detail.
+            - link "Read post →" [ref=f6e125] [cursor=pointer]:
+              - /url: /resources/blog/embracing-excellence-why-pasha-health-is-the-leading-choice-for-dementia-alzheimers-care-in-portland-oregon/
+        - generic [ref=f6e126]:
+          - img "Senior Care Provider in Portland Oregon helps Senior with transportation." [ref=f6e128]
+          - generic [ref=f6e129]:
+            - generic [ref=f6e130]: June 16, 2025
+            - 'heading "Caring Beyond the Home: The Importance of Providing Transportation for Our Elderly Clients" [level=3] [ref=f6e131]'
+            - paragraph [ref=f6e132]: At PASHA HEALTH, we believe that compassionate senior care goes far beyond medical treatment. One of the most essential, yet often overlooked, components of elderly care is accessibility.
+            - link "Read post →" [ref=f6e134] [cursor=pointer]:
+              - /url: /resources/blog/caring-beyond-the-home-the-importance-of-providing-transportation-for-our-elderly-clients/
+        - generic [ref=f6e135]:
+          - img "A Care Giver providing help with technology to an elderly person." [ref=f6e137]
+          - generic [ref=f6e138]:
+            - generic [ref=f6e139]: June 9, 2025
+            - 'heading "Empowering Seniors In Portland: How PASHA HEALTH Supports Seniors with Everyday Technology" [level=3] [ref=f6e140]'
+            - paragraph [ref=f6e141]: At PASHA HEALTH, we understand that navigating today’s digital world can be overwhelming, especially for our elderly clients. That’s why we’re proud to offer hands-on support with everyday technology.
+            - link "Read post →" [ref=f6e143] [cursor=pointer]:
+              - /url: /resources/blog/empowering-seniors-in-portland-how-pasha-health-supports-seniors-with-everyday-technology/
+        - generic [ref=f6e144]:
+          - img "Care Giver providing cooking assistance to client." [ref=f6e146]
+          - generic [ref=f6e147]:
+            - generic [ref=f6e148]: June 2, 2025
+            - 'heading "Supporting Your Wellness Journey: How PASHA HEALTH Helps You Eat and Drink Well" [level=3] [ref=f6e149]'
+            - paragraph [ref=f6e150]: At PASHA HEALTH, we believe that nutrition is foundational to good health. Whether you’re managing a chronic condition, recovering from surgery, or simply striving for a healthier lifestyle.
+            - link "Read post →" [ref=f6e152] [cursor=pointer]:
+              - /url: /resources/blog/supporting-your-wellness-journey-how-pasha-health-helps-you-eat-and-drink-well/
+        - generic [ref=f6e153]:
+          - img "An elderly man and a care provider speaking to each other." [ref=f6e155]
+          - generic [ref=f6e156]:
+            - generic [ref=f6e157]: May 21, 2025
+            - 'heading "Multilingual Care: A Vital Part of Compassionate Health Services for Our Elderly" [level=3] [ref=f6e158]'
+            - paragraph [ref=f6e159]: At PASHA HEALTH, we believe that care is more than a service. It’s a connection. And for elderly clients, this connection is rooted in trust, clarity, and comfort.
+            - link "Read post →" [ref=f6e161] [cursor=pointer]:
+              - /url: /resources/blog/multilingual-care-a-vital-part-of-compassionate-health-services-for-our-elderly/
+        - generic [ref=f6e162]:
+          - img "Adult child sitting with elder parent." [ref=f6e164]
+          - generic [ref=f6e165]:
+            - generic [ref=f6e166]: May 20, 2025
+            - 'heading "Caring for Our Elders: The Importance of Continued Care in Their Golden Years" [level=3] [ref=f6e167]'
+            - paragraph [ref=f6e168]: As our parents age, the roles we once knew begin to shift. The ones who cared for us, guided us, and stood by us now need our support, presence, and care more than ever.
+            - link "Read post →" [ref=f6e170] [cursor=pointer]:
+              - /url: /resources/blog/caring-for-our-elders-the-importance-of-continued-care-in-their-golden-years/
+        - generic [ref=f6e171]:
+          - img "Pasha Health team during HIPAA Compliance training." [ref=f6e173]
+          - generic [ref=f6e174]:
+            - generic [ref=f6e175]: May 9, 2025
+            - heading "Why we take HIPAA Compliance very serious and why it matters:" [level=3] [ref=f6e176]
+            - paragraph [ref=f6e177]: In an age where personal health information is increasingly stored and shared digitally, safeguarding that data has never been more critical.
+            - link "Read post →" [ref=f6e179] [cursor=pointer]:
+              - /url: /resources/blog/why-at-pasha-health-we-take-hipaa-compliance-so-serious-and-why-it-matters/
+        - generic [ref=f6e180]:
+          - img "A Pasha Health home care expert working with a client on strength and mobility." [ref=f6e182]
+          - generic [ref=f6e183]:
+            - generic [ref=f6e184]: April 30, 2025
+            - 'heading "Staying Active as You Age: How to Keep Moving and Feel Your Best" [level=3] [ref=f6e185]'
+            - paragraph [ref=f6e186]: As we grow older, it’s easy to believe that slowing down is just part of the process. While aging is inevitable, losing strength and energy doesn’t have to be.
+            - link "Read post →" [ref=f6e188] [cursor=pointer]:
+              - /url: /resources/blog/staying-active-as-you-age-how-to-keep-moving-and-feel-your-best/
+        - generic [ref=f6e189]:
+          - img "Senior man comforting his elderly wife with hearing loss and dementia symptoms" [ref=f6e191]
+          - generic [ref=f6e192]:
+            - generic [ref=f6e193]: April 25, 2025
+            - heading "Could Hearing Aids and Blood Pressure Control Help Prevent Dementia?" [level=3] [ref=f6e194]
+            - paragraph [ref=f6e195]: Dementia affects millions of people worldwide, and while there’s no guaranteed way to prevent it, research increasingly points to two modifiable risk factors that can potentially make a difference.
+            - link "Read post →" [ref=f6e197] [cursor=pointer]:
+              - /url: /resources/blog/could-hearing-aids-and-blood-pressure-control-help-prevent-dementia/
+        - generic [ref=f6e198]:
+          - img "Woman washing fresh vegetables in clean kitchen" [ref=f6e200]
+          - generic [ref=f6e201]:
+            - generic [ref=f6e202]: March 26, 2025
+            - heading "The Benefits of In-Home Care for Seniors" [level=3] [ref=f6e203]
+            - paragraph [ref=f6e204]: As our loved ones age, the decision between in-home care and moving to a care facility becomes a pressing issue. In-home care offers numerous benefits that can enhance the quality of life for seniors.
+            - link "Read post →" [ref=f6e206] [cursor=pointer]:
+              - /url: /resources/blog/the-benefits-of-in-home-care-for-seniors/
+        - generic [ref=f6e207]:
+          - img "Holding Hands Supportive and Warm." [ref=f6e209]
+          - generic [ref=f6e210]:
+            - generic [ref=f6e211]: March 3, 2025
+            - heading "How to Choose the Right Caregiver for Your Loved Ones" [level=3] [ref=f6e212]
+            - paragraph [ref=f6e213]: Selecting the right caregiver for your loved one can be challenging. With so many options available, how do you make the best choice?
+            - link "Read post →" [ref=f6e215] [cursor=pointer]:
+              - /url: /resources/blog/how-to-choose-the-right-caregiver-for-your-loved-ones/
+        - generic [ref=f6e216]:
+          - img "The Importance of Compassionate Care for Aging Parents" [ref=f6e218]
+          - generic [ref=f6e219]:
+            - generic [ref=f6e220]: August 26, 2024
+            - heading "The Importance of Compassionate Care for Aging Parents" [level=3] [ref=f6e221]
+            - paragraph [ref=f6e222]: As our parents age, the need for professional care becomes more significant. Ensuring they are treated with the utmost respect and compassion is crucial for their well-being.
+            - link "Read post →" [ref=f6e224] [cursor=pointer]:
+              - /url: /resources/blog/the-importance-of-compassionate-care-for-aging-parents/
+      - generic [ref=f6e227]:
+        - generic [ref=f6e228]: Talk to a real person
+        - heading "A 15-minute call. No commitment." [level=2] [ref=f6e229]
+        - paragraph [ref=f6e230]: We'll listen to where your parent is, answer your questions honestly, and tell you whether we're the right fit.
+        - generic [ref=f6e231]:
+          - link "Schedule a call" [ref=f6e232] [cursor=pointer]:
+            - /url: /contact/
+          - link "Take the 2-min assessment" [ref=f6e233] [cursor=pointer]:
+            - /url: "#"
+  - contentinfo [ref=f6e234]:
+    - generic [ref=f6e235]:
+      - generic [ref=f6e236]:
+        - generic [ref=f6e237]:
+          - img "Pasha Health" [ref=f6e238]
+          - paragraph [ref=f6e239]: Just rest and let us take care of you.
+          - generic [ref=f6e240]:
+            - generic [ref=f6e241]: (971) 369-4522
+            - generic [ref=f6e242]: info@pashahealth.com
+            - generic [ref=f6e243]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f6e244]:
+            - generic [ref=f6e245]: 5.0 average from 21 Google reviews
+            - generic [ref=f6e246]:
+              - generic [ref=f6e247]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f6e248]:
+          - generic [ref=f6e249]: Services
+          - list [ref=f6e250]:
+            - listitem [ref=f6e251]:
+              - link "Personal Care" [ref=f6e252] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f6e253]:
+              - link "Around-The-Home Help" [ref=f6e254] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f6e255]:
+              - link "Senior Transportation" [ref=f6e256] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f6e257]:
+              - link "Companionship" [ref=f6e258] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f6e259]:
+              - link "Technology Lessons" [ref=f6e260] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f6e261]:
+              - link "Nutrition & Meal Prep" [ref=f6e262] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f6e263]:
+          - generic [ref=f6e264]: Service areas
+          - list [ref=f6e265]:
+            - listitem [ref=f6e266]:
+              - link "Salem" [ref=f6e267] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f6e268]:
+              - link "Turner" [ref=f6e269] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f6e270]:
+              - link "Keizer" [ref=f6e271] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f6e272]:
+              - link "Stayton" [ref=f6e273] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f6e274]:
+              - link "Aumsville" [ref=f6e275] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f6e276]:
+              - link "Silverton" [ref=f6e277] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f6e278]:
+          - generic [ref=f6e279]: Resources
+          - list [ref=f6e280]:
+            - listitem [ref=f6e281]:
+              - link "Resource hub" [ref=f6e282] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f6e283]:
+              - button "Care Assessment" [ref=f6e284] [cursor=pointer]
+            - listitem [ref=f6e285]:
+              - link "FAQ" [ref=f6e286] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f6e287]:
+              - link "Blog" [ref=f6e288] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f6e289]:
+          - generic [ref=f6e290]: Company
+          - list [ref=f6e291]:
+            - listitem [ref=f6e292]:
+              - link "About" [ref=f6e293] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f6e294]:
+              - link "Careers" [ref=f6e295] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f6e296]:
+              - link "Contact" [ref=f6e297] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f6e298]:
+              - link "For care managers" [ref=f6e299] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f6e300]:
+        - generic [ref=f6e301]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f6e302]:
+          - link "Privacy" [ref=f6e303] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f6e304] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f6e305] [cursor=pointer]:
+            - /url: "#"

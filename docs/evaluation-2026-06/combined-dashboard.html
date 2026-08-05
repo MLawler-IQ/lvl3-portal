@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LVL3 Portal — Combined Evaluation & Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#09090B;--card:#18181B;--card2:#1F1F23;--input:#27272A;--border:#3F3F46;--border2:#52525B;
+    --t100:#FAFAFA;--t300:#D4D4D8;--t400:#A1A1AA;--t500:#71717A;--acc:#A78BFA;--int:#8B5CF6;
+    --good:#34D399;--warn:#FBBF24;--bad:#F87171;
+    --p0:#F87171;--p1:#FBBF24;--p2:#60A5FA;--p3:#A1A1AA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t300);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 80px}
+  h1,h2,h3{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--t100);letter-spacing:-0.01em}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .eyebrow{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--int)}
+  header{border-bottom:1px solid var(--border);padding:48px 0 36px;margin-bottom:36px}
+  header h1{font-size:30px;margin:10px 0 8px}
+  header .sub{color:var(--t400);max-width:760px}
+  .meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;font-size:12px;color:var(--t500);font-family:'JetBrains Mono',monospace}
+  .meta b{color:var(--t300);font-weight:500}
+  section{margin:0 0 48px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .sec-head h2{font-size:20px}.sec-head .n{font-family:'JetBrains Mono',monospace;color:var(--int);font-size:13px}
+  .sec-head .hint{font-size:12px;color:var(--t500);margin-left:auto}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+  .kpi .num{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--acc);font-size:26px;line-height:1.1}
+  .kpi .lbl{font-size:11px;color:var(--t400);margin-top:6px}
+  .grid2{display:grid;grid-template-columns:1.05fr 0.95fr;gap:22px;align-items:start}
+  .scorelist{display:flex;flex-direction:column;gap:11px}
+  .scorerow{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 15px}
+  .scorerow .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .scorerow .name{color:var(--t100);font-weight:500;font-size:13px}
+  .scorerow .val{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--acc);font-size:14px}
+  .scorerow .verdict{font-size:11px;color:var(--t400);margin-top:6px;line-height:1.45}
+  .bar{height:5px;background:var(--input);border-radius:3px;overflow:hidden}.bar>i{display:block;height:100%;background:var(--int)}
+  .chartcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
+  .chartcard h4{font-size:11px;color:var(--t400);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:8px}
+  /* heatmap */
+  .scroll{overflow-x:auto}
+  table.heat{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+  table.heat th{text-align:center;font-family:'JetBrains Mono',monospace;font-weight:500;font-size:11px;color:var(--t400);padding:7px 5px;border-bottom:1px solid var(--border);text-transform:uppercase}
+  table.heat th.tool{text-align:left;width:200px}
+  table.heat td{padding:4px 5px;text-align:center;border-bottom:1px solid var(--card2)}
+  table.heat td.tool{text-align:left;color:var(--t100);font-weight:500;font-size:12px}
+  table.heat td.tool .tier{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--t500);display:block;font-weight:400}
+  .cell{display:inline-block;width:28px;height:24px;line-height:24px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#09090B}
+  .ov{display:inline-block;min-width:36px;height:24px;line-height:24px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;padding:0 5px;color:#09090B}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--t400);align-items:center}
+  .legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+  /* roadmap */
+  .lane{margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .lane-head{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
+  .pill{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;padding:3px 10px;border-radius:6px;color:#09090B}
+  .lane-head .ttl{color:var(--t100);font-weight:500;font-size:14px}.lane-head .cnt{margin-left:auto;font-size:11px;color:var(--t500);font-family:'JetBrains Mono',monospace}
+  .item{display:grid;grid-template-columns:26px 1fr auto;gap:11px;align-items:start;padding:10px 18px;border-bottom:1px solid var(--card2)}
+  .item:last-child{border-bottom:0}
+  .item .ix{font-family:'JetBrains Mono',monospace;color:var(--t500);font-size:11px;padding-top:2px}
+  .item .h{color:var(--t100);font-size:13px;font-weight:500;margin-bottom:2px}
+  .item .d{font-size:12px;color:var(--t400);line-height:1.45}
+  .tags{display:flex;gap:5px;align-items:center;flex-shrink:0;padding-top:1px;flex-wrap:wrap;justify-content:flex-end;max-width:160px}
+  .tag{font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:500;padding:2px 6px;border-radius:5px;border:1px solid var(--border2);color:var(--t400);white-space:nowrap}
+  .tag.sev{color:#09090B;border:0}.sev-HIGH{background:var(--p0)}.sev-MED{background:var(--p1)}.sev-LOW{background:var(--p3)}
+  .tag.org{border:0;color:#09090B}.org-Both{background:var(--acc)}.org-Codebase{background:#60A5FA}.org-Tools{background:#34D399}
+  /* corrections */
+  .corr-table{width:100%;border-collapse:collapse;font-size:12px}
+  .corr-table td{padding:9px 12px;border-bottom:1px solid var(--card2);vertical-align:top}
+  .corr-table tr td:first-child{color:var(--t500);text-decoration:line-through;width:42%}
+  .corr-table tr td:last-child{color:var(--t300)}
+  .corr-table b{color:var(--good);font-weight:600}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:6px 6px}
+  .good-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .goodcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .goodcard .h{color:var(--t100);font-weight:500;font-size:13px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .goodcard .h::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--good)}
+  .goodcard .d{font-size:12px;color:var(--t400);line-height:1.45}
+  footer{border-top:1px solid var(--border);padding:24px 0;margin-top:40px;font-size:12px;color:var(--t500);font-family:'JetBrains Mono',monospace}
+  @media(max-width:860px){.grid2,.good-grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">LVL3 Portal · Combined Engineering Review</div>
+    <h1>Evaluation &amp; Improvement Roadmap</h1>
+    <p class="sub">Whole-codebase audit + per-tool evaluation, merged into one prioritized roadmap. Every high-severity finding was adversarially verified against the real code; the deployed app was reviewed live on desktop and mobile.</p>
+    <div class="meta">
+      <span><b>~30k</b> LOC · Next.js 14 · Supabase · Claude</span>
+      <span><b>16</b> tools scored</span>
+      <span><b>57</b> agents across 3 workflows</span>
+      <span><b>7</b> false positives killed by verification</span>
+      <span>2026-06-10 · commit <b>34c6935</b></span>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+  <section>
+    <div class="kpis">
+      <div class="kpi"><div class="num">5.3</div><div class="lbl">codebase health (verified avg)</div></div>
+      <div class="kpi"><div class="num">6.7</div><div class="lbl">tools health (16-tool avg)</div></div>
+      <div class="kpi"><div class="num">7</div><div class="lbl">P0 security + correctness fixes</div></div>
+      <div class="kpi"><div class="num">0</div><div class="lbl">console errors across the live app</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">01</span><h2>Codebase scorecard</h2></div>
+    <div class="grid2">
+      <div class="scorelist" id="scorelist"></div>
+      <div class="chartcard"><h4>Dimension health (verified, 0–10)</h4>
+        <div style="position:relative;height:288px"><canvas id="radar" role="img" aria-label="Radar of six codebase dimensions: Security 5.5, Performance 5, Cleanliness 6, Data 6, UX 5, Tooling 4.5"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">02</span><h2>Tool scorecard heatmap</h2><span class="hint">green 8–10 · violet 7 · amber 6 · red ≤5</span></div>
+    <div class="scroll"><table class="heat" id="heat"></table></div>
+    <div class="legend">
+      <span><span class="sw" style="background:#34D399"></span>8–10</span>
+      <span><span class="sw" style="background:#A78BFA"></span>7</span>
+      <span><span class="sw" style="background:#FBBF24"></span>6</span>
+      <span><span class="sw" style="background:#F87171"></span>≤5</span>
+      <span style="margin-left:auto;color:var(--acc)">† verification-adjusted</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">03</span><h2>The merged roadmap</h2>
+      <span class="hint"><span class="tag org org-Both" style="font-size:9px">Both</span> <span class="tag org org-Codebase" style="font-size:9px">Codebase</span> <span class="tag org org-Tools" style="font-size:9px">Tools</span></span>
+    </div>
+    <div id="roadmap"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">04</span><h2>What verification corrected</h2></div>
+    <div class="chartcard" style="padding:6px 8px"><table class="corr-table" id="corr"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">05</span><h2>What's genuinely good — keep it</h2></div>
+    <div class="good-grid" id="good"></div>
+  </section>
+
+</div>
+<footer><div class="wrap">Consolidated from a 6-dimension codebase audit, a 16-tool evaluation, and an 11-claim verification pass, plus a live desktop+mobile review. Severities post-verification. Full per-area detail in EVALUATION.md and TOOLS-EVALUATION.md. Nothing discarded.</div></footer>
+
+<script>
+const scores=[
+  {name:'Security & AuthZ',val:5.5,verdict:'Auth coverage solid; member-scope on service-client paths is the gap.'},
+  {name:'Performance',val:5,verdict:'Zero caching on third-party APIs — live-confirmed 2–3s analytics waits.'},
+  {name:'Code cleanliness',val:6,verdict:'A few god-files + duplicated route boilerplate.'},
+  {name:'Data & schema',val:6,verdict:'Sound RLS; missing indexes + no retention bite at 107-brand scale.'},
+  {name:'UX & a11y',val:5,verdict:'Error/loading states, feedback, form a11y + brand-red contrast.'},
+  {name:'DX / testing / tooling',val:4.5,verdict:'No tests and no CI gate are the weak spots.'},
+];
+const sl=document.getElementById('scorelist');
+scores.forEach(s=>{const d=document.createElement('div');d.className='scorerow';
+  d.innerHTML=`<div class="top"><span class="name">${s.name}</span><span class="val">${s.val.toFixed(1)}</span></div><div class="bar"><i style="width:${s.val*10}%"></i></div><div class="verdict">${s.verdict}</div>`;sl.appendChild(d)});
+
+const TOOLS=[
+  {n:'SEO Content Engine',t:'Strong',s:[7,8,7,7,8],o:7.5},
+  {n:'Keyword Quick Wins',t:'Solid',s:[8,7,8,7,7],o:7.4},
+  {n:'TFK Location Generator',t:'Solid',s:[8,7,6,7,8],o:7.2},
+  {n:'Competitor Gap (Semrush)',t:'Solid',s:[7,7,6,7,8],o:7.0},
+  {n:'Content Gap Finder',t:'Solid',s:[7,7,8,6,7],o:7.0},
+  {n:'GBP Audit',t:'Solid',s:[7,7,7,7,7],o:7.0},
+  {n:'Core Web Vitals †',t:'Needs work',s:[6,7,7,7,7],o:6.8},
+  {n:'Content Refresh Finder',t:'Solid',s:[7,7,6,6,7],o:6.6},
+  {n:'Backlink Overview',t:'Needs work',s:[7,5,8,6,7],o:6.6},
+  {n:'Keyword Research',t:'Needs work',s:[7,6,7,6,6],o:6.4},
+  {n:'Page SEO Audit',t:'Needs work',s:[7,6,7,6,6],o:6.4},
+  {n:'Blog Image Generator †',t:'Needs work',s:[6,7,6,5,7],o:6.3},
+  {n:'Content Quality',t:'Needs work',s:[7,7,6,6,5],o:6.2},
+  {n:'Vertical Benchmark',t:'Weak',s:[6,7,6,5,6],o:6.2},
+  {n:'AI Visibility Check',t:'Needs work',s:[6,7,6,5,7],o:6.0},
+  {n:'Landing Page CRO Audit',t:'Weak',s:[6,7,6,6,5],o:6.0},
+];
+function col(v){if(v>=8)return'#34D399';if(v>=7)return'#A78BFA';if(v>=6)return'#FBBF24';return'#F87171'}
+const dims=['Logic','Workflow','Code','Func','UI/UX'];
+let h='<thead><tr><th class="tool">Tool</th>'+dims.map(d=>`<th>${d}</th>`).join('')+'<th>Overall</th></tr></thead><tbody>';
+TOOLS.forEach(t=>{h+=`<tr><td class="tool">${t.n}<span class="tier">${t.t}</span></td>`;
+  t.s.forEach(v=>{h+=`<td><span class="cell" style="background:${col(v)}">${v}</span></td>`});
+  h+=`<td><span class="ov" style="background:${col(t.o)}">${t.o.toFixed(1)}</span></td></tr>`});
+h+='</tbody>';document.getElementById('heat').innerHTML=h;
+
+const lanes=[
+  {id:'P0',color:'var(--p0)',title:'Security & correctness — ship first',items:[
+    {h:'Member-scope on service-client paths',d:'One root issue, seen twice: API routes fetch by untrusted clientId, and tool_runs RLS keys on user_id — a member can run any tool for any client and read it back. One shared guard + tighter RLS.',sev:'HIGH',eff:'M',org:'Both'},
+    {h:'Two unguarded server actions',d:'getSheetData(sheetId) reads any sheet; generateClientSummary(clientId) fires a paid Claude write to any client — no requireAuth.',sev:'HIGH',eff:'S',org:'Codebase'},
+    {h:'SSRF guard on URL-fetching tools',d:'Crawler / PSI / CRO fetch user URLs with no host validation — internal IPs reachable. Require https + block private ranges.',sev:'MED',eff:'S',org:'Both'},
+    {h:'Core Web Vitals false "pass"',d:'cwvPass counts CrUX AVERAGE as passing — tells clients a page passes CWV when it doesn\'t. Require === FAST.',sev:'HIGH',eff:'S',org:'Tools'},
+    {h:'AI Visibility misclassifies branded traffic',d:'split(".")[0] yields "shop" for shop.brand.com + substring brand-match. Use normalizeDomain + word boundaries.',sev:'HIGH',eff:'S',org:'Tools'},
+    {h:'Vertical Benchmark stuck failed runs',d:'Catch block has a "// mark failed" TODO, no DB update — failed runs stay running forever.',sev:'HIGH',eff:'S',org:'Tools'},
+    {h:'Blog Image registry metadata wrong',d:'persistsRuns:true but never writes; dataSources:["claude"] but uses OpenAI. Fix the manifest.',sev:'HIGH',eff:'S',org:'Tools'},
+  ]},
+  {id:'P1',color:'var(--p1)',title:'High leverage — cost, resilience, scale',items:[
+    {h:'Cache third-party API responses',d:'Zero caching on GA4/GSC/Semrush/PSI/KE — live-confirmed 2–3s waits + blank tool renders. React.cache + TTL DB cache. Biggest single win, flagged by both evals.',sev:'HIGH',eff:'M',org:'Both'},
+    {h:'One connector error contract',d:'catch{return null} makes API-key failures look like "no data" across Backlink, Semrush Gap, Keyword Research. Standardize {ok,data,error} + logging.',sev:'HIGH',eff:'M',org:'Both'},
+    {h:'Cost controls + rate limiting on AI tools',d:'No per-user/client throttle or token budget; one batch can run an untracked bill.',sev:'HIGH',eff:'M',org:'Both'},
+    {h:'Production observability (Sentry + log wrapper)',d:'Errors go to console only — no aggregation or alerting.',sev:'HIGH',eff:'M',org:'Codebase'},
+    {h:'Add missing scale indexes',d:'client_id/created_at composites on deliverables, comments, ask_lvl3_*; comments(parent_id). One migration.',sev:'MED',eff:'S',org:'Codebase'},
+    {h:'DB backups + retention',d:'Enable Supabase backups; 90-day retention on tool_runs + seo_content_engine_* JSONB blobs.',sev:'HIGH',eff:'M',org:'Codebase'},
+    {h:'Error & not-found boundaries',d:'No error.tsx / global-error.tsx / not-found.tsx. Add three branded boundaries.',sev:'MED',eff:'S',org:'Codebase'},
+    {h:'Fix brand-red contrast + tokenize status colors',d:'Link/active red #EF4444 is 3.64:1 — fails AA. Use #DC2626 for text; replace hardcoded status colors with tokens across 5+ tools.',sev:'MED',eff:'S',org:'Both'},
+    {h:'OAuth token hardening',d:'Admin token tables: add RLS, encrypt at rest, alert on refresh failure.',sev:'MED',eff:'M',org:'Codebase'},
+  ]},
+  {id:'P2',color:'var(--p2)',title:'UX polish, tool completeness & maintainability',items:[
+    {h:'Persistence + export primitive for 8 read-only tools',d:'No save/export on Quick Wins, AI Visibility, Content Gaps, Keyword Research, CWV, Page SEO, Content Quality, Backlink. Build one ExportTool. Biggest tool UX upgrade.',sev:'MED',eff:'M',org:'Tools'},
+    {h:'Loading states across routes & tools',d:'Pairs with caching — add loading.tsx / Suspense + skeletons to dashboard, deliverables, insights, projects + sync tools.',sev:'MED',eff:'M',org:'Both'},
+    {h:'App-wide toast system',d:'Promote the existing comment-thread Toast to a provider; confirm saves/uploads/refreshes.',sev:'MED',eff:'M',org:'Codebase'},
+    {h:'Form accessibility',d:'aria-invalid/describedby, login email label, skip link, modal focus traps, drawer aria-modal + scroll-lock.',sev:'MED',eff:'M',org:'Codebase'},
+    {h:'Unify domain handling + per-tool logic fixes',d:'One URL-parsing normalizeDomain everywhere; fix Content Gap boundary, Vertical Benchmark substring, CRO trust signals.',sev:'MED',eff:'M',org:'Tools'},
+    {h:'God-file refactors',d:'usePipelineStream (838L), useSemrushSort (993L), lib/ask-lvl3/tools registry (973L route). Readability, not bugs.',sev:'MED',eff:'M',org:'Codebase'},
+    {h:'Supabase types + shared helpers',d:'supabase gen types; lib/api/route-guard.ts; lib/parse-csv.ts; registry-vs-reality lint.',sev:'MED',eff:'S',org:'Both'},
+    {h:'Zod validation at HTTP boundary',d:'seo-content-engine / ask-lvl3 / generate-blog-images fail fast with 400 on bad input.',sev:'MED',eff:'M',org:'Both'},
+    {h:'Remaining tool MEDIUMs + a11y nits',d:'TFK Buffer→atob/btoa, backlink error context, 44px touch targets, table scroll affordance, alt text, 2 purple refs.',sev:'LOW',eff:'S',org:'Both'},
+  ]},
+  {id:'P3',color:'var(--p3)',title:'Foundations & strategic',items:[
+    {h:'Testing (start small, high-value)',d:'vitest for auth + client-resolution + validators + P0 member-scope; Playwright smoke for login → select → run-a-tool.',sev:'MED',eff:'L',org:'Codebase'},
+    {h:'CI gate (GitHub Actions)',d:'tsc + lint + build on PR + branch protection. Cheapest insurance before the Next upgrade.',sev:'MED',eff:'S',org:'Codebase'},
+    {h:'ESLint architecture rules',d:'Block service client in components; flag any.',sev:'LOW',eff:'S',org:'Codebase'},
+    {h:'Staged dependency upgrades',d:'Anthropic SDK → Supabase → TS → pause at Next 14→15 → React 19. Vulns are dev-only.',sev:'MED',eff:'M',org:'Codebase'},
+    {h:'Public-route correctness + coming-soon tools',d:'robots.txt, OpenGraph, security headers; decide build-or-hide for the 3 coming-soon tool stubs.',sev:'LOW',eff:'S',org:'Both'},
+  ]},
+];
+const sevC={HIGH:'sev-HIGH',MED:'sev-MED',LOW:'sev-LOW'};
+const rm=document.getElementById('roadmap');
+lanes.forEach(l=>{const lane=document.createElement('div');lane.className='lane';let items='';
+  l.items.forEach((it,i)=>{items+=`<div class="item"><div class="ix">${l.id}.${i+1}</div><div><div class="h">${it.h}</div><div class="d">${it.d}</div></div><div class="tags"><span class="tag org org-${it.org}">${it.org}</span><span class="tag sev ${sevC[it.sev]}">${it.sev}</span><span class="tag">${it.eff}</span></div></div>`});
+  lane.innerHTML=`<div class="lane-head"><span class="pill" style="background:${l.color}">${l.id}</span><span class="ttl">${l.title}</span><span class="cnt">${l.items.length} items</span></div>${items}`;rm.appendChild(lane)});
+
+const corrections=[
+  ['".env.local is committed"','Gitignored, absent from history. No exposure.'],
+  ['"~24 tool files still use leftover violet"','Tokens remapped to red; only 2 literal purple refs remain.'],
+  ['"openai is imported but unused"','Powers the blog image generator.'],
+  ['"Blog Image uses an invalid model gpt-image-1" (was the #1 blocking bug)','gpt-image-1 is a real OpenAI model; the code reads its base64 correctly. dall-e-3 would regress it.'],
+  ['"Core Web Vitals theme is inverted / half-finished"','surface-900 = #F7F6F4 (light), surface-100 = #0A0A0A (ink) — styling is correct.'],
+  ['"No error boundaries → white screen" (CRITICAL)','Next ships default error pages; real gap is unbranded → MEDIUM.'],
+  ['"Heavy libs bloat every tools-tab bundle" (HIGH)','Only jszip is client-bundled and route-split → LOW.'],
+];
+document.getElementById('corr').innerHTML=corrections.map(c=>`<tr><td>${c[0]}</td><td><b>Actually:</b> ${c[1]}</td></tr>`).join('');
+
+const good=[
+  {h:'Auth architecture',d:'3-role model, requireAuth/requireAdmin, get_my_role() SECURITY DEFINER fixing RLS recursion, clean user-vs-service client split.'},
+  {h:'SEO Content Engine',d:'Cross-run caching by topic title + NDJSON streaming + DOCX export. Strongest tool and a model to copy.'},
+  {h:'Design-system discipline',d:'CSS-variable theming meant the whole dark→light rebrand happened by remapping tokens.'},
+  {h:'Runtime quality',d:'Zero console errors across the authenticated app; responsive with no horizontal overflow.'},
+  {h:'Type discipline',d:'Strict TS, 9 any usages (localized), zero @ts-ignore outside one spot.'},
+  {h:'Already in production',d:'Live, working product carrying normal startup debt — this roadmap hardens it, it doesn\'t rescue it.'},
+];
+document.getElementById('good').innerHTML=good.map(x=>`<div class="goodcard"><div class="h">${x.h}</div><div class="d">${x.d}</div></div>`).join('');
+
+new Chart(document.getElementById('radar'),{type:'radar',
+  data:{labels:['Security','Performance','Cleanliness','Data/Schema','UX & A11y','Tooling'],
+    datasets:[{label:'Verified',data:[5.5,5,6,6,5,4.5],backgroundColor:'rgba(139,92,246,0.18)',borderColor:'#A78BFA',borderWidth:2,pointBackgroundColor:'#A78BFA',pointRadius:3}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    scales:{r:{min:0,max:10,ticks:{stepSize:2,color:'#71717A',backdropColor:'transparent',font:{size:10}},grid:{color:'#3F3F46'},angleLines:{color:'#3F3F46'},pointLabels:{color:'#D4D4D8',font:{size:12,family:'Inter'}}}},
+    plugins:{legend:{display:false}}}});
+</script>
+</body>
+</html>

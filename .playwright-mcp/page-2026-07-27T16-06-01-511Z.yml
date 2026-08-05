@@ -1,0 +1,288 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Pasha Health home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=e5]
+      - navigation "Primary" [ref=e6]:
+        - button "Services" [ref=e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=e8]: 
+        - button "Care by condition" [ref=e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=e10]: 
+        - button "Service areas" [ref=e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=e12]: 
+        - button "About" [ref=e13] [cursor=pointer]
+        - button "Resources" [ref=e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=e15]: 
+      - generic [ref=e16]:
+        - link "(971) 369-4522" [ref=e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e23]:
+        - navigation "Breadcrumb" [ref=e24]:
+          - link "Home" [ref=e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e26]: /
+          - link "Resources" [ref=e27] [cursor=pointer]:
+            - /url: /resources/
+          - generic [ref=e28]: /
+          - generic [ref=e29]: Cost of home care
+        - generic [ref=e31]:
+          - generic [ref=e32]: The money conversation
+          - heading "What home care actually costs in Oregon." [level=1] [ref=e33]
+          - paragraph [ref=e34]: You cannot plan around a mystery. Here are the real Oregon numbers, a calculator that does the math for your situation, and every way families pay for care. No games, no "call for pricing" runaround on the market facts.
+          - generic [ref=e35]:
+            - button "Take the 2-min assessment" [ref=e36] [cursor=pointer]
+            - link "Talk to a real person" [ref=e37] [cursor=pointer]:
+              - /url: /contact/
+          - generic [ref=e38]:
+            - generic [ref=e39]:
+              - generic [ref=e40]: 
+              - text: Interactive cost calculator
+            - generic [ref=e41]:
+              - generic [ref=e42]: 
+              - text: 2025 Oregon benchmarks
+            - generic [ref=e43]:
+              - generic [ref=e44]: 
+              - text: Same-day callback
+      - generic [ref=e49]:
+        - generic [ref=e50]: The short answer
+        - heading "About $40 an hour. The rest is multiplication." [level=2] [ref=e51]
+        - paragraph [ref=e52]: "The median rate for non-medical home care in Oregon is about $40 per hour, according to the 2025 CareScout Cost of Care Survey. What a month of care costs your family depends almost entirely on one variable: hours per week. A few mornings of help is a few hundred dollars a week. Around-the-clock care is a different financial conversation entirely."
+        - generic [ref=e53]: No agency can honestly quote you a price before understanding the situation. Anyone who does is quoting a package, not your parent. The math below is the market. Your number comes from a conversation.
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: Do the math
+          - heading "Estimate your monthly cost." [level=2] [ref=e58]
+          - paragraph [ref=e59]: Pick the hours that match your parent's week, adjust the rate if you have a quote in hand, and see the weekly, monthly, and yearly picture.
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - generic [ref=e62]:
+              - generic [ref=e63]: Hours of care per week
+              - generic [ref=e64]:
+                - button "6 hrs" [ref=e65] [cursor=pointer]
+                - button "20 hrs" [ref=e66] [cursor=pointer]
+                - button "40 hrs" [ref=e67] [cursor=pointer]
+                - button "24/7" [ref=e68] [cursor=pointer]
+              - slider "Hours of care per week" [ref=e69]: "20"
+              - spinbutton "Hours of care per week, exact number" [ref=e70]: "20"
+              - generic [ref=e71]: From a 3-hour visit twice a week to around-the-clock care (168 hours).
+            - generic [ref=e72]:
+              - generic [ref=e73]: Hourly rate
+              - paragraph [ref=e74]: Pre-filled with the Oregon median from the 2025 CareScout Cost of Care Survey. Adjust it to any quote you have in hand.
+              - slider "Hourly rate in dollars" [ref=e75]: "40"
+              - generic [ref=e76]:
+                - spinbutton "Hourly rate in dollars, exact number" [ref=e77]: "40"
+                - button "Reset to Oregon median" [ref=e78] [cursor=pointer]
+              - generic [ref=e79]: Agency rates in the Salem area typically land within a few dollars of the state median.
+          - generic [ref=e80]:
+            - generic [ref=e81]:
+              - generic [ref=e82]: $800
+              - generic [ref=e83]: per week
+            - generic [ref=e84]:
+              - generic [ref=e85]: $3,467
+              - generic [ref=e86]: per month
+            - generic [ref=e87]:
+              - generic [ref=e88]: $41,600
+              - generic [ref=e89]: per year
+          - paragraph [ref=e90]: Estimates only, using the market rate you set above. Real quotes depend on care level, schedule, and location. This is not a Pasha price.
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]: Oregon benchmarks
+          - heading "What care costs in Oregon, side by side." [level=2] [ref=e95]
+          - paragraph [ref=e96]: Statewide medians from the 2025 CareScout Cost of Care Survey, the standard industry source. Salem-area rates typically run at or slightly below these.
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - generic [ref=e99]: Home care, hourly
+            - generic [ref=e100]: $40/hr
+          - generic [ref=e101]:
+            - generic [ref=e102]: Home care, 20 hrs/week
+            - generic [ref=e103]: ~$3,470/mo
+          - generic [ref=e104]:
+            - generic [ref=e105]: Assisted living
+            - generic [ref=e106]: $6,875/mo
+          - generic [ref=e107]:
+            - generic [ref=e108]: Nursing home, semi-private
+            - generic [ref=e109]: $16,760/mo
+        - paragraph [ref=e110]: For context, the national median for home care is $35 per hour. Oregon runs higher than most states across every care setting, which makes the hours decision matter even more here.
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]: Home care vs. the alternatives
+          - heading "Home care wins at part-time hours. Then the math changes." [level=2] [ref=e115]
+          - paragraph [ref=e116]: We would rather you hear this from us than discover it later. Here is where each option makes financial sense, using the 2025 Oregon medians.
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]: "01"
+            - 'heading "Under 40 hours a week: home care, clearly" [level=4] [ref=e120]'
+            - paragraph [ref=e121]: Twenty hours a week at the Oregon median is about $3,470 a month, roughly half the cost of assisted living. Your parent keeps their home, their routine, and one consistent caregiver. This is where most families live, and where home care is the obvious value.
+          - generic [ref=e122]:
+            - generic [ref=e123]: "02"
+            - 'heading "Around 40 hours: the lines cross" [level=4] [ref=e124]'
+            - paragraph [ref=e125]: "Full weekday coverage runs about $6,930 a month, essentially the same as Oregon's $6,875 assisted living median. At this point the decision stops being financial. It becomes about what your parent wants: their own home and one-on-one attention, or a community setting."
+          - generic [ref=e126]:
+            - generic [ref=e127]: "03"
+            - 'heading "Around the clock: facilities cost less" [level=4] [ref=e128]'
+            - paragraph [ref=e129]: True 24/7 home care at market rates can run $25,000 to $29,000 a month, well above a nursing home's $16,760 median. Some families choose it anyway, especially near the end of life, and we understand why. But you should walk in knowing the numbers, not discover them.
+      - generic [ref=e131]:
+        - generic [ref=e132]:
+          - generic [ref=e133]: How families pay
+          - heading "Four ways to pay for home care in Oregon." [level=2] [ref=e134]
+          - paragraph [ref=e135]: Most families combine two or more of these. If you are not sure where to start, the ADRC (855-673-2372) is Oregon's free front door for all of it.
+        - generic [ref=e136]:
+          - generic [ref=e137]:
+            - generic [ref=e138]: 
+            - heading "Private pay" [level=3] [ref=e139]
+            - paragraph [ref=e140]: "Most families start here: savings, retirement income, family contributions, or a mix. The calculator above is your budgeting tool. Many families split a month of care across siblings the same way they would any shared family cost."
+          - generic [ref=e141]:
+            - generic [ref=e142]: 
+            - heading "Long-term care insurance" [level=3] [ref=e143]
+            - paragraph [ref=e144]: If your parent bought a long-term care policy years ago, it likely covers in-home care. Find the policy, check the daily or monthly benefit and the elimination period, and call the insurer before care starts. We are happy to help you read the fine print.
+          - generic [ref=e145]:
+            - generic [ref=e146]: 
+            - heading "VA Aid & Attendance" [level=3] [ref=e147]
+            - paragraph [ref=e148]: Wartime veterans and surviving spouses may qualify for VA Aid & Attendance, a monthly pension add-on that can be put toward in-home care. Many eligible families have never heard of it. The Oregon Department of Veterans Affairs can help you apply for free.
+          - generic [ref=e149]:
+            - generic [ref=e150]: 
+            - heading "Medicaid and Oregon programs" [level=3] [ref=e151]
+            - paragraph [ref=e152]: Oregon Medicaid covers in-home care for those who qualify, largely through the Community First Choice Option (the K Plan), run by ODHS Aging and People with Disabilities. And Oregon Project Independence helps people who earn too much for Medicaid but still need help at home. Your local Aging and Disability Resource Connection (ADRC) is the front door for both.
+        - paragraph [ref=e153]: "One boundary worth knowing: Medicare does not cover ongoing non-medical home care. It covers short-term, doctor-ordered home health after a hospital stay, which is a different service that often runs alongside ours."
+      - generic [ref=e156]:
+        - paragraph [ref=e157]: Just rest and let us take care of you.
+        - paragraph [ref=e158]: The money conversation is stressful. It is also solvable. Families figure this out every week, and you will too.
+      - generic [ref=e160]:
+        - generic [ref=e161]:
+          - generic [ref=e162]: Common questions
+          - heading "What families ask about cost." [level=2] [ref=e163]
+        - generic [ref=e164]:
+          - generic [ref=e165]:
+            - button "How much does in-home care cost in Salem, Oregon?" [ref=e166] [cursor=pointer]:
+              - generic [ref=e168]: 
+            - generic [ref=e169]: The Oregon median is about $40 per hour for non-medical home care, according to the 2025 CareScout Cost of Care Survey. Salem-area rates generally sit close to that. What you actually pay depends on hours per week and the level of care, which is why the calculator above starts with hours, not a package.
+          - button "How much does in-home dementia care cost in Salem?" [ref=e171] [cursor=pointer]:
+            - generic [ref=e173]: 
+          - button "Is home care cheaper than assisted living in Oregon?" [ref=e175] [cursor=pointer]:
+            - generic [ref=e177]: 
+          - button "Does Medicare pay for home care?" [ref=e179] [cursor=pointer]:
+            - generic [ref=e181]: 
+          - button "What does Pasha Health charge?" [ref=e183] [cursor=pointer]:
+            - generic [ref=e185]: 
+          - button "Are there programs that help pay if we cannot afford care?" [ref=e187] [cursor=pointer]:
+            - generic [ref=e189]: 
+      - generic [ref=e192]:
+        - generic [ref=e193]: Get your real number
+        - heading "Two minutes now. A real quote after one call." [level=2] [ref=e194]
+        - paragraph [ref=e195]: Tell us the hours, the care level, and what is going on at home. We'll give you an honest number for your situation, and we'll tell you if fewer hours would do the job.
+        - generic [ref=e196]:
+          - link "Take the 2-min assessment" [ref=e197] [cursor=pointer]:
+            - /url: "#"
+          - link "Contact us" [ref=e198] [cursor=pointer]:
+            - /url: /contact/
+  - contentinfo [ref=e199]:
+    - generic [ref=e200]:
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - img "Pasha Health" [ref=e203]
+          - paragraph [ref=e204]: Just rest and let us take care of you.
+          - generic [ref=e205]:
+            - generic [ref=e206]: (971) 369-4522
+            - generic [ref=e207]: info@pashahealth.com
+            - generic [ref=e208]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=e209]:
+            - generic [ref=e210]: 5.0 average from 21 Google reviews
+            - generic [ref=e211]:
+              - generic [ref=e212]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=e213]:
+          - generic [ref=e214]: Services
+          - list [ref=e215]:
+            - listitem [ref=e216]:
+              - link "Personal Care" [ref=e217] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=e218]:
+              - link "Around-The-Home Help" [ref=e219] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=e220]:
+              - link "Senior Transportation" [ref=e221] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=e222]:
+              - link "Companionship" [ref=e223] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=e224]:
+              - link "Technology Lessons" [ref=e225] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=e226]:
+              - link "Nutrition & Meal Prep" [ref=e227] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=e228]:
+          - generic [ref=e229]: Service areas
+          - list [ref=e230]:
+            - listitem [ref=e231]:
+              - link "Salem" [ref=e232] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=e233]:
+              - link "Turner" [ref=e234] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=e235]:
+              - link "Keizer" [ref=e236] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=e237]:
+              - link "Stayton" [ref=e238] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=e239]:
+              - link "Aumsville" [ref=e240] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=e241]:
+              - link "Silverton" [ref=e242] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=e243]:
+          - generic [ref=e244]: Resources
+          - list [ref=e245]:
+            - listitem [ref=e246]:
+              - link "Resource hub" [ref=e247] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=e248]:
+              - link "Cost of home care" [ref=e249] [cursor=pointer]:
+                - /url: /resources/cost-of-home-care-oregon/
+            - listitem [ref=e250]:
+              - button "Care Assessment" [ref=e251] [cursor=pointer]
+            - listitem [ref=e252]:
+              - link "FAQ" [ref=e253] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=e254]:
+              - link "Blog" [ref=e255] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=e256]:
+          - generic [ref=e257]: Company
+          - list [ref=e258]:
+            - listitem [ref=e259]:
+              - link "About" [ref=e260] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e261]:
+              - link "Careers" [ref=e262] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=e263]:
+              - link "Contact" [ref=e264] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e265]:
+              - link "For care managers" [ref=e266] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=e267]:
+        - generic [ref=e268]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=e269]:
+          - link "Privacy" [ref=e270] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=e271] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=e272] [cursor=pointer]:
+            - /url: "#"

@@ -1,0 +1,199 @@
+- generic [active] [ref=f14e1]:
+  - banner [ref=f14e2]:
+    - generic [ref=f14e3]:
+      - link "Pasha Health home" [ref=f14e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health. Just rest and let us take care of you." [ref=f14e5]
+      - navigation "Primary" [ref=f14e6]:
+        - button "Services" [ref=f14e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f14e8]: 
+        - button "Care by condition" [ref=f14e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f14e10]: 
+        - button "Service areas" [ref=f14e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f14e12]: 
+        - button "About" [ref=f14e13] [cursor=pointer]
+        - button "Resources" [ref=f14e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f14e15]: 
+      - generic [ref=f14e16]:
+        - link "(971) 369-4522" [ref=f14e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f14e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f14e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f14e20]:
+    - generic [ref=f14e21]:
+      - generic [ref=f14e23]:
+        - navigation "Breadcrumb" [ref=f14e24]:
+          - link "Home" [ref=f14e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f14e26]: /
+          - generic [ref=f14e27]: Schedule a call
+        - generic [ref=f14e28]:
+          - generic [ref=f14e29]: Schedule a call
+          - heading "A 15-minute call. No commitment." [level=1] [ref=f14e30]
+          - paragraph [ref=f14e31]: We'll listen to where things stand, answer your questions, and tell you honestly whether Pasha is the right fit, or who else to talk to.
+      - generic [ref=f14e34]:
+        - generic [ref=f14e36]:
+          - heading "Tell us where things stand." [level=2] [ref=f14e37]
+          - paragraph [ref=f14e38]: Required fields marked with *.
+          - generic [ref=f14e39]:
+            - generic [ref=f14e40]:
+              - generic [ref=f14e41]: Your name*
+              - textbox [ref=f14e42]
+            - generic [ref=f14e43]:
+              - generic [ref=f14e44]: Phone*
+              - textbox [ref=f14e45]
+          - generic [ref=f14e46]:
+            - generic [ref=f14e47]: Email
+            - textbox [ref=f14e48]
+          - generic [ref=f14e49]:
+            - generic [ref=f14e50]: Care is for…
+            - combobox [ref=f14e51]:
+              - option "A parent or relative" [selected]
+              - option "Myself"
+              - option "My spouse"
+              - option "A client (case manager, social worker)"
+          - generic [ref=f14e52]:
+            - generic [ref=f14e53]: What's happening?
+            - textbox "A diagnosis, a hospital discharge, a fall, family caregiver burnout. Whatever is driving the call." [ref=f14e54]
+          - button "Send and we'll call you " [ref=f14e56] [cursor=pointer]:
+            - text: Send and we'll call you
+            - generic [ref=f14e57]: 
+          - paragraph [ref=f14e58]:
+            - text: Or skip the form and call us at
+            - strong [ref=f14e59]: (971) 369-4522
+            - text: .
+        - generic [ref=f14e60]:
+          - link "Call us (971) 369-4522 Same-day callbacks. Weekends too." [ref=f14e61] [cursor=pointer]:
+            - /url: tel:9713694522
+            - generic [ref=f14e62]: 
+            - generic [ref=f14e63]:
+              - generic [ref=f14e64]: Call us
+              - generic [ref=f14e65]: (971) 369-4522
+              - generic [ref=f14e66]: Same-day callbacks. Weekends too.
+          - link "Email info@pashahealth.com" [ref=f14e67] [cursor=pointer]:
+            - /url: mailto:info@pashahealth.com
+            - generic [ref=f14e68]: 
+            - generic [ref=f14e69]:
+              - generic [ref=f14e70]: Email
+              - generic [ref=f14e71]: info@pashahealth.com
+          - generic [ref=f14e72]:
+            - generic [ref=f14e73]: 
+            - generic [ref=f14e74]:
+              - generic [ref=f14e75]: Our office
+              - generic [ref=f14e76]: 5325 Denver ST SE
+              - generic [ref=f14e77]: Turner, OR 97392
+          - generic [ref=f14e78]:
+            - generic [ref=f14e79]: 
+            - generic [ref=f14e80]:
+              - generic [ref=f14e81]: Not ready to call?
+              - generic [ref=f14e82]: Take the 2-minute assessment first.
+              - generic [ref=f14e83]: We'll match you to the right service and call back when you say so.
+              - link "Start assessment →" [ref=f14e85] [cursor=pointer]:
+                - /url: "#"
+  - contentinfo [ref=f14e86]:
+    - generic [ref=f14e87]:
+      - generic [ref=f14e88]:
+        - generic [ref=f14e89]:
+          - img "Pasha Health" [ref=f14e91]
+          - paragraph [ref=f14e92]: Just rest and let us take care of you.
+          - generic [ref=f14e93]:
+            - generic [ref=f14e94]: (971) 369-4522
+            - generic [ref=f14e95]: info@pashahealth.com
+            - generic [ref=f14e96]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f14e97]:
+            - generic [ref=f14e98]: 5.0 average from 21 Google reviews
+            - generic [ref=f14e99]:
+              - generic [ref=f14e100]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f14e101]:
+          - generic [ref=f14e102]: Services
+          - list [ref=f14e103]:
+            - listitem [ref=f14e104]:
+              - link "Personal Care" [ref=f14e105] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f14e106]:
+              - link "Around-The-Home Help" [ref=f14e107] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f14e108]:
+              - link "Senior Transportation" [ref=f14e109] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f14e110]:
+              - link "Companionship" [ref=f14e111] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f14e112]:
+              - link "Technology Lessons" [ref=f14e113] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f14e114]:
+              - link "Nutrition & Meal Prep" [ref=f14e115] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f14e116]:
+          - generic [ref=f14e117]: Service areas
+          - list [ref=f14e118]:
+            - listitem [ref=f14e119]:
+              - link "Salem" [ref=f14e120] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f14e121]:
+              - link "Turner" [ref=f14e122] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f14e123]:
+              - link "Keizer" [ref=f14e124] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f14e125]:
+              - link "Stayton" [ref=f14e126] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f14e127]:
+              - link "Aumsville" [ref=f14e128] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f14e129]:
+              - link "Silverton" [ref=f14e130] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f14e131]:
+          - generic [ref=f14e132]: Resources
+          - list [ref=f14e133]:
+            - listitem [ref=f14e134]:
+              - link "Resource hub" [ref=f14e135] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f14e136]:
+              - link "Cost of home care" [ref=f14e137] [cursor=pointer]:
+                - /url: /resources/cost-of-home-care-oregon/
+            - listitem [ref=f14e138]:
+              - button "Care Assessment" [ref=f14e139] [cursor=pointer]
+            - listitem [ref=f14e140]:
+              - link "FAQ" [ref=f14e141] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f14e142]:
+              - link "Blog" [ref=f14e143] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f14e144]:
+          - generic [ref=f14e145]: Company
+          - list [ref=f14e146]:
+            - listitem [ref=f14e147]:
+              - link "About" [ref=f14e148] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f14e149]:
+              - link "Careers" [ref=f14e150] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f14e151]:
+              - link "Contact" [ref=f14e152] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f14e153]:
+              - link "For care managers" [ref=f14e154] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f14e155]:
+        - generic [ref=f14e156]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f14e157]:
+          - link "Privacy" [ref=f14e158] [cursor=pointer]:
+            - /url: /privacy-policy/
+          - link "Accessibility" [ref=f14e159] [cursor=pointer]:
+            - /url: /accessibility-statement/
+          - link "Terms" [ref=f14e160] [cursor=pointer]:
+            - /url: /terms-of-service/
+  - alert [ref=f14e161]

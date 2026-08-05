@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LVL3 Portal — Per-Tool Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#09090B;--card:#18181B;--card2:#1F1F23;--input:#27272A;--border:#3F3F46;--border2:#52525B;
+    --t100:#FAFAFA;--t300:#D4D4D8;--t400:#A1A1AA;--t500:#71717A;--acc:#A78BFA;--int:#8B5CF6;
+    --good:#34D399;--warn:#FBBF24;--bad:#F87171;
+    --strong:#34D399;--solid:#A78BFA;--needs:#FBBF24;--weak:#F87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--t300);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:0 0 80px}
+  h1,h2,h3{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--t100);letter-spacing:-0.01em}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .eyebrow{font-size:11px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--int)}
+  header{border-bottom:1px solid var(--border);padding:48px 0 36px;margin-bottom:40px}
+  header h1{font-size:30px;margin:10px 0 8px}
+  header .sub{color:var(--t400);max-width:720px}
+  .meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;font-size:12px;color:var(--t500);font-family:'JetBrains Mono',monospace}
+  .meta b{color:var(--t300);font-weight:500}
+  section{margin:0 0 52px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+  .sec-head h2{font-size:20px}.sec-head .n{font-family:'JetBrains Mono',monospace;color:var(--int);font-size:13px}
+  .sec-head .hint{font-size:12px;color:var(--t500);margin-left:auto}
+  /* heatmap table */
+  .scroll{overflow-x:auto}
+  table.heat{width:100%;border-collapse:collapse;font-size:13px;min-width:680px}
+  table.heat th{text-align:center;font-family:'JetBrains Mono',monospace;font-weight:500;font-size:11px;color:var(--t400);padding:8px 6px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em}
+  table.heat th.tool{text-align:left;width:200px}
+  table.heat td{padding:5px 6px;text-align:center;border-bottom:1px solid var(--card2)}
+  table.heat td.tool{text-align:left;color:var(--t100);font-weight:500;font-size:13px}
+  table.heat td.tool .tier{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--t500);display:block;font-weight:400}
+  .cell{display:inline-block;width:30px;height:26px;line-height:26px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#09090B}
+  .ov{display:inline-block;min-width:38px;height:26px;line-height:26px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;padding:0 6px}
+  .dagger{color:var(--acc)}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--t400);align-items:center}
+  .legend .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+  /* tiers */
+  .tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .tier{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;border-left-width:3px}
+  .tier h3{font-size:13px;margin-bottom:4px;font-family:'Inter';font-weight:600;letter-spacing:0.02em;text-transform:uppercase}
+  .tier .tools{color:var(--t100);font-size:13px;font-weight:500;margin:6px 0}
+  .tier .why{font-size:12px;color:var(--t400);line-height:1.5}
+  /* corrections */
+  .corr{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--good);border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:12px}
+  .corr .claim{color:var(--t500);text-decoration:line-through;font-size:13px}
+  .corr .truth{color:var(--t300);font-size:13px;margin-top:4px}
+  .corr .truth b{color:var(--good);font-weight:600;text-decoration:none}
+  /* bug list */
+  .bug{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:11px 0;border-bottom:1px solid var(--card2);align-items:start}
+  .bug:last-child{border-bottom:0}
+  .bug .sev{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:700;padding:3px 8px;border-radius:5px;color:#09090B;height:fit-content;white-space:nowrap}
+  .sev-HIGH{background:var(--bad)}.sev-MED{background:var(--warn)}
+  .bug .h{color:var(--t100);font-size:13px;font-weight:500;margin-bottom:2px}
+  .bug .d{font-size:12px;color:var(--t400);line-height:1.5}
+  .bug code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--acc);background:var(--input);padding:1px 5px;border-radius:4px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+  .patterns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .pat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .pat .h{color:var(--t100);font-size:13px;font-weight:500;margin-bottom:4px;display:flex;gap:8px;align-items:baseline}
+  .pat .num{font-family:'JetBrains Mono',monospace;color:var(--int);font-size:12px}
+  .pat .d{font-size:12px;color:var(--t400);line-height:1.5}
+  footer{border-top:1px solid var(--border);padding:24px 0;margin-top:40px;font-size:12px;color:var(--t500);font-family:'JetBrains Mono',monospace}
+  @media(max-width:820px){.tiers,.patterns{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">LVL3 Portal · Tool Audit</div>
+    <h1>Per-Tool Evaluation — 16 SEO Tools</h1>
+    <p class="sub">Each tool scored across logic, workflow, code efficiency, functionality, and UI/UX — then every high-severity finding adversarially verified against the real code.</p>
+    <div class="meta">
+      <span><b>16</b> tools scored</span><span><b>5</b> dimensions each</span>
+      <span><b>11</b> blocking claims verified</span><span><b>2</b> false positives killed</span>
+      <span>commit <b>34c6935</b></span>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+
+  <section>
+    <div class="sec-head"><span class="n">01</span><h2>Scorecard heatmap</h2><span class="hint">green = strong · amber = mid · red = weak</span></div>
+    <div class="scroll"><table class="heat" id="heat"></table></div>
+    <div class="legend">
+      <span><span class="sw" style="background:#34D399"></span>8–10</span>
+      <span><span class="sw" style="background:#A78BFA"></span>7</span>
+      <span><span class="sw" style="background:#FBBF24"></span>6</span>
+      <span><span class="sw" style="background:#F87171"></span>≤5</span>
+      <span style="margin-left:auto" class="dagger">† verification-adjusted (false-positive penalty removed)</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">02</span><h2>What verification corrected</h2></div>
+    <div id="corr"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">03</span><h2>Confirmed bugs worth fixing</h2></div>
+    <div class="card" id="bugs"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">04</span><h2>Tier ranking</h2></div>
+    <div class="tiers" id="tiers"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="n">05</span><h2>Cross-cutting patterns — fix once, help the whole suite</h2></div>
+    <div class="patterns" id="patterns"></div>
+  </section>
+
+</div>
+<footer><div class="wrap">16-agent per-tool evaluation + cross-tool synthesis, hardened by an 11-claim adversarial verification pass. Severities post-verification. Full raw findings preserved in task outputs.</div></footer>
+
+<script>
+const TOOLS=[
+  {n:'SEO Content Engine',t:'Strong',s:[7,8,7,7,8],o:7.5},
+  {n:'Keyword Quick Wins',t:'Solid',s:[8,7,8,7,7],o:7.4},
+  {n:'TFK Location Generator',t:'Solid',s:[8,7,6,7,8],o:7.2},
+  {n:'Competitor Gap (Semrush)',t:'Solid',s:[7,7,6,7,8],o:7.0},
+  {n:'Content Gap Finder',t:'Solid',s:[7,7,8,6,7],o:7.0},
+  {n:'GBP Audit',t:'Solid',s:[7,7,7,7,7],o:7.0},
+  {n:'Core Web Vitals †',t:'Needs work',s:[6,7,7,7,7],o:6.8,dag:true},
+  {n:'Content Refresh Finder',t:'Solid',s:[7,7,6,6,7],o:6.6},
+  {n:'Backlink Overview',t:'Needs work',s:[7,5,8,6,7],o:6.6},
+  {n:'Keyword Research',t:'Needs work',s:[7,6,7,6,6],o:6.4},
+  {n:'Page SEO Audit',t:'Needs work',s:[7,6,7,6,6],o:6.4},
+  {n:'Blog Image Generator †',t:'Needs work',s:[6,7,6,5,7],o:6.3,dag:true},
+  {n:'Content Quality',t:'Needs work',s:[7,7,6,6,5],o:6.2},
+  {n:'Vertical Benchmark',t:'Weak',s:[6,7,6,5,6],o:6.2},
+  {n:'AI Visibility Check',t:'Needs work',s:[6,7,6,5,7],o:6.0},
+  {n:'Landing Page CRO Audit',t:'Weak',s:[6,7,6,6,5],o:6.0},
+];
+function color(v){if(v>=8)return'#34D399';if(v>=7)return'#A78BFA';if(v>=6)return'#FBBF24';return'#F87171'}
+const dims=['Logic','Workflow','Code','Func','UI/UX'];
+let h='<thead><tr><th class="tool">Tool</th>'+dims.map(d=>`<th>${d}</th>`).join('')+'<th>Overall</th></tr></thead><tbody>';
+TOOLS.forEach(t=>{
+  h+=`<tr><td class="tool">${t.n}<span class="tier">${t.t}</span></td>`;
+  t.s.forEach(v=>{h+=`<td><span class="cell" style="background:${color(v)}">${v}</span></td>`});
+  h+=`<td><span class="ov" style="background:${color(t.o)};color:#09090B">${t.o.toFixed(1)}</span></td></tr>`;
+});
+h+='</tbody>';
+document.getElementById('heat').innerHTML=h;
+
+const corrections=[
+  {claim:'"Blog Image Generator uses an invalid model gpt-image-1 — change to dall-e-3" (flagged the #1 blocking bug)',truth:'gpt-image-1 is a real, current OpenAI model that returns base64 by default — exactly what the code reads. Changing to dall-e-3 would regress it.'},
+  {claim:'"Core Web Vitals uses inverted dark-theme colors, looks half-finished" (UI/UX HIGH)',truth:'surface-900 is #F7F6F4 (light) and surface-100 is #0A0A0A (ink) after the v4.2 token remap — the styling is correct light-theme. The agent assumed the old LVL3 scale.'},
+];
+document.getElementById('corr').innerHTML=corrections.map(c=>`<div class="corr"><div class="claim">${c.claim}</div><div class="truth"><b>Actually:</b> ${c.truth}</div></div>`).join('');
+
+const bugs=[
+  {sev:'HIGH',h:'Core Web Vitals reports a false "pass"',d:'cwvPass counts CrUX AVERAGE as passing alongside FAST (pagespeed.ts:70-73). AVERAGE is the needs-improvement bucket — the tool says pages pass CWV when they don\'t. Require === FAST for all three.'},
+  {sev:'HIGH',h:'AI Visibility misclassifies branded traffic',d:'Domain token from clean.split(".")[0] (tools.ts:124) yields "shop" for shop.brand.com; plus substring brand-match ("shoe" matches "shoelace"). Core metric unreliable for subdomained/short-slug clients. Use normalizeDomain() + word boundaries.'},
+  {sev:'HIGH',h:'Vertical Benchmark leaves failed runs stuck',d:'Catch block emits an error event but only has a "// Mark run as failed" TODO — no DB update (route.ts:403-406). Failed runs stay status=running forever.'},
+  {sev:'HIGH',h:'Blog Image registry metadata is wrong',d:'Registry says persistsRuns:true but the route never writes tool_runs; dataSources:["claude"] though it uses OpenAI (registry.ts:141-144). Set persistsRuns:false and dataSources:["openai"].'},
+  {sev:'MED',h:'Content Gap Finder drops ~position 10.1–10.9 queries',d:'The three classification branches leave a hole — a query at avg position 10.5 with moderate impressions matches none and is silently excluded (tools.ts:541-563). Widen a boundary to 10.5.'},
+  {sev:'MED',h:'Semrush connector swallows errors',d:'} catch { return null } (semrush-portal.ts:75-77,104-106) makes an API-key failure look like "domain not indexed." Affects Backlink Overview, Semrush Gap, Keyword Research. Log + return a typed error.'},
+  {sev:'MED',h:'Vertical Benchmark domain matching is substringy',d:'r.url.includes(domain) (route.ts:52) — example.com matches notexample.com. Lower real-world risk but regresses from the URL().hostname used elsewhere in the same file.'},
+  {sev:'MED',h:'TFK Generator leans on a Buffer polyfill',d:'Buffer.from(...) in a "use client" component (TfkGeneratorClient.tsx:73,96-97). Next 14.2 polyfills it so it works today, but it is fragile. Use atob/btoa + Uint8Array. (Not the crash the first pass claimed.)'},
+];
+document.getElementById('bugs').innerHTML=bugs.map(b=>`<div class="bug"><span class="sev sev-${b.sev}">${b.sev}</span><div><div class="h">${b.h}</div><div class="d">${b.d}</div></div></div>`).join('')
++`<div class="bug" style="border-top:1px solid var(--border);margin-top:6px;padding-top:12px"><span class="sev" style="background:var(--border2);color:var(--t100)">CHECK</span><div><div class="h">Two items to live-verify before changing</div><div class="d">CWV CLS display (percentile / 100) may be correct if PSI returns CLS pre-multiplied by 100 — confirm against a live response. Blog Image b64 handling is correct for gpt-image-1; confirm against your installed openai SDK version.</div></div></div>`;
+
+const tiers=[
+  {tier:'Strong',color:'#34D399',tools:'SEO Content Engine',why:'Cross-run caching by topic title, NDJSON streaming with per-topic progress, proper persistence + DOCX export. Most complete tool in the suite.'},
+  {tier:'Solid',color:'#A78BFA',tools:'Keyword Quick Wins · TFK Generator · Competitor Gap · Content Gap Finder · GBP Audit · Content Refresh Finder',why:'Sound logic and good architecture; gaps are export/persistence and edge cases, not correctness.'},
+  {tier:'Needs work',color:'#FBBF24',tools:'Core Web Vitals · Backlink Overview · Keyword Research · Page SEO Audit · Blog Image · Content Quality · AI Visibility',why:'Each has a real correctness bug or metadata/error gap, plus missing persistence.'},
+  {tier:'Weak',color:'#F87171',tools:'Vertical Benchmark · Landing Page CRO Audit',why:'Foundational issues: VB stuck-run + substring domain match; CRO hardcoded colors, naive trust-signal detection, stalled progress during the Claude call.'},
+];
+document.getElementById('tiers').innerHTML=tiers.map(t=>`<div class="tier" style="border-left-color:${t.color}"><h3 style="color:${t.color}">${t.tier}</h3><div class="tools">${t.tools}</div><div class="why">${t.why}</div></div>`).join('');
+
+const patterns=[
+  {n:'01',h:'No persistence/export on read-only tools',d:'8 tools have persistsRuns:false and no CSV/DOCX — users can\'t save, share, or trend results. Build one ExportTool/persistence primitive and adopt it across all.'},
+  {n:'02',h:'Hardcoded status colors instead of tokens',d:'text-green-400, #34D399, #FBBF24, #F87171 recur across CRO, Vertical Benchmark, Content Quality, GBP, CWV badges. Extract statusColor() mapped to --color-success/-warning/-error.'},
+  {n:'03',h:'Silent error swallowing in connectors',d:'catch { return null } across Semrush/PSI/crawler hides why data is missing in 5+ tools. Standardize a {ok,data,error} return + logging.'},
+  {n:'04',h:'Naive domain handling re-implemented per tool',d:'split(".")[0] and url.includes(domain) in AI Visibility, Semrush Gap (client dup), Vertical Benchmark. One strict URL-parsing normalizeDomain everywhere.'},
+  {n:'05',h:'No loading feedback on sync server tools',d:'Backlink, CWV, Page SEO, Content Quality, Keyword Research render blank during the fetch (ties to the 2–3s analytics latency). Add loading.tsx / Suspense + skeletons.'},
+  {n:'06',h:'Registry metadata drifts from implementation',d:'Blog Image, Page SEO Audit, Semrush Gap, Content Refresh Finder all mismatch dataSources/persistsRuns/promised features. Treat the registry as a contract; add a lint check.'},
+];
+document.getElementById('patterns').innerHTML=patterns.map(p=>`<div class="pat"><div class="h"><span class="num">${p.n}</span>${p.h}</div><div class="d">${p.d}</div></div>`).join('');
+</script>
+</body>
+</html>

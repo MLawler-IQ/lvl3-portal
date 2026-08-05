@@ -24,6 +24,17 @@ export const slotValueSchema = z.object({
   unknown: z.boolean().default(false),
   reason: z.string().max(500).optional(),
   recordedAt: z.string().optional(),
+
+  // Provenance. Same envelope shape the iiq-preextract intake tool already
+  // returns ({ value, confidence, source, evidence }), so a ported extractor
+  // drops in without reshaping anything.
+  //
+  // 'auto' means the portal matched it against Google's own APIs rather than
+  // being told it. Surfaced in the review pane with its evidence so a wrong
+  // match is visible instead of merely plausible.
+  source: z.enum(['interview', 'auto']).optional(),
+  confidence: z.enum(['high', 'medium', 'low']).optional(),
+  evidence: z.string().max(300).optional(),
 })
 
 export type SlotValue = z.infer<typeof slotValueSchema>
@@ -308,10 +319,19 @@ export function isKnownGap(v: SlotValue | undefined): boolean {
   return v?.unknown === true && (v.reason ?? '').trim().length > 0
 }
 
-/** Is this slot actually answered? `unknown` is a visible gap, never an answer. */
+/**
+ * Is this slot actually answered?
+ *
+ * `unknown` is a visible gap, never an answer. A LOW-confidence auto match is a
+ * suggestion, not an answer either — it is shown pre-filled with its evidence,
+ * but it still counts as missing until a human confirms it. A high-confidence
+ * auto match does count: it is a fact read from the agency's own Google account,
+ * not a guess.
+ */
 export function isFilled(v: SlotValue | undefined): boolean {
   if (!v) return false
   if (v.unknown) return false
+  if (v.source === 'auto' && v.confidence === 'low') return false
   if (v.value === null) return false
   if (typeof v.value === 'string') return v.value.trim().length > 0
   if (Array.isArray(v.value)) return v.value.filter((s) => s.trim().length > 0).length > 0

@@ -1,0 +1,162 @@
+- generic [active] [ref=f9e1]:
+  - banner [ref=f9e2]:
+    - generic [ref=f9e3]:
+      - link "Pasha Health home" [ref=f9e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f9e5]
+      - navigation "Primary" [ref=f9e6]:
+        - button "Services" [ref=f9e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f9e8]: 
+        - button "Care by condition" [ref=f9e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f9e10]: 
+        - button "Service areas" [ref=f9e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f9e12]: 
+        - button "About" [ref=f9e13] [cursor=pointer]
+        - button "Resources" [ref=f9e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f9e15]: 
+      - generic [ref=f9e16]:
+        - link "(971) 369-4522" [ref=f9e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f9e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f9e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f9e20]:
+    - generic [ref=f9e21]:
+      - generic [ref=f9e23]:
+        - navigation "Breadcrumb" [ref=f9e24]:
+          - link "Home" [ref=f9e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f9e26]: /
+          - link "Resources" [ref=f9e27] [cursor=pointer]:
+            - /url: /resources/
+          - generic [ref=f9e28]: /
+          - link "Blog" [ref=f9e29] [cursor=pointer]:
+            - /url: /resources/blog/
+          - generic [ref=f9e30]: /
+          - generic [ref=f9e31]: How to Choose the Right Caregiver for Your Loved Ones
+        - generic [ref=f9e32]: From the blog
+        - heading "How to Choose the Right Caregiver for Your Loved Ones" [level=1] [ref=f9e33]
+        - paragraph [ref=f9e34]: Posted on March 3, 2025
+      - article [ref=f9e37]:
+        - img "Holding Hands Supportive and Warm." [ref=f9e40]
+        - generic [ref=f9e41]:
+          - heading "Introduction" [level=2] [ref=f9e42]
+          - paragraph [ref=f9e43]: Selecting the right caregiver for your loved one can be challenging. With so many options available, how do you make the best choice?
+          - heading "Key Qualities to Look for in a Caregiver" [level=2] [ref=f9e44]
+          - paragraph [ref=f9e45]: "Experience and Training: Ensure the caregiver has the necessary experience and certifications to handle the specific needs of your loved one. Empathy and Patience: A great caregiver must be empathetic and patient, especially when dealing with elderly individuals who may require extra time and understanding. Communication Skills: Effective communication is crucial. The caregiver should be able to clearly convey information and listen attentively to the needs of your loved one. How Pasha Health Matches Clients with Caregivers We take the time to understand the unique needs of each client, allowing us to match them with caregivers who are not only skilled but also share similar values and personalities."
+          - heading "Conclusion" [level=2] [ref=f9e46]
+          - paragraph [ref=f9e47]: Choosing the right caregiver is a process that requires careful consideration. At Pasha Health, we make this process easier by ensuring that every caregiver is a perfect fit for your family’s needs.
+      - generic [ref=f9e50]:
+        - paragraph [ref=f9e51]: Just rest and let us take care of you.
+        - paragraph [ref=f9e52]: Needing help isn't giving up. It's one of the most loving things you can do.
+      - generic [ref=f9e55]:
+        - generic [ref=f9e56]: Talk to a real person
+        - heading "A 15-minute call. No commitment." [level=2] [ref=f9e57]
+        - paragraph [ref=f9e58]: We'll listen to where your parent is, answer your questions honestly, and tell you whether we're the right fit.
+        - generic [ref=f9e59]:
+          - link "Schedule a call" [ref=f9e60] [cursor=pointer]:
+            - /url: /contact/
+          - link "Take the 2-min assessment" [ref=f9e61] [cursor=pointer]:
+            - /url: "#"
+  - contentinfo [ref=f9e62]:
+    - generic [ref=f9e63]:
+      - generic [ref=f9e64]:
+        - generic [ref=f9e65]:
+          - img "Pasha Health" [ref=f9e66]
+          - paragraph [ref=f9e67]: Just rest and let us take care of you.
+          - generic [ref=f9e68]:
+            - generic [ref=f9e69]: (971) 369-4522
+            - generic [ref=f9e70]: info@pashahealth.com
+            - generic [ref=f9e71]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f9e72]:
+            - generic [ref=f9e73]: 5.0 average from 21 Google reviews
+            - generic [ref=f9e74]:
+              - generic [ref=f9e75]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f9e76]:
+          - generic [ref=f9e77]: Services
+          - list [ref=f9e78]:
+            - listitem [ref=f9e79]:
+              - link "Personal Care" [ref=f9e80] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f9e81]:
+              - link "Around-The-Home Help" [ref=f9e82] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f9e83]:
+              - link "Senior Transportation" [ref=f9e84] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f9e85]:
+              - link "Companionship" [ref=f9e86] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f9e87]:
+              - link "Technology Lessons" [ref=f9e88] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f9e89]:
+              - link "Nutrition & Meal Prep" [ref=f9e90] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f9e91]:
+          - generic [ref=f9e92]: Service areas
+          - list [ref=f9e93]:
+            - listitem [ref=f9e94]:
+              - link "Salem" [ref=f9e95] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f9e96]:
+              - link "Turner" [ref=f9e97] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f9e98]:
+              - link "Keizer" [ref=f9e99] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f9e100]:
+              - link "Stayton" [ref=f9e101] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f9e102]:
+              - link "Aumsville" [ref=f9e103] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f9e104]:
+              - link "Silverton" [ref=f9e105] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f9e106]:
+          - generic [ref=f9e107]: Resources
+          - list [ref=f9e108]:
+            - listitem [ref=f9e109]:
+              - link "Resource hub" [ref=f9e110] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f9e111]:
+              - button "Care Assessment" [ref=f9e112] [cursor=pointer]
+            - listitem [ref=f9e113]:
+              - link "FAQ" [ref=f9e114] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f9e115]:
+              - link "Blog" [ref=f9e116] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f9e117]:
+          - generic [ref=f9e118]: Company
+          - list [ref=f9e119]:
+            - listitem [ref=f9e120]:
+              - link "About" [ref=f9e121] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f9e122]:
+              - link "Careers" [ref=f9e123] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f9e124]:
+              - link "Contact" [ref=f9e125] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f9e126]:
+              - link "For care managers" [ref=f9e127] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f9e128]:
+        - generic [ref=f9e129]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f9e130]:
+          - link "Privacy" [ref=f9e131] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f9e132] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f9e133] [cursor=pointer]:
+            - /url: "#"

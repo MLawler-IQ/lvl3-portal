@@ -1,0 +1,338 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - img "Amberline" [ref=e5]
+      - navigation "Sections" [ref=e8]:
+        - link "Method" [ref=e9] [cursor=pointer]:
+          - /url: "#method"
+        - link "What we test" [ref=e10] [cursor=pointer]:
+          - /url: "#test"
+        - link "Report" [ref=e11] [cursor=pointer]:
+          - /url: "#report"
+        - link "Privacy" [ref=e12] [cursor=pointer]:
+          - /url: "#privacy"
+      - generic [ref=e13]: Intake pending
+  - main [ref=e15]:
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - paragraph [ref=e18]: Instrument coming online
+        - heading "The laboratory is not yet accepting samples." [level=1] [ref=e19]
+        - paragraph [ref=e20]: An independent, mail-in laboratory that measures how much peptide a vial actually contains — by mass — and issues a certificate of analysis.
+        - paragraph [ref=e21]: Sample intake opens shortly. Provide an address to be notified when registration begins.
+        - generic [ref=e22]:
+          - generic [ref=e23]: Email address
+          - generic [ref=e24]:
+            - textbox "Email address" [ref=e25]:
+              - /placeholder: name@domain.com
+            - generic [ref=e26]:
+              - text: Company
+              - textbox [ref=e27]
+            - button "Register the address" [ref=e28] [cursor=pointer]
+          - generic [ref=e29]: The address receives a single notification when intake opens. No further correspondence.
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - generic [ref=e33]: BPC-157
+            - generic [ref=e34]: SPM-4471
+          - generic [ref=e35]: Sample preview
+        - 'img "Chromatogram for sample SPM-4471: the measured peak falls short of the label-claim peak, 7.2 mg against a claimed 10.0 mg" [ref=e36]':
+          - generic [ref=e41]:
+            - generic [ref=e43]: LABEL CLAIM
+            - generic [ref=e44]: 10.0 mg
+            - generic [ref=e46]: MEASURED
+            - generic [ref=e47]: 7.2 mg
+            - generic [ref=e49]: MISSING
+            - generic [ref=e50]: −2.8 mg
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - generic [ref=e53]: Identity
+            - generic [ref=e54]: Confirmed
+          - generic [ref=e55]:
+            - generic [ref=e56]: Purity
+            - generic [ref=e57]: 99.1%
+          - generic [ref=e58]:
+            - generic [ref=e59]: Net peptide (mg)
+            - generic [ref=e60]: 7.2 mg −28%
+    - generic [ref=e62]:
+      - generic [ref=e63]:
+        - paragraph [ref=e64]: The gap we test for
+        - heading "Purity is a low-variance measurement. Content is not." [level=2] [ref=e65]
+        - paragraph [ref=e66]: Across submitted samples, identity confirms and purity clears specification with regularity. The mass of active compound present is the parameter that fails.
+      - generic [ref=e67]:
+        - generic [ref=e68]:
+          - generic [ref=e69]:
+            - generic [ref=e70]: Identity
+            - generic [ref=e71]: Confirmed
+            - generic [ref=e73]: Compound matches the declaration.
+            - generic [ref=e74]:
+              - generic [ref=e75]: ✓
+              - generic [ref=e76]: Matches the declaration
+          - generic [ref=e77]:
+            - generic [ref=e78]: Purity
+            - generic [ref=e79]: 99.1%
+            - generic [ref=e81]: Within specification.
+            - generic [ref=e82]: Within spec
+          - generic [ref=e87]:
+            - generic [ref=e88]: Net content
+            - generic [ref=e89]:
+              - generic [ref=e90]: "7.2"
+              - generic [ref=e91]: mg
+            - generic [ref=e92]: 28% below the declared 10.0 mg.
+            - generic [ref=e96]:
+              - generic [ref=e97]: of 10.0 mg
+              - generic [ref=e98]: −28%
+        - 'img "Vial fill comparison: label claims 10.0 mg, measured content 7.2 mg, 2.8 mg short" [ref=e100]':
+          - generic [ref=e109]: −2.8 mg
+          - generic [ref=e110]: missing (−28%)
+          - generic [ref=e111]: LABEL CLAIM
+          - generic [ref=e112]: 10.0 mg
+          - generic [ref=e113]: MEASURED
+          - generic [ref=e114]: 7.2 mg
+          - generic [ref=e115]: What you paid for vs. what's in the vial
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - heading "Content varies where purity does not" [level=3] [ref=e119]
+          - paragraph [ref=e120]: Each point is a sampled vial, plotted as measured content against label claim. Purity clusters near specification; content spreads, with a tail that runs well short.
+        - 'img "Scatter of measured content as percent of label across 40 samples: most cluster near 100 percent, a tail runs well short" [ref=e122]':
+          - generic [ref=e123]: PURITY PASSES. CONTENT SCATTERS.
+          - generic [ref=e124]: measured content as % of label claim, across 40 sampled vials
+          - generic [ref=e126]: 50%
+          - generic [ref=e128]: 60%
+          - generic [ref=e130]: 70%
+          - generic [ref=e132]: 80%
+          - generic [ref=e134]: 90%
+          - generic [ref=e136]: 100%
+          - generic [ref=e138]: 110%
+          - generic [ref=e140]: 100% = label is accurate
+          - generic [ref=e181]: "the tail: 7 of 40 ran short"
+          - generic [ref=e182]: samples (n = 40)
+          - generic [ref=e183]: measured content (% of label)
+    - generic [ref=e185]:
+      - generic [ref=e186]:
+        - heading "The consequence of a short vial across a schedule" [level=2] [ref=e187]
+        - paragraph [ref=e188]: A 28% deficit is not isolated to one draw. It propagates through every unit administered and accumulates across the dosing schedule.
+      - 'img "Dosing math: a 28% short vial delivers 0.72 mg instead of 1.00 mg per 20-unit dose and runs 8.4 mg short across a 30-dose cycle" [ref=e190]':
+        - generic [ref=e191]: THE DOSE MATH
+        - generic [ref=e192]: a 28% short vial shorts every dose — and it compounds over a cycle
+        - generic [ref=e199]: LABEL 10 mg
+        - generic [ref=e200]: ACTUAL 7.2 mg
+        - generic [ref=e201]: draw
+        - generic [ref=e202]: DRAW 20 UNITS
+        - generic [ref=e211]: same volume — 28% less peptide
+        - generic [ref=e212]: YOU THINK
+        - generic [ref=e213]: 1.00 mg
+        - generic [ref=e214]: YOU GET
+        - generic [ref=e215]: 0.72 mg
+        - generic [ref=e216]: per 20-unit dose
+        - generic [ref=e217]: OVER A 30-DOSE CYCLE
+        - generic [ref=e218]: intended 30.0 mg
+        - generic [ref=e223]: delivered 21.6 mg
+        - generic [ref=e224]: 8.4 mg short
+    - generic [ref=e226]:
+      - heading "Method" [level=2] [ref=e227]
+      - generic [ref=e228]:
+        - generic [ref=e229]:
+          - generic [ref=e230]: "01"
+          - heading "Registration" [level=3] [ref=e231]
+          - paragraph [ref=e232]: The sample is logged, assigned an identifier, and its declared values recorded.
+        - generic [ref=e233]:
+          - generic [ref=e234]: "02"
+          - heading "Quantification" [level=3] [ref=e235]
+          - paragraph [ref=e236]: Identity is confirmed and net peptide content is measured against the label claim.
+        - generic [ref=e237]:
+          - generic [ref=e238]: "03"
+          - heading "Certification" [level=3] [ref=e239]
+          - paragraph [ref=e240]: A certificate of analysis is issued, citable and retained on file.
+    - generic [ref=e242]:
+      - generic [ref=e243]:
+        - paragraph [ref=e244]: Methodology
+        - heading "How net content is measured" [level=2] [ref=e245]
+        - paragraph [ref=e246]: Net peptide content is quantified by reversed-phase HPLC with UV detection, measured against a certified reference standard of known concentration. Identity and purity are reported alongside; content is the determinative parameter.
+      - generic [ref=e247]:
+        - generic [ref=e248]:
+          - heading "Quantification" [level=3] [ref=e249]
+          - paragraph [ref=e250]: The sample is separated by reversed-phase HPLC with UV detection. The target peak area is integrated and compared against a certified reference standard of known concentration to derive net content by mass.
+        - generic [ref=e251]:
+          - heading "Identity" [level=3] [ref=e252]
+          - paragraph [ref=e253]: Identity is confirmed by retention time against the reference standard and, where required, by mass. A match is a necessary condition; it is not a statement of quantity.
+        - generic [ref=e254]:
+          - heading "Purity" [level=3] [ref=e255]
+          - paragraph [ref=e256]: Purity is read as the percentage of total peak area attributable to the target compound. It describes composition, not the mass present.
+      - generic [ref=e257]:
+        - generic [ref=e258]:
+          - heading "Why content, not purity, is the reported outcome" [level=3] [ref=e259]
+          - paragraph [ref=e260]: Purity is a low-variance measurement. It clears specification in the substantial majority of submitted samples. Quantitative content is where samples diverge from the label, and content is the parameter against which a dose is calculated. A sample may report high purity and still be materially short.
+        - paragraph [ref=e262]: "Method limits: LOD [to confirm], LOQ [to confirm], recovery [to confirm], intra-assay CV [to confirm], instrument [model to confirm]. Values are established per method and stated on the certificate."
+    - generic [ref=e264]:
+      - generic [ref=e265]:
+        - heading "What the laboratory measures" [level=2] [ref=e266]
+        - paragraph [ref=e267]: The following compound classes are accepted for quantitative content analysis. Compounds outside this list are assessed on request.
+      - generic [ref=e268]:
+        - generic [ref=e269]:
+          - heading "Repair and healing" [level=3] [ref=e270]
+          - list [ref=e271]:
+            - listitem [ref=e272]: BPC-157
+            - listitem [ref=e273]: TB-500 (thymosin β4)
+            - listitem [ref=e274]: GHK-Cu
+            - listitem [ref=e275]: KPV
+        - generic [ref=e276]:
+          - heading "GLP-1 and metabolic" [level=3] [ref=e277]
+          - list [ref=e278]:
+            - listitem [ref=e279]: Semaglutide
+            - listitem [ref=e280]: Tirzepatide
+            - listitem [ref=e281]: Retatrutide
+            - listitem [ref=e282]: Cagrilintide
+        - generic [ref=e283]:
+          - heading "GH secretagogues" [level=3] [ref=e284]
+          - list [ref=e285]:
+            - listitem [ref=e286]: Ipamorelin
+            - listitem [ref=e287]: CJC-1295
+            - listitem [ref=e288]: Tesamorelin
+            - listitem [ref=e289]: MK-677
+        - generic [ref=e290]:
+          - heading "Other and research" [level=3] [ref=e291]
+          - list [ref=e292]:
+            - listitem [ref=e293]: Melanotan II
+            - listitem [ref=e294]: PT-141
+            - listitem [ref=e295]: Selank
+            - listitem [ref=e296]: Epithalon
+      - generic [ref=e297]:
+        - generic [ref=e298]:
+          - heading "Compound not listed" [level=3] [ref=e299]
+          - paragraph [ref=e300]: Submit the compound and its declared concentration. Feasibility of a quantitative method is assessed and confirmed before the sample is accepted.
+        - link "Request a compound" [ref=e301] [cursor=pointer]:
+          - /url: "#submit"
+    - generic [ref=e304]:
+      - generic [ref=e305]:
+        - paragraph [ref=e306]: What you’ll get
+        - heading "Certificate of analysis" [level=2] [ref=e307]
+        - paragraph [ref=e308]: Issued per sample. Values reported with method and tolerance.
+      - 'img "Certificate of analysis for BPC-157: identity confirmed, purity 99.1 percent, content 7.2 mg, 28 percent below label" [ref=e310]':
+        - generic [ref=e313]: Amberline
+        - generic [ref=e314]: CERTIFICATE OF ANALYSIS
+        - generic [ref=e315]: COA-4471
+        - generic [ref=e316]: COMPOUND
+        - generic [ref=e317]: BPC-157
+        - generic [ref=e318]: METHOD
+        - generic [ref=e319]: RP-HPLC / UV
+        - generic [ref=e320]: LOT
+        - generic [ref=e321]: 4471-A
+        - generic [ref=e322]: RECEIVED
+        - generic [ref=e323]: 2026-05-14
+        - generic [ref=e324]: RESULTS
+        - generic [ref=e325]: IDENTITY
+        - generic [ref=e326]: Confirmed
+        - generic [ref=e327]: PURITY
+        - generic [ref=e328]: 99.1%
+        - generic [ref=e329]: CONTENT
+        - generic [ref=e330]: 7.2 mg
+        - generic [ref=e331]: vs label 10.0 mg
+        - generic [ref=e332]: −2.8 mg (−28%)
+        - generic [ref=e334]: CONTENT 28% BELOW LABEL CLAIM
+        - generic [ref=e335]: HPLC TRACE
+        - generic [ref=e339]: label 10.0
+        - generic [ref=e340]: measured 7.2
+        - generic [ref=e344]: VERIFIED
+        - generic [ref=e346]: Authorized signatory
+        - generic [ref=e366]: scan to verify
+    - generic [ref=e369]:
+      - generic [ref=e370]:
+        - heading "Submitting a sample" [level=2] [ref=e371]
+        - paragraph [ref=e372]: Samples are accepted by mail. Both lyophilized powder and reconstituted solution are acceptable; the method does not require one form over the other.
+        - generic [ref=e373]:
+          - generic [ref=e374]:
+            - term [ref=e375]: Minimum quantity
+            - definition [ref=e376]: One vial, or [volume/mass to confirm]
+          - generic [ref=e377]:
+            - term [ref=e378]: Form
+            - definition [ref=e379]: Powder or reconstituted solution
+          - generic [ref=e380]:
+            - term [ref=e381]: Remainder
+            - definition [ref=e382]: Consumed in analysis; not returned
+          - generic [ref=e383]:
+            - term [ref=e384]: Shipping liquids
+            - definition [ref=e385]: Sealed vial, secondary containment, rigid packaging
+          - generic [ref=e386]:
+            - term [ref=e387]: Turnaround
+            - definition [ref=e388]: 3 to 5 days from receipt
+      - generic [ref=e389]:
+        - generic [ref=e390]:
+          - heading "On material consumed" [level=3] [ref=e391]
+          - paragraph [ref=e392]: Quantitative analysis consumes a portion of the sample. Submit a quantity that can be spared; the remainder is not returned.
+        - generic [ref=e393]:
+          - heading "On transit" [level=3] [ref=e394]
+          - paragraph [ref=e395]: Peptides tolerate ambient transit for the duration of standard mail. Cold-chain shipping is not required for identity and content analysis.
+    - generic [ref=e397]:
+      - heading "The laboratory holds no position in any compound it measures." [level=2] [ref=e398]
+      - paragraph [ref=e399]: No compounds are sold, brokered, or recommended. The laboratory’s only output is measurement.
+    - generic [ref=e402]:
+      - generic [ref=e403]:
+        - paragraph [ref=e404]: Privacy
+        - heading "The laboratory tests samples, not persons" [level=2] [ref=e405]
+        - paragraph [ref=e406]: No name is required. Each submission is logged under an anonymous specimen identifier. The laboratory analyzes chemical samples for research and quality verification; it does not collect, test, or retain human specimens or personal health information.
+      - list [ref=e407]:
+        - listitem [ref=e408]:
+          - generic [ref=e409]: ✓
+          - generic [ref=e410]: No name or identity required
+        - listitem [ref=e411]:
+          - generic [ref=e412]: ✓
+          - generic [ref=e413]: Anonymous specimen identifiers
+        - listitem [ref=e414]:
+          - generic [ref=e415]: ✓
+          - generic [ref=e416]: Declared values and results retained on file
+        - listitem [ref=e417]:
+          - generic [ref=e418]: ✓
+          - generic [ref=e419]: No personal health information collected
+    - generic [ref=e421]:
+      - heading "Questions" [level=2] [ref=e422]
+      - generic [ref=e423]:
+        - generic [ref=e424]:
+          - heading [level=3] [ref=e425]:
+            - button "May a certificate be shared or published?" [ref=e426] [cursor=pointer]:
+              - generic [ref=e428]: +
+          - region "May a certificate be shared or published?":
+            - paragraph [ref=e429]: The certificate is issued to the submitter and may be reproduced. It attests to the tested sample only and makes no representation about other material from the same source.
+        - generic [ref=e430]:
+          - heading [level=3] [ref=e431]:
+            - button "What follows a short result?" [ref=e432] [cursor=pointer]:
+              - generic [ref=e434]: +
+          - region "What follows a short result?":
+            - paragraph [ref=e435]: A short result reports the measured content of the submitted sample. Interpretation and any subsequent action rest with the submitter; the laboratory issues measurement, not recommendation.
+        - generic [ref=e436]:
+          - heading [level=3] [ref=e437]:
+            - button "Does the laboratory sell or supply peptides?" [ref=e438] [cursor=pointer]:
+              - generic [ref=e440]: +
+          - region "Does the laboratory sell or supply peptides?":
+            - paragraph [ref=e441]: No. The laboratory holds no position in any compound it measures and supplies none.
+        - generic [ref=e442]:
+          - heading [level=3] [ref=e443]:
+            - button "Is re-testing available?" [ref=e444] [cursor=pointer]:
+              - generic [ref=e446]: +
+          - region "Is re-testing available?":
+            - paragraph [ref=e447]: A further sample may be submitted as a new assay under its own identifier. Results are reported independently.
+        - generic [ref=e448]:
+          - heading [level=3] [ref=e449]:
+            - button "How does a result relate to a source?" [ref=e450] [cursor=pointer]:
+              - generic [ref=e452]: +
+          - region "How does a result relate to a source?":
+            - paragraph [ref=e453]: A result describes the submitted sample. It does not certify a vendor, a lot beyond the one tested, or future production.
+    - generic [ref=e455]:
+      - paragraph [ref=e456]: Instrument coming online
+      - heading "The laboratory is not yet accepting samples." [level=2] [ref=e457]
+      - generic [ref=e458]:
+        - generic [ref=e459]: Email address
+        - generic [ref=e460]:
+          - textbox "Email address" [ref=e461]:
+            - /placeholder: name@domain.com
+          - generic [ref=e462]:
+            - text: Company
+            - textbox [ref=e463]
+          - button "Register the address" [ref=e464] [cursor=pointer]
+        - generic [ref=e465]: The address receives a single notification when intake opens. No further correspondence.
+  - contentinfo [ref=e466]:
+    - generic [ref=e467]:
+      - img "Amberline" [ref=e468]
+      - paragraph [ref=e471]: For research use only. Not for human consumption. The laboratory reports measurements and makes no representation as to safety or suitability.
+  - button "Open Next.js Dev Tools" [ref=e477] [cursor=pointer]

@@ -10,11 +10,12 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, CircleHelp, Circle, Loader2 } from 'lucide-react'
+import { Check, CircleHelp, Circle, Loader2, Sparkles, RefreshCw } from 'lucide-react'
 import {
   approveOnboardingSession,
   saveAnswerEdits,
 } from '@/app/actions/onboarding'
+import { runDiscovery } from '@/app/actions/onboarding-discover'
 import type { Completeness, SlotStatus } from '@/lib/onboarding/completeness'
 import type { Answers } from '@/lib/onboarding/schema'
 
@@ -66,7 +67,7 @@ export default function OnboardingReview({
 }: Props) {
   const router = useRouter()
   const [answers, setAnswers] = useState<Answers>(initialAnswers)
-  const [busy, setBusy] = useState<'save' | 'approve' | null>(null)
+  const [busy, setBusy] = useState<'save' | 'approve' | 'detect' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -93,6 +94,9 @@ export default function OnboardingReview({
         value: slot.kind === 'list' ? raw.split(',').map((s) => s.trim()).filter(Boolean) : raw,
         unknown: false,
         recordedAt: prev[slot.id]?.recordedAt,
+        // Typing over an auto-matched value makes it the human's answer, so the
+        // "auto-detected" provenance is dropped rather than left to mislead.
+        source: 'interview',
       },
     }))
   }
@@ -130,6 +134,18 @@ export default function OnboardingReview({
     if (res.error) setError(res.error)
     else {
       setSaved(true)
+      router.refresh()
+    }
+  }
+
+  async function handleDetect() {
+    setBusy('detect')
+    setError(null)
+    const res = await runDiscovery(sessionId)
+    setBusy(null)
+    if (res.error) setError(res.error)
+    else {
+      if (res.answers) setAnswers(res.answers)
       router.refresh()
     }
   }
@@ -239,6 +255,22 @@ export default function OnboardingReview({
                       />
                     )}
 
+                    {answer?.source === 'auto' && answer.evidence && (
+                      <p className="mt-1.5 flex items-start gap-1.5 text-[11px] leading-relaxed text-surface-400">
+                        <Sparkles
+                          size={11}
+                          className={`mt-0.5 shrink-0 ${answer.confidence === 'low' ? '' : 'text-brand-400'}`}
+                          style={answer.confidence === 'low' ? { color: 'var(--color-warning)' } : undefined}
+                        />
+                        <span>
+                          <span className="font-medium text-surface-300">
+                            {answer.confidence === 'low' ? 'Best guess — confirm: ' : 'Auto-detected: '}
+                          </span>
+                          {answer.evidence}
+                        </span>
+                      </p>
+                    )}
+
                     <label className="mt-2 inline-flex items-center gap-2 text-[11px] text-surface-400 cursor-pointer transition-colors hover:text-surface-100">
                       <input
                         type="checkbox"
@@ -280,6 +312,20 @@ export default function OnboardingReview({
         )}
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDetect}
+            disabled={busy !== null}
+            title="Re-check the connected Google accounts for this client's domain"
+            className="inline-flex items-center gap-1.5 rounded-sm border border-surface-800 px-3 py-2 text-sm font-medium text-surface-100 transition-colors hover:bg-surface-850 hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {busy === 'detect' ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <RefreshCw size={14} />
+            )}
+            Re-detect
+          </button>
           <button
             type="button"
             onClick={handleSave}

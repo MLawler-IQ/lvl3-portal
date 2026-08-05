@@ -1,0 +1,265 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Pasha Health home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=e5]
+      - navigation "Primary" [ref=e6]:
+        - button "Services" [ref=e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=e8]: 
+        - button "Care by condition" [ref=e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=e10]: 
+        - button "Service areas" [ref=e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=e12]: 
+        - button "About" [ref=e13] [cursor=pointer]
+        - button "Resources" [ref=e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=e15]: 
+      - generic [ref=e16]:
+        - link "(971) 369-4522" [ref=e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e24]:
+        - navigation "Breadcrumb" [ref=e25]:
+          - link "Home" [ref=e26] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e27]: /
+          - generic [ref=e28]: Services
+        - generic [ref=e29]: What we do
+        - heading "Ten services. One caregiver." [level=1] [ref=e30]
+        - paragraph [ref=e31]: We don't send a rotating cast. The same caregiver delivers what your parent needs across every category. That consistency is the entire product.
+        - generic [ref=e32]:
+          - button "Take the 2-min assessment" [ref=e33] [cursor=pointer]
+          - link "Schedule a call" [ref=e34] [cursor=pointer]:
+            - /url: /contact/
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: Core care
+          - heading "Six services we've built the company around." [level=2] [ref=e39]
+          - paragraph [ref=e40]: Pick what you need; we don't bundle. Every plan is written and approved before anything starts.
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: 
+              - generic [ref=e45]: Our specialty
+            - heading "Personal Care" [level=3] [ref=e46]
+            - generic [ref=e47]: Pasha Personal Care
+            - paragraph [ref=e48]: Hands-on daily care delivered by the same caregiver each visit. Dementia-specialized since day one.
+            - link "Learn more →" [ref=e50] [cursor=pointer]:
+              - /url: /services/personal-care/
+          - generic [ref=e51]:
+            - generic [ref=e52]: 
+            - heading "Around-The-Home Help" [level=3] [ref=e54]
+            - generic [ref=e55]: Pasha Around The Home
+            - paragraph [ref=e56]: The quiet upkeep that keeps a home livable, without disrupting the day.
+            - link "Learn more →" [ref=e58] [cursor=pointer]:
+              - /url: /services/around-the-home-help/
+          - generic [ref=e59]:
+            - generic [ref=e60]: 
+            - heading "Senior Transportation" [level=3] [ref=e62]
+            - generic [ref=e63]: Pasha Transportation
+            - paragraph [ref=e64]: Door-to-door, never rushed. The driver is also the caregiver. Same person, same trust.
+            - link "Learn more →" [ref=e66] [cursor=pointer]:
+              - /url: /services/transportation/
+          - generic [ref=e67]:
+            - generic [ref=e68]: 
+            - heading "Companionship" [level=3] [ref=e70]
+            - generic [ref=e71]: Pasha Companionship
+            - paragraph [ref=e72]: Isolation is the part of aging nobody books a doctor for. We show up for it.
+            - link "Learn more →" [ref=e74] [cursor=pointer]:
+              - /url: /services/companionship/
+          - generic [ref=e75]:
+            - generic [ref=e76]: 
+            - heading "Technology Lessons" [level=3] [ref=e78]
+            - generic [ref=e79]: Pasha Technology Lessons
+            - paragraph [ref=e80]: The digital gap closed, at the pace your parent learns best.
+            - link "Learn more →" [ref=e82] [cursor=pointer]:
+              - /url: /services/technology-lessons/
+          - generic [ref=e83]:
+            - generic [ref=e84]: 
+            - heading "Nutrition & Meal Prep" [level=3] [ref=e86]
+            - generic [ref=e87]: Pasha Nutrition
+            - paragraph [ref=e88]: Cooked at home, eaten at the table. Hydration and intake tracked when it matters.
+            - link "Learn more →" [ref=e90] [cursor=pointer]:
+              - /url: /services/nutrition-meal-prep/
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - generic [ref=e94]: Specialized care
+          - heading "Four services for the moments care has to scale up." [level=2] [ref=e95]
+          - paragraph [ref=e96]: Respite, overnight, around-the-clock, and post-hospital recovery. The same caregivers, longer hours, when something changes.
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - generic [ref=e99]:
+              - generic [ref=e100]: 
+              - generic [ref=e101]: New
+            - heading "Respite Care" [level=3] [ref=e102]
+            - generic [ref=e103]: Pasha Respite
+            - paragraph [ref=e104]: Family caregivers burn out. Respite care exists so the primary caregiver can sleep, travel, or just sit.
+            - link "Learn more →" [ref=e106] [cursor=pointer]:
+              - /url: /services/respite-care/
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - generic [ref=e109]: 
+              - generic [ref=e110]: New
+            - heading "24-Hour Care" [level=3] [ref=e111]
+            - generic [ref=e112]: Pasha 24-Hour
+            - paragraph [ref=e113]: Two- or three-caregiver rotation so someone is always awake. Used for late-stage dementia, hospice support, and high fall risk.
+            - link "Learn more →" [ref=e115] [cursor=pointer]:
+              - /url: /services/24-hour-care/
+          - generic [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]: 
+              - generic [ref=e119]: New
+            - heading "Overnight Care" [level=3] [ref=e120]
+            - generic [ref=e121]: Pasha Overnight
+            - paragraph [ref=e122]: Asleep until needed, awake the moment something happens.
+            - link "Learn more →" [ref=e124] [cursor=pointer]:
+              - /url: /services/overnight-care/
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - generic [ref=e127]: 
+              - generic [ref=e128]: New
+            - heading "Post-Hospital Recovery" [level=3] [ref=e129]
+            - generic [ref=e130]: Pasha Recovery
+            - paragraph [ref=e131]: Coordinated handoff from discharge planners. Med routines, mobility, and the household tasks recovery depends on.
+            - link "Learn more →" [ref=e133] [cursor=pointer]:
+              - /url: /services/post-hospital-recovery/
+      - generic [ref=e136]:
+        - generic [ref=e137]: What we don't do
+        - heading "Non-medical means non-medical." [level=2] [ref=e138]
+        - paragraph [ref=e139]: We're proud of the line. It's clearer for families, safer for your parent, and means we don't compete with the people you actually want involved.
+        - generic [ref=e140]:
+          - generic [ref=e141]:
+            - generic [ref=e142]:
+              - generic [ref=e143]: 
+              - heading "What we do" [level=3] [ref=e144]
+            - list [ref=e145]:
+              - listitem [ref=e146]: Bathing, dressing, mobility, fall prevention
+              - listitem [ref=e147]: Medication reminders (non-administering)
+              - listitem [ref=e148]: Housekeeping, meals, errands, transportation
+              - listitem [ref=e149]: Companionship and language-matched conversation
+              - listitem [ref=e150]: Dementia & Alzheimer's specialized care
+          - generic [ref=e151]:
+            - generic [ref=e152]:
+              - generic [ref=e153]: 
+              - heading "What we don't do" [level=3] [ref=e154]
+            - list [ref=e155]:
+              - listitem [ref=e156]: Nursing, wound care, or injections
+              - listitem [ref=e157]: Medication administration
+              - listitem [ref=e158]: Physical or occupational therapy
+              - listitem [ref=e159]: Diagnoses or medical advice
+              - listitem [ref=e160]: Insurance billing for medical services
+      - generic [ref=e163]:
+        - generic [ref=e164]: Not sure where to start?
+        - heading "Tell us where things stand." [level=2] [ref=e165]
+        - paragraph [ref=e166]: A two-minute assessment or a fifteen-minute call. We'll match you to the right service, even if it's not us.
+        - generic [ref=e167]:
+          - link "Take the assessment" [ref=e168] [cursor=pointer]:
+            - /url: "#"
+          - link "Schedule a call" [ref=e169] [cursor=pointer]:
+            - /url: /contact/
+  - contentinfo [ref=e170]:
+    - generic [ref=e171]:
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - img "Pasha Health" [ref=e174]
+          - paragraph [ref=e175]: Just rest and let us take care of you.
+          - generic [ref=e176]:
+            - generic [ref=e177]: (971) 369-4522
+            - generic [ref=e178]: info@pashahealth.com
+            - generic [ref=e179]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=e180]:
+            - generic [ref=e181]: 5.0 average from 21 Google reviews
+            - generic [ref=e182]:
+              - generic [ref=e183]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=e184]:
+          - generic [ref=e185]: Services
+          - list [ref=e186]:
+            - listitem [ref=e187]:
+              - link "Personal Care" [ref=e188] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=e189]:
+              - link "Around-The-Home Help" [ref=e190] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=e191]:
+              - link "Senior Transportation" [ref=e192] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=e193]:
+              - link "Companionship" [ref=e194] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=e195]:
+              - link "Technology Lessons" [ref=e196] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=e197]:
+              - link "Nutrition & Meal Prep" [ref=e198] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=e199]:
+          - generic [ref=e200]: Service areas
+          - list [ref=e201]:
+            - listitem [ref=e202]:
+              - link "Salem" [ref=e203] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=e204]:
+              - link "Turner" [ref=e205] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=e206]:
+              - link "Keizer" [ref=e207] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=e208]:
+              - link "Stayton" [ref=e209] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=e210]:
+              - link "Aumsville" [ref=e211] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=e212]:
+              - link "Silverton" [ref=e213] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=e214]:
+          - generic [ref=e215]: Resources
+          - list [ref=e216]:
+            - listitem [ref=e217]:
+              - link "Cost of home care" [ref=e218] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e219]:
+              - button "Care Assessment" [ref=e220] [cursor=pointer]
+            - listitem [ref=e221]:
+              - link "FAQ" [ref=e222] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e223]:
+              - link "Blog" [ref=e224] [cursor=pointer]:
+                - /url: /
+        - generic [ref=e225]:
+          - generic [ref=e226]: Company
+          - list [ref=e227]:
+            - listitem [ref=e228]:
+              - link "About" [ref=e229] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=e230]:
+              - link "Careers" [ref=e231] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e232]:
+              - link "Contact" [ref=e233] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=e234]:
+              - link "For care managers" [ref=e235] [cursor=pointer]:
+                - /url: /
+      - generic [ref=e236]:
+        - generic [ref=e237]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=e238]:
+          - link "Privacy" [ref=e239] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=e240] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=e241] [cursor=pointer]:
+            - /url: "#"

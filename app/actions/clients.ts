@@ -108,9 +108,13 @@ export async function createClient(formData: FormData): Promise<{ id: string }> 
   const slug = rawSlug && rawSlug.length > 0 ? rawSlug : slugify(name)
   const logo_url = (formData.get('logo_url') as string | null)?.trim() || null
 
+  // The website used to be collected and thrown away (logo fetch only). It is
+  // the match key for onboarding auto-discovery, so it is now persisted.
+  const website_url = (formData.get('website') as string | null)?.trim() || null
+
   const { data, error } = await service
     .from('clients')
-    .insert({ name, slug, logo_url })
+    .insert({ name, slug, logo_url, website_url })
     .select('id')
     .single()
 
@@ -153,9 +157,16 @@ export async function updateClient(clientId: string, formData: FormData) {
     (formData.get('brand_match_mode') as string | null) === 'exact' ? 'exact' : 'contains'
   const targets = parseTargets(formData)
 
+  // website_url is patched conditionally: a form that doesn't submit the field
+  // must leave the stored value alone rather than nulling it.
+  const websitePatch: { website_url?: string | null } = formData.has('website_url')
+    ? { website_url: (formData.get('website_url') as string | null)?.trim() || null }
+    : {}
+
   const { error } = await service
     .from('clients')
     .update({
+      ...websitePatch,
       name,
       slug,
       logo_url,

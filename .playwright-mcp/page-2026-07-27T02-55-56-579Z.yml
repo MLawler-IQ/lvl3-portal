@@ -1,0 +1,303 @@
+- generic [active] [ref=f7e1]:
+  - banner [ref=f7e2]:
+    - generic [ref=f7e3]:
+      - link "Pasha Health home" [ref=f7e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f7e5]
+      - navigation "Primary" [ref=f7e6]:
+        - button "Services" [ref=f7e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f7e8]: 
+        - button "Care by condition" [ref=f7e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f7e10]: 
+        - button "Service areas" [ref=f7e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f7e12]: 
+        - button "About" [ref=f7e13] [cursor=pointer]
+        - button "Resources" [ref=f7e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f7e15]: 
+      - generic [ref=f7e16]:
+        - link "(971) 369-4522" [ref=f7e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f7e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f7e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f7e20]:
+    - generic [ref=f7e21]:
+      - generic [ref=f7e23]:
+        - navigation "Breadcrumb" [ref=f7e24]:
+          - link "Home" [ref=f7e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f7e26]: /
+          - link "Care by condition" [ref=f7e27] [cursor=pointer]:
+            - /url: /conditions/
+          - generic [ref=f7e28]: /
+          - generic [ref=f7e29]: COPD
+        - generic [ref=f7e31]:
+          - generic [ref=f7e32]: Care by condition
+          - heading "COPD home care in Salem, OR" [level=1] [ref=f7e33]
+          - paragraph [ref=f7e34]: With COPD, everything has a breath budget. A shower, the stairs, dinner. Your dad isn't being stubborn when he skips things, he's rationing air. We help him spend it on what matters.
+          - generic [ref=f7e35]:
+            - link "Talk to a care specialist" [ref=f7e36] [cursor=pointer]:
+              - /url: /contact/
+            - button "Take the 2-min assessment" [ref=f7e37] [cursor=pointer]
+          - generic [ref=f7e38]:
+            - generic [ref=f7e39]:
+              - generic [ref=f7e40]: 
+              - text: Breath-paced daily support
+            - generic [ref=f7e41]:
+              - generic [ref=f7e42]: 
+              - text: Trigger-aware housekeeping
+            - generic [ref=f7e43]:
+              - generic [ref=f7e44]: 
+              - text: Same-day callback
+      - generic [ref=f7e49]:
+        - generic [ref=f7e50]: What it is
+        - heading "What COPD home care covers." [level=2] [ref=f7e51]
+        - paragraph [ref=f7e52]: "COPD home care is non-medical support built around one scarce resource: breath. We take over the tasks that burn it, pace the ones that can't be skipped, and keep the home itself from making breathing harder. Medical management stays with the pulmonologist and respiratory team."
+        - generic [ref=f7e54]:
+          - generic [ref=f7e55]:
+            - heading "It covers" [level=4] [ref=f7e56]
+            - list [ref=f7e57]:
+              - listitem [ref=f7e58]: Energy-paced help with bathing, dressing, and daily tasks
+              - listitem [ref=f7e59]: Housekeeping that keeps dust and scent triggers down
+              - listitem [ref=f7e60]: Light meals, cooking, and cleanup
+              - listitem [ref=f7e61]: Errands, groceries, and rides to appointments
+              - listitem [ref=f7e62]: Safety awareness around oxygen equipment and tubing
+          - generic [ref=f7e63]:
+            - heading "It does not cover" [level=4] [ref=f7e64]
+            - list [ref=f7e65]:
+              - listitem [ref=f7e66]: Managing or adjusting oxygen
+              - listitem [ref=f7e67]: Administering inhalers or nebulizer treatments
+              - listitem [ref=f7e68]: Respiratory therapy
+              - listitem [ref=f7e69]: Medical monitoring or assessment
+      - generic [ref=f7e71]:
+        - generic [ref=f7e72]:
+          - generic [ref=f7e73]: How needs change
+          - heading "Care matched to the breath of the day." [level=2] [ref=f7e74]
+          - paragraph [ref=f7e75]: COPD tends to move in one direction, but not on a schedule. We match the help to the breath your parent actually has, week by week.
+        - generic [ref=f7e76]:
+          - generic [ref=f7e77]:
+            - generic [ref=f7e78]: "01"
+            - heading "The pacing years" [level=4] [ref=f7e79]
+            - paragraph [ref=f7e80]: Mostly independent, but the expensive tasks (vacuuming, laundry baskets, grocery hauls) cost a day's energy. We take those, so the good hours go to living.
+          - generic [ref=f7e81]:
+            - generic [ref=f7e82]: "02"
+            - heading "When the home gets smaller" [level=4] [ref=f7e83]
+            - paragraph [ref=f7e84]: The activity radius shrinks toward the favorite chair. Bathing support, meals, and steady company matter more. We keep the world from shrinking with it.
+          - generic [ref=f7e85]:
+            - generic [ref=f7e86]: "03"
+            - heading "Advanced COPD" [level=4] [ref=f7e87]
+            - paragraph [ref=f7e88]: "Presence becomes the service: unhurried personal care, calm nights, and coordination alongside the medical team, including hospice when families choose it."
+      - generic [ref=f7e90]:
+        - generic [ref=f7e91]:
+          - generic [ref=f7e92]: How we help
+          - heading "Six ways we help your parent spend breath on living." [level=2] [ref=f7e93]
+        - generic [ref=f7e94]:
+          - generic [ref=f7e95]:
+            - generic [ref=f7e96]: 
+            - heading "Pacing, not pushing" [level=3] [ref=f7e97]
+            - paragraph [ref=f7e98]: Every task broken into pieces with rest built in. A caregiver who understands that stopping halfway up the hall isn't quitting, it's the technique.
+          - generic [ref=f7e99]:
+            - generic [ref=f7e100]: 
+            - heading "Bathing without the battle" [level=3] [ref=f7e101]
+            - paragraph [ref=f7e102]: The most breath-expensive task of the day, done seated, slowly, with rest stops and zero rush. Many clients stop dreading it.
+          - generic [ref=f7e103]:
+            - generic [ref=f7e104]: 
+            - heading "Trigger-aware housekeeping" [level=3] [ref=f7e105]
+            - paragraph [ref=f7e106]: Dust, aerosols, and strong scents make hard breathing harder. We clean with unscented products and keep the air in mind, not just the surfaces.
+          - generic [ref=f7e107]:
+            - generic [ref=f7e108]: 
+            - heading "Lighter meals, more often" [level=3] [ref=f7e109]
+            - paragraph [ref=f7e110]: "Big meals are exhausting to eat. We cook the way many COPD families prefer: smaller, lighter, more frequent, and still worth sitting down for."
+          - generic [ref=f7e111]:
+            - generic [ref=f7e112]: 
+            - heading "Oxygen-equipment awareness" [level=3] [ref=f7e113]
+            - paragraph [ref=f7e114]: We never adjust oxygen. We do keep tubing untangled and out of walkways, watch the supply, and flag anything that looks off to you and the supplier.
+          - generic [ref=f7e115]:
+            - generic [ref=f7e116]: 
+            - heading "Calmer nights" [level=3] [ref=f7e117]
+            - paragraph [ref=f7e118]: Breathlessness anxiety peaks at 2am. An overnight presence turns bad nights survivable, for your parent and for whoever's been sleeping with one ear open.
+      - generic [ref=f7e121]:
+        - generic [ref=f7e122]: From a family
+        - paragraph [ref=f7e123]: "\"Dad wouldn't shower for weeks because it wiped him out. His caregiver worked out a seated routine with rest breaks, and now it's just a normal Tuesday thing. A small victory to anyone else. Huge for us.\""
+        - generic [ref=f7e126]:
+          - generic [ref=f7e127]: Son of client
+          - generic [ref=f7e128]: Stayton, OR · COPD support since 2024
+      - generic [ref=f7e131]:
+        - generic [ref=f7e132]:
+          - generic [ref=f7e133]: Free for families
+          - heading "COPD home comfort checklist." [level=2] [ref=f7e134]
+          - paragraph [ref=f7e135]: "A one-page printable for making the house itself easier to breathe in: seating, air, tubing routes, and a plan for smoke season."
+          - generic [ref=f7e136]:
+            - button "Download the PDF" [ref=f7e137] [cursor=pointer]
+            - link "Or just talk to us" [ref=f7e138] [cursor=pointer]:
+              - /url: /contact/
+        - generic [ref=f7e139]:
+          - generic [ref=f7e140]:
+            - generic [ref=f7e141]: 
+            - generic [ref=f7e142]: Preview
+          - list [ref=f7e143]:
+            - listitem [ref=f7e144]: A seat in the shower and rest stops on long routes through the house
+            - listitem [ref=f7e145]: Unscented cleaning and laundry products only
+            - listitem [ref=f7e146]: Oxygen tubing routes that never cross a walkway
+            - listitem [ref=f7e147]: Pantry staples for small, light meals
+            - listitem [ref=f7e148]: A wildfire-smoke plan for Oregon summers
+            - listitem [ref=f7e149]: ...and 6 more
+      - generic [ref=f7e151]:
+        - generic [ref=f7e152]:
+          - generic [ref=f7e153]: Common questions
+          - heading "What families ask first." [level=2] [ref=f7e154]
+        - generic [ref=f7e155]:
+          - generic [ref=f7e156]:
+            - button "Do caregivers manage the oxygen?" [ref=f7e157] [cursor=pointer]:
+              - generic [ref=f7e159]: 
+            - generic [ref=f7e160]: No, never. Adjusting oxygen is medical. What we do is keep the equipment area safe, the tubing untangled and trip-proof, and tell you and the supplier when something looks wrong.
+          - button "What happens during a flare-up?" [ref=f7e162] [cursor=pointer]:
+            - generic [ref=f7e164]: 
+          - button "Can you help him shower without exhausting him?" [ref=f7e166] [cursor=pointer]:
+            - generic [ref=f7e168]: 
+          - button "Do you use different cleaning products?" [ref=f7e170] [cursor=pointer]:
+            - generic [ref=f7e172]: 
+          - button "Is overnight help available?" [ref=f7e174] [cursor=pointer]:
+            - generic [ref=f7e176]: 
+          - button "Do you work with his pulmonologist?" [ref=f7e178] [cursor=pointer]:
+            - generic [ref=f7e180]: 
+      - generic [ref=f7e182]:
+        - generic [ref=f7e183]:
+          - generic [ref=f7e184]: You might also need
+          - heading "Three services COPD families often combine." [level=2] [ref=f7e185]
+        - generic [ref=f7e186]:
+          - generic [ref=f7e187]:
+            - generic [ref=f7e188]: 
+            - heading "Personal Care" [level=3] [ref=f7e190]
+            - generic [ref=f7e191]: Pasha Personal Care
+            - paragraph [ref=f7e192]: Hands-on daily care delivered by the same caregiver each visit. Dementia-specialized since day one.
+            - link "Learn more →" [ref=f7e194] [cursor=pointer]:
+              - /url: /services/personal-care/
+          - generic [ref=f7e195]:
+            - generic [ref=f7e196]: 
+            - heading "Around-The-Home Help" [level=3] [ref=f7e198]
+            - generic [ref=f7e199]: Pasha Around The Home
+            - paragraph [ref=f7e200]: The quiet upkeep that keeps a home livable, without disrupting the day.
+            - link "Learn more →" [ref=f7e202] [cursor=pointer]:
+              - /url: /services/around-the-home-help/
+          - generic [ref=f7e203]:
+            - generic [ref=f7e204]: 
+            - heading "Overnight Care" [level=3] [ref=f7e206]
+            - generic [ref=f7e207]: Pasha Overnight
+            - paragraph [ref=f7e208]: Asleep until needed, awake the moment something happens.
+            - link "Learn more →" [ref=f7e210] [cursor=pointer]:
+              - /url: /services/overnight-care/
+      - generic [ref=f7e213]:
+        - paragraph [ref=f7e214]: Just rest and let us take care of you.
+        - paragraph [ref=f7e215]: Needing help isn't giving up. It's one of the most loving things you can do.
+      - generic [ref=f7e218]:
+        - generic [ref=f7e219]: Talk to a care specialist
+        - heading "A 15-minute call. No commitment." [level=2] [ref=f7e220]
+        - paragraph [ref=f7e221]: Tell us what a hard day looks like. We'll explain how breath-paced care works and tell you honestly whether we're the right fit.
+        - generic [ref=f7e222]:
+          - link "Schedule a call" [ref=f7e223] [cursor=pointer]:
+            - /url: /contact/
+          - link "Take the 2-min assessment" [ref=f7e224] [cursor=pointer]:
+            - /url: "#"
+  - contentinfo [ref=f7e225]:
+    - generic [ref=f7e226]:
+      - generic [ref=f7e227]:
+        - generic [ref=f7e228]:
+          - img "Pasha Health" [ref=f7e229]
+          - paragraph [ref=f7e230]: Just rest and let us take care of you.
+          - generic [ref=f7e231]:
+            - generic [ref=f7e232]: (971) 369-4522
+            - generic [ref=f7e233]: info@pashahealth.com
+            - generic [ref=f7e234]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f7e235]:
+            - generic [ref=f7e236]: 5.0 average from 21 Google reviews
+            - generic [ref=f7e237]:
+              - generic [ref=f7e238]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f7e239]:
+          - generic [ref=f7e240]: Services
+          - list [ref=f7e241]:
+            - listitem [ref=f7e242]:
+              - link "Personal Care" [ref=f7e243] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f7e244]:
+              - link "Around-The-Home Help" [ref=f7e245] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f7e246]:
+              - link "Senior Transportation" [ref=f7e247] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f7e248]:
+              - link "Companionship" [ref=f7e249] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f7e250]:
+              - link "Technology Lessons" [ref=f7e251] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f7e252]:
+              - link "Nutrition & Meal Prep" [ref=f7e253] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f7e254]:
+          - generic [ref=f7e255]: Service areas
+          - list [ref=f7e256]:
+            - listitem [ref=f7e257]:
+              - link "Salem" [ref=f7e258] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f7e259]:
+              - link "Turner" [ref=f7e260] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f7e261]:
+              - link "Keizer" [ref=f7e262] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f7e263]:
+              - link "Stayton" [ref=f7e264] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f7e265]:
+              - link "Aumsville" [ref=f7e266] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f7e267]:
+              - link "Silverton" [ref=f7e268] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f7e269]:
+          - generic [ref=f7e270]: Resources
+          - list [ref=f7e271]:
+            - listitem [ref=f7e272]:
+              - link "Resource hub" [ref=f7e273] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f7e274]:
+              - button "Care Assessment" [ref=f7e275] [cursor=pointer]
+            - listitem [ref=f7e276]:
+              - link "FAQ" [ref=f7e277] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f7e278]:
+              - link "Blog" [ref=f7e279] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f7e280]:
+          - generic [ref=f7e281]: Company
+          - list [ref=f7e282]:
+            - listitem [ref=f7e283]:
+              - link "About" [ref=f7e284] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f7e285]:
+              - link "Careers" [ref=f7e286] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f7e287]:
+              - link "Contact" [ref=f7e288] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f7e289]:
+              - link "For care managers" [ref=f7e290] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f7e291]:
+        - generic [ref=f7e292]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f7e293]:
+          - link "Privacy" [ref=f7e294] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f7e295] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f7e296] [cursor=pointer]:
+            - /url: "#"

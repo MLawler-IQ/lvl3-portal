@@ -67,7 +67,7 @@ export async function getActiveSession(
 
 export async function startSession(
   clientId: string,
-): Promise<{ session?: OnboardingSession; error?: string }> {
+): Promise<{ session?: OnboardingSession; error?: string; ranDiscovery?: boolean }> {
   try {
     const { user } = await requireAdmin()
     const service = await createServiceClient()
@@ -100,7 +100,7 @@ export async function startSession(
     if (error) return { error: error.message }
 
     revalidatePath(`/clients/${clientId}/onboarding`)
-    return { session: { ...data, answers: {} } as OnboardingSession }
+    return { session: { ...data, answers: {} } as OnboardingSession, ranDiscovery: true }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to start session' }
   }

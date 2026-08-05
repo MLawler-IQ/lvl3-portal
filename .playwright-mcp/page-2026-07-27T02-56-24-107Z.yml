@@ -1,0 +1,186 @@
+- generic [active] [ref=f8e1]:
+  - banner [ref=f8e2]:
+    - generic [ref=f8e3]:
+      - link "Pasha Health home" [ref=f8e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f8e5]
+      - navigation "Primary" [ref=f8e6]:
+        - button "Services" [ref=f8e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f8e8]: 
+        - button "Care by condition" [ref=f8e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f8e10]: 
+        - button "Service areas" [ref=f8e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f8e12]: 
+        - button "About" [ref=f8e13] [cursor=pointer]
+        - button "Resources" [ref=f8e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f8e15]: 
+      - generic [ref=f8e16]:
+        - link "(971) 369-4522" [ref=f8e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f8e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f8e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f8e20]:
+    - generic [ref=f8e21]:
+      - generic [ref=f8e23]:
+        - navigation "Breadcrumb" [ref=f8e24]:
+          - link "Home" [ref=f8e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f8e26]: /
+          - generic [ref=f8e27]: Careers
+        - generic [ref=f8e28]: Careers at Pasha Health
+        - heading "Do the kind of caregiving you got into this work for." [level=1] [ref=f8e29]
+        - paragraph [ref=f8e30]: One consistent client instead of a rotating roster. Dementia-care training we provide. A small Salem-area agency where the scheduler knows your name and the founder knows your clients.
+        - generic [ref=f8e31]:
+          - link "Apply in 5 minutes" [ref=f8e32] [cursor=pointer]:
+            - /url: https://pashahealth.clearcareonline.com/quick-apply/
+          - link "Call 971-369-4522" [ref=f8e33] [cursor=pointer]:
+            - /url: tel:971-369-4522
+      - generic [ref=f8e35]:
+        - generic [ref=f8e36]:
+          - generic [ref=f8e37]: Why caregivers stay
+          - heading "What it's like to work here." [level=2] [ref=f8e38]
+          - paragraph [ref=f8e39]: "Most agencies treat caregivers the way they treat clients: as interchangeable. We don't. Consistency is our whole product, and that starts with how we treat you."
+        - generic [ref=f8e40]:
+          - generic [ref=f8e41]:
+            - generic [ref=f8e42]: 
+            - heading "Same client, every visit" [level=3] [ref=f8e43]
+            - paragraph [ref=f8e44]: We schedule for consistency, not coverage. You learn one person's routines, build real trust, and see the difference you make week after week.
+          - generic [ref=f8e45]:
+            - generic [ref=f8e46]: 
+            - heading "Training we provide" [level=3] [ref=f8e47]
+            - paragraph [ref=f8e48]: Dementia-specific training before your first memory-care client, and registered nurses on the team when a situation needs a second opinion.
+          - generic [ref=f8e49]:
+            - generic [ref=f8e50]: 
+            - heading "Your languages are an asset" [level=3] [ref=f8e51]
+            - paragraph [ref=f8e52]: Our clients speak English, Russian, Serbian, Spanish, Ukrainian, Somali, and Farsi. If you grew up speaking one of them, that's a skill here, not a footnote.
+          - generic [ref=f8e53]:
+            - generic [ref=f8e54]: 
+            - heading "Known by name" [level=3] [ref=f8e55]
+            - paragraph [ref=f8e56]: A small agency, not a corporate chain. The office team answers when you call, matches you to clients you actually fit, and knows your name from day one.
+      - generic [ref=f8e59]:
+        - generic [ref=f8e60]: What we look for
+        - heading "Hired harder, trained better." [level=2] [ref=f8e61]
+        - paragraph [ref=f8e62]: "Every caregiver placed with a Pasha Health family is dementia-trained, background-checked, and matched to the client's personality and care needs. Not assigned at random. Not rotated week to week. Here's what that means for who we hire:"
+        - list [ref=f8e63]:
+          - listitem [ref=f8e64]: Genuine warmth that goes beyond a job description
+          - listitem [ref=f8e65]: Patience for the slow moments. Dementia care rewards people who don't rush.
+          - listitem [ref=f8e66]: Reliability. Families build their whole day around your visit.
+          - listitem [ref=f8e67]: Experience helps, but calling matters more. We train the skills.
+          - listitem [ref=f8e68]: A clean background check. Everything else, we can teach.
+        - paragraph [ref=f8e69]:
+          - text: Questions before you apply? Call us at
+          - link "971-369-4522" [ref=f8e70] [cursor=pointer]:
+            - /url: tel:971-369-4522
+          - text: and ask for the office team. A real person answers.
+      - generic [ref=f8e73]:
+        - generic [ref=f8e74]: Ready when you are
+        - heading "Five minutes to apply. A real person reads it." [level=2] [ref=f8e75]
+        - paragraph [ref=f8e76]: The application runs through ClearCare, our care platform. Short and simple. We'll call you back to talk it through.
+        - generic [ref=f8e77]:
+          - link "Apply now" [ref=f8e78] [cursor=pointer]:
+            - /url: https://pashahealth.clearcareonline.com/quick-apply/
+          - link "Call 971-369-4522" [ref=f8e79] [cursor=pointer]:
+            - /url: tel:971-369-4522
+  - contentinfo [ref=f8e80]:
+    - generic [ref=f8e81]:
+      - generic [ref=f8e82]:
+        - generic [ref=f8e83]:
+          - img "Pasha Health" [ref=f8e84]
+          - paragraph [ref=f8e85]: Just rest and let us take care of you.
+          - generic [ref=f8e86]:
+            - generic [ref=f8e87]: (971) 369-4522
+            - generic [ref=f8e88]: info@pashahealth.com
+            - generic [ref=f8e89]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f8e90]:
+            - generic [ref=f8e91]: 5.0 average from 21 Google reviews
+            - generic [ref=f8e92]:
+              - generic [ref=f8e93]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f8e94]:
+          - generic [ref=f8e95]: Services
+          - list [ref=f8e96]:
+            - listitem [ref=f8e97]:
+              - link "Personal Care" [ref=f8e98] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f8e99]:
+              - link "Around-The-Home Help" [ref=f8e100] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f8e101]:
+              - link "Senior Transportation" [ref=f8e102] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f8e103]:
+              - link "Companionship" [ref=f8e104] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f8e105]:
+              - link "Technology Lessons" [ref=f8e106] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f8e107]:
+              - link "Nutrition & Meal Prep" [ref=f8e108] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f8e109]:
+          - generic [ref=f8e110]: Service areas
+          - list [ref=f8e111]:
+            - listitem [ref=f8e112]:
+              - link "Salem" [ref=f8e113] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f8e114]:
+              - link "Turner" [ref=f8e115] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f8e116]:
+              - link "Keizer" [ref=f8e117] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f8e118]:
+              - link "Stayton" [ref=f8e119] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f8e120]:
+              - link "Aumsville" [ref=f8e121] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f8e122]:
+              - link "Silverton" [ref=f8e123] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f8e124]:
+          - generic [ref=f8e125]: Resources
+          - list [ref=f8e126]:
+            - listitem [ref=f8e127]:
+              - link "Resource hub" [ref=f8e128] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f8e129]:
+              - button "Care Assessment" [ref=f8e130] [cursor=pointer]
+            - listitem [ref=f8e131]:
+              - link "FAQ" [ref=f8e132] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f8e133]:
+              - link "Blog" [ref=f8e134] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f8e135]:
+          - generic [ref=f8e136]: Company
+          - list [ref=f8e137]:
+            - listitem [ref=f8e138]:
+              - link "About" [ref=f8e139] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f8e140]:
+              - link "Careers" [ref=f8e141] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f8e142]:
+              - link "Contact" [ref=f8e143] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f8e144]:
+              - link "For care managers" [ref=f8e145] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f8e146]:
+        - generic [ref=f8e147]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f8e148]:
+          - link "Privacy" [ref=f8e149] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f8e150] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f8e151] [cursor=pointer]:
+            - /url: "#"

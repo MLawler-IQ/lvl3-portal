@@ -20,3 +20,22 @@ export function normalizeDomain(raw: string): string {
       .trim()
   }
 }
+
+/**
+ * Does a Search Console property cover this domain?
+ *
+ * A `sc-domain:` property covers its own domain AND every subdomain, so it also
+ * matches when the target is a subdomain of it. A URL-prefix property has to be
+ * an exact host match — `https://shop.brand.com/` does not cover `brand.com`.
+ *
+ * Lifted out of app/actions/analytics.ts, where it was module-private inside a
+ * `'use server'` file and therefore unexportable (every export there has to be
+ * an async server action). It belongs next to normalizeDomain anyway.
+ */
+export function siteMatchesDomain(site: string, domain: string): boolean {
+  if (site.startsWith('sc-domain:')) {
+    const d = normalizeDomain(site)
+    return d === domain || domain.endsWith('.' + d)
+  }
+  return normalizeDomain(site) === domain
+}

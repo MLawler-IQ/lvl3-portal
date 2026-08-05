@@ -94,6 +94,8 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
       fd.set('name', name)
       fd.set('slug', slug)
       fd.set('logo_url', logoUrl)
+      // Persisted now, and used as the match key for auto-discovery.
+      fd.set('website', website)
       const { id } = await createClient(fd)
       onClose()
       // Creation captures only name/slug/logo. Everything else — GA4, GSC, GBP,

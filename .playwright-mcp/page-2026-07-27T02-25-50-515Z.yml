@@ -1,0 +1,343 @@
+- generic [active] [ref=f4e1]:
+  - banner [ref=f4e2]:
+    - generic [ref=f4e3]:
+      - link "Pasha Health home" [ref=f4e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f4e5]
+      - navigation "Primary" [ref=f4e6]:
+        - button "Services" [ref=f4e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f4e8]: 
+        - button "Care by condition" [ref=f4e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f4e10]: 
+        - button "Service areas" [ref=f4e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f4e12]: 
+        - button "About" [ref=f4e13] [cursor=pointer]
+        - button "Resources" [ref=f4e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f4e15]: 
+      - generic [ref=f4e16]:
+        - link "(971) 369-4522" [ref=f4e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f4e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f4e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f4e20]:
+    - generic [ref=f4e21]:
+      - generic [ref=f4e24]:
+        - generic [ref=f4e25]:
+          - generic [ref=f4e26]: In-home senior care · Salem, OR + 30-mile radius
+          - heading [level=1] [ref=f4e27]:
+            - text: Care that lets your
+            - emphasis [ref=f4e28]: parent
+            - text: stay home.
+          - paragraph [ref=f4e29]: Just rest and let us take care of you.
+          - paragraph [ref=f4e30]: Twelve years of dementia-specialized, multilingual home care. One consistent caregiver. A written care plan you approve before anything starts.
+          - generic [ref=f4e31]:
+            - link "Schedule a 15-min call" [ref=f4e32] [cursor=pointer]:
+              - /url: /contact/
+            - button "Take the 2-min assessment" [ref=f4e33] [cursor=pointer]
+          - generic [ref=f4e34]:
+            - generic [ref=f4e35]:
+              - generic [ref=f4e36]: 
+              - text: Same-day callback
+            - generic [ref=f4e37]:
+              - generic [ref=f4e38]: 
+              - text: Background-checked caregivers
+            - generic [ref=f4e39]:
+              - generic [ref=f4e40]: 
+              - text: 7 languages spoken
+        - generic [ref=f4e44]:
+          - paragraph [ref=f4e45]: "\"After three months my mom started calling her by name again.\""
+          - generic [ref=f4e46]: Daughter of client · Salem, OR
+      - generic [ref=f4e49]:
+        - generic [ref=f4e51]:
+          - generic [ref=f4e52]: 12 years
+          - generic [ref=f4e53]: serving the Salem area
+        - generic [ref=f4e55]:
+          - generic [ref=f4e56]: 7 languages
+          - generic [ref=f4e57]: spoken by our caregivers
+        - generic [ref=f4e59]:
+          - generic [ref=f4e60]: 5.0 ★
+          - generic [ref=f4e61]: from 21 Google reviews
+        - generic [ref=f4e63]:
+          - generic [ref=f4e64]: Dementia & Alzheimer's
+          - generic [ref=f4e65]: specialty since day one
+      - generic [ref=f4e71]:
+        - generic [ref=f4e72]: Our specialty
+        - heading "Twelve years of dementia & Alzheimer's care." [level=2] [ref=f4e73]
+        - paragraph [ref=f4e74]: Dementia is the highest-stakes work we do. It's also where the brand started. Most of our first clients came through families navigating an early-stage Alzheimer's diagnosis. The way we hire, train, and schedule caregivers reflects that history.
+        - list [ref=f4e75]:
+          - listitem [ref=f4e76]: Caregivers trained in dementia-specific communication and de-escalation
+          - listitem [ref=f4e77]: Same-caregiver consistency. The part that matters most for memory care.
+          - listitem [ref=f4e78]: Fall-prevention home assessment included with every plan
+          - listitem [ref=f4e79]: Family education sessions on what to expect as the disease progresses
+        - generic [ref=f4e80]:
+          - link "See our dementia approach" [ref=f4e81] [cursor=pointer]:
+            - /url: /conditions/dementia/
+          - link "Or our Alzheimer's approach →" [ref=f4e82] [cursor=pointer]:
+            - /url: /conditions/alzheimers/
+      - generic [ref=f4e84]:
+        - generic [ref=f4e85]:
+          - generic [ref=f4e86]:
+            - generic [ref=f4e87]: What we do
+            - heading "Everything except the medical parts." [level=2] [ref=f4e88]
+            - paragraph [ref=f4e89]: The daily, the routine, the around-the-house, and the get-out-of-the-house. Nursing comes from your existing provider.
+          - link "See all 10 services →" [ref=f4e90] [cursor=pointer]:
+            - /url: /services/
+        - generic [ref=f4e91]:
+          - generic [ref=f4e92]:
+            - generic [ref=f4e93]:
+              - generic [ref=f4e94]: 
+              - generic [ref=f4e95]: Our specialty
+            - heading "Personal Care" [level=3] [ref=f4e96]
+            - generic [ref=f4e97]: Pasha Personal Care
+            - paragraph [ref=f4e98]: Hands-on daily care delivered by the same caregiver each visit. Dementia-specialized since day one.
+            - link "See what's included →" [ref=f4e100] [cursor=pointer]:
+              - /url: /services/personal-care/
+          - generic [ref=f4e101]:
+            - generic [ref=f4e102]: 
+            - heading "Around-The-Home Help" [level=3] [ref=f4e104]
+            - generic [ref=f4e105]: Pasha Around The Home
+            - paragraph [ref=f4e106]: The quiet upkeep that keeps a home livable, without disrupting the day.
+            - link "Learn more →" [ref=f4e108] [cursor=pointer]:
+              - /url: /services/around-the-home-help/
+          - generic [ref=f4e109]:
+            - generic [ref=f4e110]: 
+            - heading "Senior Transportation" [level=3] [ref=f4e112]
+            - generic [ref=f4e113]: Pasha Transportation
+            - paragraph [ref=f4e114]: Door-to-door, never rushed. The driver is also the caregiver. Same person, same trust.
+            - link "Learn more →" [ref=f4e116] [cursor=pointer]:
+              - /url: /services/transportation/
+          - generic [ref=f4e117]:
+            - generic [ref=f4e118]: 
+            - heading "Companionship" [level=3] [ref=f4e120]
+            - generic [ref=f4e121]: Pasha Companionship
+            - paragraph [ref=f4e122]: Isolation is the part of aging nobody books a doctor for. We show up for it.
+            - link "Learn more →" [ref=f4e124] [cursor=pointer]:
+              - /url: /services/companionship/
+          - generic [ref=f4e125]:
+            - generic [ref=f4e126]: 
+            - heading "Technology Lessons" [level=3] [ref=f4e128]
+            - generic [ref=f4e129]: Pasha Technology Lessons
+            - paragraph [ref=f4e130]: The digital gap closed, at the pace your parent learns best.
+            - link "Learn more →" [ref=f4e132] [cursor=pointer]:
+              - /url: /services/technology-lessons/
+          - generic [ref=f4e133]:
+            - generic [ref=f4e134]: 
+            - heading "Nutrition & Meal Prep" [level=3] [ref=f4e136]
+            - generic [ref=f4e137]: Pasha Nutrition
+            - paragraph [ref=f4e138]: Cooked at home, eaten at the table. Hydration and intake tracked when it matters.
+            - link "Learn more →" [ref=f4e140] [cursor=pointer]:
+              - /url: /services/nutrition-meal-prep/
+      - generic [ref=f4e143]:
+        - generic [ref=f4e144]: Who we hire
+        - heading "We speak the languages your parent grew up with." [level=2] [ref=f4e145]
+        - paragraph [ref=f4e146]: Greater Salem is more multilingual than people expect. Our caregivers reflect that. They're not learning your parent's first language. It's theirs too.
+        - generic [ref=f4e147]:
+          - generic [ref=f4e148]: English
+          - generic [ref=f4e149]: Russian
+          - generic [ref=f4e150]: Serbian
+          - generic [ref=f4e151]: Spanish
+          - generic [ref=f4e152]: Ukrainian
+          - generic [ref=f4e153]: Somali
+          - generic [ref=f4e154]: Farsi
+        - paragraph [ref=f4e155]: Don't see your language? Ask. Our roster keeps growing.
+      - generic [ref=f4e157]:
+        - generic [ref=f4e158]:
+          - generic [ref=f4e159]: Families we work with
+          - heading "What adult children tell us." [level=2] [ref=f4e160]
+        - generic [ref=f4e161]:
+          - generic [ref=f4e162]:
+            - paragraph [ref=f4e163]: "\"The same caregiver every visit. After three months my mom started calling her by name again. That was the part I didn't know we needed.\""
+            - generic [ref=f4e166]:
+              - generic [ref=f4e167]: Daughter of client
+              - generic [ref=f4e168]: Salem, OR
+          - generic [ref=f4e169]:
+            - paragraph [ref=f4e170]: "\"Russian speaker for my father after his stroke. He stopped pretending he understood and started actually talking. That alone was worth it.\""
+            - generic [ref=f4e173]:
+              - generic [ref=f4e174]: Son of client
+              - generic [ref=f4e175]: Keizer, OR
+          - generic [ref=f4e176]:
+            - paragraph [ref=f4e177]: "\"We interviewed four agencies. Pasha was the only one that gave a straight answer about what their dementia training actually covers.\""
+            - generic [ref=f4e180]:
+              - generic [ref=f4e181]: Daughter of client
+              - generic [ref=f4e182]: Woodburn, OR
+      - generic [ref=f4e184]:
+        - generic [ref=f4e185]:
+          - generic [ref=f4e186]: How it works
+          - heading "Four steps. About a week, start to first visit." [level=2] [ref=f4e187]
+        - generic [ref=f4e188]:
+          - generic [ref=f4e189]:
+            - generic [ref=f4e190]: "01"
+            - heading "Take the assessment" [level=3] [ref=f4e191]
+            - paragraph [ref=f4e192]: Five questions. Two minutes. Tells us where things stand.
+            - link "Start →" [ref=f4e194] [cursor=pointer]:
+              - /url: "#"
+            - generic [ref=f4e195]: 
+          - generic [ref=f4e197]:
+            - generic [ref=f4e198]: "02"
+            - heading "Talk with us" [level=3] [ref=f4e199]
+            - paragraph [ref=f4e200]: A 15-minute call to listen, answer questions, and decide if we're a fit.
+            - link "Schedule →" [ref=f4e202] [cursor=pointer]:
+              - /url: /contact/
+            - generic [ref=f4e203]: 
+          - generic [ref=f4e205]:
+            - generic [ref=f4e206]: "03"
+            - heading "Free in-home visit" [level=3] [ref=f4e207]
+            - paragraph [ref=f4e208]: We come out, meet your parent, and draft a written plan you approve.
+            - generic [ref=f4e209]: 
+          - generic [ref=f4e211]:
+            - generic [ref=f4e212]: "04"
+            - heading "Care begins" [level=3] [ref=f4e213]
+            - paragraph [ref=f4e214]: Same caregiver, every visit. Family check-in after each shift. Adjustments any time.
+      - generic [ref=f4e217]:
+        - generic [ref=f4e218]:
+          - generic [ref=f4e219]: Where we serve
+          - heading "Salem, OR and the 30-mile radius around it." [level=2] [ref=f4e220]
+          - paragraph [ref=f4e221]: From Turner to Woodburn, Dallas to Silverton. If you're not sure we cover your town, ask. We often do.
+          - list [ref=f4e223]:
+            - listitem [ref=f4e224]:
+              - link "Salem" [ref=f4e225] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+              - generic [ref=f4e226]: Home base
+            - listitem [ref=f4e227]:
+              - link "Turner" [ref=f4e228] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+              - generic [ref=f4e229]: Home base
+            - listitem [ref=f4e230]:
+              - link "Keizer" [ref=f4e231] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+              - generic [ref=f4e232]: 10 min
+            - listitem [ref=f4e233]:
+              - link "Stayton" [ref=f4e234] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+              - generic [ref=f4e235]: 20 min
+            - listitem [ref=f4e236]:
+              - link "Aumsville" [ref=f4e237] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+              - generic [ref=f4e238]: 15 min
+            - listitem [ref=f4e239]:
+              - link "Silverton" [ref=f4e240] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+              - generic [ref=f4e241]: 25 min
+            - listitem [ref=f4e242]:
+              - link "Woodburn" [ref=f4e243] [cursor=pointer]:
+                - /url: /service-areas/woodburn-or/
+              - generic [ref=f4e244]: 30 min
+            - listitem [ref=f4e245]:
+              - link "Dallas" [ref=f4e246] [cursor=pointer]:
+                - /url: /service-areas/dallas-or/
+              - generic [ref=f4e247]: 25 min
+          - link "See all service areas →" [ref=f4e249] [cursor=pointer]:
+            - /url: /service-areas/salem-or/
+        - img "Service area map" [ref=f4e252]
+      - generic [ref=f4e255]:
+        - generic [ref=f4e256]: Start the conversation
+        - heading "A 15-minute call. No commitment." [level=2] [ref=f4e257]
+        - paragraph [ref=f4e258]: Tell us where things stand. We'll listen, answer questions, and tell you honestly whether we're the right fit, or who else to talk to.
+        - generic [ref=f4e259]:
+          - link "Schedule a call" [ref=f4e260] [cursor=pointer]:
+            - /url: /contact/
+          - link "Take the 2-min assessment" [ref=f4e261] [cursor=pointer]:
+            - /url: "#"
+  - contentinfo [ref=f4e262]:
+    - generic [ref=f4e263]:
+      - generic [ref=f4e264]:
+        - generic [ref=f4e265]:
+          - img "Pasha Health" [ref=f4e266]
+          - paragraph [ref=f4e267]: Just rest and let us take care of you.
+          - generic [ref=f4e268]:
+            - generic [ref=f4e269]: (971) 369-4522
+            - generic [ref=f4e270]: info@pashahealth.com
+            - generic [ref=f4e271]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f4e272]:
+            - generic [ref=f4e273]: 5.0 average from 21 Google reviews
+            - generic [ref=f4e274]:
+              - generic [ref=f4e275]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f4e276]:
+          - generic [ref=f4e277]: Services
+          - list [ref=f4e278]:
+            - listitem [ref=f4e279]:
+              - link "Personal Care" [ref=f4e280] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f4e281]:
+              - link "Around-The-Home Help" [ref=f4e282] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f4e283]:
+              - link "Senior Transportation" [ref=f4e284] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f4e285]:
+              - link "Companionship" [ref=f4e286] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f4e287]:
+              - link "Technology Lessons" [ref=f4e288] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f4e289]:
+              - link "Nutrition & Meal Prep" [ref=f4e290] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f4e291]:
+          - generic [ref=f4e292]: Service areas
+          - list [ref=f4e293]:
+            - listitem [ref=f4e294]:
+              - link "Salem" [ref=f4e295] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f4e296]:
+              - link "Turner" [ref=f4e297] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f4e298]:
+              - link "Keizer" [ref=f4e299] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f4e300]:
+              - link "Stayton" [ref=f4e301] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f4e302]:
+              - link "Aumsville" [ref=f4e303] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f4e304]:
+              - link "Silverton" [ref=f4e305] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f4e306]:
+          - generic [ref=f4e307]: Resources
+          - list [ref=f4e308]:
+            - listitem [ref=f4e309]:
+              - link "Cost of home care" [ref=f4e310] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f4e311]:
+              - button "Care Assessment" [ref=f4e312] [cursor=pointer]
+            - listitem [ref=f4e313]:
+              - link "FAQ" [ref=f4e314] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f4e315]:
+              - link "Blog" [ref=f4e316] [cursor=pointer]:
+                - /url: /
+        - generic [ref=f4e317]:
+          - generic [ref=f4e318]: Company
+          - list [ref=f4e319]:
+            - listitem [ref=f4e320]:
+              - link "About" [ref=f4e321] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f4e322]:
+              - link "Careers" [ref=f4e323] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=f4e324]:
+              - link "Contact" [ref=f4e325] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f4e326]:
+              - link "For care managers" [ref=f4e327] [cursor=pointer]:
+                - /url: /
+      - generic [ref=f4e328]:
+        - generic [ref=f4e329]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f4e330]:
+          - link "Privacy" [ref=f4e331] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f4e332] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f4e333] [cursor=pointer]:
+            - /url: "#"

@@ -8,7 +8,7 @@ import { parseSheetId, fetchSheetHeaders } from '@/lib/google-sheets'
 import { fetchGA4Metrics, GA4Metrics, fetchGA4Report, GA4Report, ChannelRow, SourceMediumRow, LandingPageRow } from '@/lib/google-analytics'
 import { fetchGSCMetrics, GSCMetrics, listGSCSites, fetchGSCReport, GSCReport, GSCTrendBucket, QueryRow, UrlRow, SerpDistribution } from '@/lib/google-search-console'
 import { buildDateRange, DateRange } from '@/lib/date-range'
-import { normalizeDomain } from '@/lib/normalize-domain'
+import { normalizeDomain, siteMatchesDomain } from '@/lib/normalize-domain'
 import Anthropic from '@anthropic-ai/sdk'
 import type { InsightCard } from '@/lib/dashboard/types'
 import { deriveInsightCards, deriveHeadline, type InsightSignals } from '@/lib/dashboard/insights'
@@ -36,7 +36,9 @@ export type SnapshotInsightsDraft = SnapshotInsights & { summary: string }
 // ── Logo ──────────────────────────────────────────────────────────────────────
 
 export async function fetchLogoUrl(domain: string): Promise<string | null> {
-  const clean = domain.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  // normalizeDomain rather than ad-hoc cleanup: this kept a `www.` prefix and any
+  // port, neither of which Clearbit resolves.
+  const clean = normalizeDomain(domain)
   if (!clean) return null
   const url = `https://logo.clearbit.com/${clean}`
   try {
@@ -156,14 +158,10 @@ export async function fetchDashboardReport(
 
 // ── GSC site detection ────────────────────────────────────────────────────────
 
-
-function siteMatchesDomain(site: string, domain: string): boolean {
-  if (site.startsWith('sc-domain:')) {
-    const d = normalizeDomain(site)
-    return d === domain || d.endsWith('.' + domain)
-  }
-  return normalizeDomain(site) === domain
-}
+// siteMatchesDomain now lives in lib/normalize-domain.ts so the onboarding
+// discovery code can share it. The subdomain comparison was also backwards here
+// (it matched a shop.brand.com property against a brand.com target, rather than
+// an sc-domain:brand.com property covering shop.brand.com) — see the tests.
 
 export async function detectGSCSiteUrl(
   propertyId: string

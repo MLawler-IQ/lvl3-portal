@@ -1,0 +1,249 @@
+- generic [active] [ref=f10e1]:
+  - banner [ref=f10e2]:
+    - generic [ref=f10e3]:
+      - link "Pasha Health home" [ref=f10e4] [cursor=pointer]:
+        - /url: /
+        - img "Pasha Health" [ref=f10e5]
+      - navigation "Primary" [ref=f10e6]:
+        - button "Services" [ref=f10e7] [cursor=pointer]:
+          - text: Services
+          - generic [ref=f10e8]: 
+        - button "Care by condition" [ref=f10e9] [cursor=pointer]:
+          - text: Care by condition
+          - generic [ref=f10e10]: 
+        - button "Service areas" [ref=f10e11] [cursor=pointer]:
+          - text: Service areas
+          - generic [ref=f10e12]: 
+        - button "About" [ref=f10e13] [cursor=pointer]
+        - button "Resources" [ref=f10e14] [cursor=pointer]:
+          - text: Resources
+          - generic [ref=f10e15]: 
+      - generic [ref=f10e16]:
+        - link "(971) 369-4522" [ref=f10e17] [cursor=pointer]:
+          - /url: tel:9713694522
+          - generic [ref=f10e18]: 
+          - text: (971) 369-4522
+        - link "Schedule a call" [ref=f10e19] [cursor=pointer]:
+          - /url: /contact/
+      - text: 
+  - text: 
+  - main [ref=f10e20]:
+    - generic [ref=f10e21]:
+      - generic [ref=f10e23]:
+        - navigation "Breadcrumb" [ref=f10e24]:
+          - link "Home" [ref=f10e25] [cursor=pointer]:
+            - /url: /
+          - generic [ref=f10e26]: /
+          - generic [ref=f10e27]: About
+        - generic [ref=f10e29]:
+          - generic [ref=f10e30]: About Pasha Health
+          - heading "A family-run home care company. For twelve years." [level=1] [ref=f10e31]
+          - paragraph [ref=f10e32]: Founded by Alina Strelnikov, CMA, after more than a decade in the medical field. For twelve years we've served seniors and individuals with disabilities across the Salem area, specializing in dementia and Alzheimer's care from day one.
+          - generic [ref=f10e33]:
+            - link "Schedule a 15-min call" [ref=f10e34] [cursor=pointer]:
+              - /url: /contact/
+            - button "Take the 2-min assessment" [ref=f10e35] [cursor=pointer]
+      - generic [ref=f10e40]:
+        - generic [ref=f10e41]: Why we exist
+        - heading "We hire people we'd hire to care for our own parents. That's the bar." [level=2] [ref=f10e42]
+        - paragraph [ref=f10e43]: "Most home care companies are franchises optimized for scale. They turn caregivers over fast, schedule by shift, and treat the relationship like a transaction. That model produces a particular kind of failure: a person you've never met arriving at your mother's door at 9am, with no context for who she is."
+        - paragraph [ref=f10e44]: We're not built that way. We hire fewer caregivers, pay them more, train them better, and keep them with the same client for years. The cost of that consistency is real. It's the entire product.
+        - paragraph [ref=f10e45]: Every client is known by name. Every caregiver is carefully matched. Every family feels supported rather than processed. That's not a marketing promise. It's the reason we exist.
+      - generic [ref=f10e51]:
+        - generic [ref=f10e52]: Founder
+        - heading "Alina Strelnikov, CMA." [level=2] [ref=f10e53]
+        - paragraph [ref=f10e54]: "\"I knew at the age of 10 years old, I wanted to care for the elderly. My journey began 12 years ago, and since then, I have dedicated myself to serving seniors and individuals with disabilities. At the core of my philosophy is the belief that caring for others is not just a profession, but a calling that I embrace wholeheartedly.\""
+        - paragraph [ref=f10e55]: "Alina came to home care with over a decade of experience in the medical field and built Pasha Health around the work she knows best: dementia and Alzheimer's care. She works closely with each client and their loved ones to create a nurturing environment where they can thrive, and she built the company to be the kind of provider she would want for her own family."
+        - paragraph [ref=f10e56]: Just rest and let us take care of you.
+        - generic [ref=f10e57]:
+          - generic [ref=f10e58]:
+            - generic [ref=f10e59]: 12 yrs
+            - generic [ref=f10e60]: building Pasha Health
+          - generic [ref=f10e61]:
+            - generic [ref=f10e62]: CMA
+            - generic [ref=f10e63]: Certified Medical Assistant
+      - generic [ref=f10e65]:
+        - generic [ref=f10e66]:
+          - generic [ref=f10e67]: Who works here
+          - heading "A small team. Most of us have been here a long time." [level=2] [ref=f10e68]
+          - paragraph [ref=f10e69]: The people who answer the phone, match caregivers, and coordinate the care. The caregiver roster is larger and changes slowly. That's the point.
+        - generic [ref=f10e70]:
+          - generic [ref=f10e74]:
+            - generic [ref=f10e75]: Dusica Drazic
+            - generic [ref=f10e76]: RN
+            - paragraph [ref=f10e77]: Clinical experience from geriatrics to neonatal care. Looks after clients from both a medical and a social perspective.
+          - generic [ref=f10e81]:
+            - generic [ref=f10e82]: Alina Ponomarenko
+            - generic [ref=f10e83]: Administrative Coordinator
+            - paragraph [ref=f10e84]: Over 10 years in the medical field. Committed to helping clients and their loved ones experience a better, more fulfilling life.
+          - generic [ref=f10e88]:
+            - generic [ref=f10e89]: Leslie Espinoza
+            - generic [ref=f10e90]: Administrative Coordinator
+            - paragraph [ref=f10e91]: Fluent in English and Spanish, she makes sure every client's needs are communicated and met.
+            - generic [ref=f10e92]:
+              - generic [ref=f10e93]: EN
+              - generic [ref=f10e94]: ES
+          - generic [ref=f10e98]:
+            - generic [ref=f10e99]: Svetlana Strelnikova
+            - generic [ref=f10e100]: Scheduler
+            - paragraph [ref=f10e101]: A reliable point of contact for clients, families, and caregivers, coordinating the care that fits each person best.
+      - generic [ref=f10e103]:
+        - generic [ref=f10e104]:
+          - generic [ref=f10e105]: How we hire
+          - heading "Four standards. Non-negotiable." [level=2] [ref=f10e106]
+        - generic [ref=f10e107]:
+          - generic [ref=f10e108]:
+            - generic [ref=f10e109]: 
+            - heading "Background-checked" [level=3] [ref=f10e110]
+            - paragraph [ref=f10e111]: Background-checked, bonded, and insured before ever entering a client's home.
+          - generic [ref=f10e112]:
+            - generic [ref=f10e113]: 
+            - heading "Dementia-trained" [level=3] [ref=f10e114]
+            - paragraph [ref=f10e115]: Every caregiver completes dementia-specific training before working with a memory-care client.
+          - generic [ref=f10e116]:
+            - generic [ref=f10e117]: 
+            - heading "Native-language matched" [level=3] [ref=f10e118]
+            - paragraph [ref=f10e119]: We match caregivers to your parent's primary language, not their second one.
+          - generic [ref=f10e120]:
+            - generic [ref=f10e121]: 
+            - heading "Same-caregiver promise" [level=3] [ref=f10e122]
+            - paragraph [ref=f10e123]: One caregiver across visits. The routine, the trust, and the safety that consistency produces.
+      - generic [ref=f10e125]:
+        - generic [ref=f10e126]:
+          - generic [ref=f10e127]: Where we've been
+          - heading "Twelve years, slowly." [level=2] [ref=f10e128]
+        - list [ref=f10e129]:
+          - listitem [ref=f10e130]:
+            - generic [ref=f10e131]: "2014"
+            - generic [ref=f10e132]:
+              - heading "Founded" [level=4] [ref=f10e133]
+              - paragraph [ref=f10e134]: Alina Strelnikov, CMA, starts Pasha Health after more than a decade in the medical field. Dementia and Alzheimer's care is the specialty from day one.
+          - listitem [ref=f10e135]:
+            - generic [ref=f10e136]: "2017"
+            - generic [ref=f10e137]:
+              - heading "The care team grows" [level=4] [ref=f10e138]
+              - paragraph [ref=f10e139]: Registered nurses and coordinators join, caring for clients from both a medical and a social perspective.
+          - listitem [ref=f10e140]:
+            - generic [ref=f10e141]: "2020"
+            - generic [ref=f10e142]:
+              - heading "Multilingual roster" [level=4] [ref=f10e143]
+              - paragraph [ref=f10e144]: Caregivers covering English, Russian, Serbian, Spanish, Ukrainian, Somali, and Farsi.
+          - listitem [ref=f10e145]:
+            - generic [ref=f10e146]: "2023"
+            - generic [ref=f10e147]:
+              - heading "30-mile service area" [level=4] [ref=f10e148]
+              - paragraph [ref=f10e149]: Coverage extended to ten cities across the Salem–Keizer–Woodburn corridor.
+          - listitem [ref=f10e150]:
+            - generic [ref=f10e151]: "2026"
+            - generic [ref=f10e152]:
+              - heading "v2 of everything" [level=4] [ref=f10e153]
+              - paragraph [ref=f10e154]: New service pages, condition pages, and the 30-day post-hospital recovery program.
+      - generic [ref=f10e158]:
+        - generic [ref=f10e159]: Where we come from
+        - heading "Salem, the Willamette Valley, and the languages our parents spoke." [level=2] [ref=f10e160]
+        - paragraph [ref=f10e161]: The Salem area is home to one of Oregon's largest Russian, Ukrainian, and Eastern European populations, plus rapidly growing Somali and Latino communities. Many of those families have aging parents who arrived in the U.S. late in life. By the time care is needed, they often prefer to receive it in the language they grew up with.
+        - paragraph [ref=f10e162]: We hire from those same communities. It's a hiring philosophy and a service philosophy at the same time.
+      - generic [ref=f10e167]:
+        - generic [ref=f10e168]: Start the conversation
+        - heading "A 15-minute call. No commitment." [level=2] [ref=f10e169]
+        - paragraph [ref=f10e170]: We'll listen, answer questions, and tell you honestly whether we're the right fit.
+        - generic [ref=f10e171]:
+          - link "Schedule a call" [ref=f10e172] [cursor=pointer]:
+            - /url: /contact/
+          - link "Take the 2-min assessment" [ref=f10e173] [cursor=pointer]:
+            - /url: "#"
+  - contentinfo [ref=f10e174]:
+    - generic [ref=f10e175]:
+      - generic [ref=f10e176]:
+        - generic [ref=f10e177]:
+          - img "Pasha Health" [ref=f10e178]
+          - paragraph [ref=f10e179]: Just rest and let us take care of you.
+          - generic [ref=f10e180]:
+            - generic [ref=f10e181]: (971) 369-4522
+            - generic [ref=f10e182]: info@pashahealth.com
+            - generic [ref=f10e183]: 5325 Denver ST SETurner, OR 97392
+          - generic [ref=f10e184]:
+            - generic [ref=f10e185]: 5.0 average from 21 Google reviews
+            - generic [ref=f10e186]:
+              - generic [ref=f10e187]: 
+              - text: Licensed by Oregon DHS
+        - generic [ref=f10e188]:
+          - generic [ref=f10e189]: Services
+          - list [ref=f10e190]:
+            - listitem [ref=f10e191]:
+              - link "Personal Care" [ref=f10e192] [cursor=pointer]:
+                - /url: /services/personal-care/
+            - listitem [ref=f10e193]:
+              - link "Around-The-Home Help" [ref=f10e194] [cursor=pointer]:
+                - /url: /services/around-the-home-help/
+            - listitem [ref=f10e195]:
+              - link "Senior Transportation" [ref=f10e196] [cursor=pointer]:
+                - /url: /services/transportation/
+            - listitem [ref=f10e197]:
+              - link "Companionship" [ref=f10e198] [cursor=pointer]:
+                - /url: /services/companionship/
+            - listitem [ref=f10e199]:
+              - link "Technology Lessons" [ref=f10e200] [cursor=pointer]:
+                - /url: /services/technology-lessons/
+            - listitem [ref=f10e201]:
+              - link "Nutrition & Meal Prep" [ref=f10e202] [cursor=pointer]:
+                - /url: /services/nutrition-meal-prep/
+        - generic [ref=f10e203]:
+          - generic [ref=f10e204]: Service areas
+          - list [ref=f10e205]:
+            - listitem [ref=f10e206]:
+              - link "Salem" [ref=f10e207] [cursor=pointer]:
+                - /url: /service-areas/salem-or/
+            - listitem [ref=f10e208]:
+              - link "Turner" [ref=f10e209] [cursor=pointer]:
+                - /url: /service-areas/turner-or/
+            - listitem [ref=f10e210]:
+              - link "Keizer" [ref=f10e211] [cursor=pointer]:
+                - /url: /service-areas/keizer-or/
+            - listitem [ref=f10e212]:
+              - link "Stayton" [ref=f10e213] [cursor=pointer]:
+                - /url: /service-areas/stayton-or/
+            - listitem [ref=f10e214]:
+              - link "Aumsville" [ref=f10e215] [cursor=pointer]:
+                - /url: /service-areas/aumsville-or/
+            - listitem [ref=f10e216]:
+              - link "Silverton" [ref=f10e217] [cursor=pointer]:
+                - /url: /service-areas/silverton-or/
+        - generic [ref=f10e218]:
+          - generic [ref=f10e219]: Resources
+          - list [ref=f10e220]:
+            - listitem [ref=f10e221]:
+              - link "Resource hub" [ref=f10e222] [cursor=pointer]:
+                - /url: /resources/
+            - listitem [ref=f10e223]:
+              - button "Care Assessment" [ref=f10e224] [cursor=pointer]
+            - listitem [ref=f10e225]:
+              - link "FAQ" [ref=f10e226] [cursor=pointer]:
+                - /url: /resources/faq/
+            - listitem [ref=f10e227]:
+              - link "Blog" [ref=f10e228] [cursor=pointer]:
+                - /url: /resources/blog/
+        - generic [ref=f10e229]:
+          - generic [ref=f10e230]: Company
+          - list [ref=f10e231]:
+            - listitem [ref=f10e232]:
+              - link "About" [ref=f10e233] [cursor=pointer]:
+                - /url: /about/
+            - listitem [ref=f10e234]:
+              - link "Careers" [ref=f10e235] [cursor=pointer]:
+                - /url: /careers/
+            - listitem [ref=f10e236]:
+              - link "Contact" [ref=f10e237] [cursor=pointer]:
+                - /url: /contact/
+            - listitem [ref=f10e238]:
+              - link "For care managers" [ref=f10e239] [cursor=pointer]:
+                - /url: /contact/
+      - generic [ref=f10e240]:
+        - generic [ref=f10e241]: © 2014–2026 Pasha Health, LLC. Non-medical home care services in Oregon. Licensed by Oregon DHS.
+        - generic [ref=f10e242]:
+          - link "Privacy" [ref=f10e243] [cursor=pointer]:
+            - /url: "#"
+          - link "Accessibility" [ref=f10e244] [cursor=pointer]:
+            - /url: "#"
+          - link "Terms" [ref=f10e245] [cursor=pointer]:
+            - /url: "#"
