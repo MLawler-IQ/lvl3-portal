@@ -277,8 +277,8 @@ export default function TfkGeneratorClient() {
         <button
           onClick={handleGenerate}
           disabled={!storeDnaFile || generating}
-          className="w-full py-3 rounded-xl font-semibold text-sm text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ background: generating || !storeDnaFile ? undefined : 'var(--color-interactive)' }}
+          className="w-full py-3 rounded-xl font-semibold text-sm text-surface-950 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{ background: generating || !storeDnaFile ? undefined : 'var(--color-accent)' }}
         >
           {generating ? (
             <span className="flex items-center justify-center gap-2">
@@ -378,8 +378,8 @@ export default function TfkGeneratorClient() {
             <a
               href={`data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${outputBase64}`}
               download="tfk-locations-draft.xlsx"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all"
-              style={{ background: 'var(--color-interactive)' }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-surface-950 transition-all"
+              style={{ background: 'var(--color-accent)' }}
             >
               <Download className="w-4 h-4" />
               Download XLSX

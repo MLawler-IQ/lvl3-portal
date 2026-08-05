@@ -44,8 +44,8 @@ export default function ChannelBarChart({ channels }: Props) {
           <Tooltip
             formatter={(v) => [Number(v ?? 0).toLocaleString(), 'Sessions']}
             contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
-            labelStyle={{ color: 'var(--chart-label)' }}
-            itemStyle={{ color: 'var(--chart-tick)' }}
+            labelStyle={{ color: 'var(--chart-tooltip-fg)' }}
+            itemStyle={{ color: 'var(--chart-tooltip-fg)' }}
           />
           <Bar dataKey="sessions" radius={[0, 2, 2, 0]}>
             {data.map((_, i) => (

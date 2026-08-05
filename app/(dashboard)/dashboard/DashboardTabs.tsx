@@ -263,7 +263,7 @@ export default function DashboardTabs({
             <button
               key={tab.key}
               onClick={() => handleTabChange(tab.key)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-500 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-900 ${
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-inset ${
                 activeTab === tab.key
                   ? "border-surface-500 text-surface-100"
                   : "border-transparent text-surface-400 hover:text-surface-100"

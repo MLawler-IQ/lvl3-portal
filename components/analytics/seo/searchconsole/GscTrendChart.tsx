@@ -68,8 +68,8 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
             formatter={(v, name) => [Number(v ?? 0).toLocaleString(), name ?? '']}
             labelFormatter={(key) => axisFormatter(String(key))}
             contentStyle={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--chart-tooltip-border)', borderRadius: 2 }}
-            labelStyle={{ color: 'var(--chart-label)' }}
-            itemStyle={{ color: 'var(--chart-tick)' }}
+            labelStyle={{ color: 'var(--chart-tooltip-fg)' }}
+            itemStyle={{ color: 'var(--chart-tooltip-fg)' }}
           />
           <Legend
             iconType="circle"

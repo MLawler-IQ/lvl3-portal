@@ -509,7 +509,7 @@ export default function SemrushGapClient({
             type="button"
             onClick={handleSubmit}
             disabled={isPending}
-            className="bg-brand-500 hover:bg-brand-400 disabled:opacity-50 text-surface-100 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2"
+            className="bg-brand-400 hover:bg-brand-300 disabled:opacity-50 text-surface-950 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors flex items-center gap-2"
           >
             {isPending ? (
               <>

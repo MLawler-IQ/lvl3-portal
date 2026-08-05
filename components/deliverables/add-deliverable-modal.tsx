@@ -91,7 +91,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
             <select
               value={clientId}
               onChange={e => setClientId(e.target.value)}
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 focus:outline-none focus:ring-1 focus:ring-surface-500"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 focus:outline-none focus:ring-2 focus:ring-brand-400"
             >
               {clients.length === 0 && <option value="">No clients found</option>}
               {clients.map(c => (
@@ -108,7 +108,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Q1 Performance Report"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-1 focus:ring-surface-500"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
 
@@ -166,7 +166,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
                 value={url}
                 onChange={e => setUrl(e.target.value)}
                 placeholder={currentConfig.placeholder ?? 'https://'}
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-1 focus:ring-surface-500"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
           )}
@@ -185,7 +185,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
             <button
               type="submit"
               disabled={loading || clients.length === 0}
-              className="flex-1 px-4 py-2 rounded-lg bg-brand-400 hover:bg-brand-500 text-surface-950 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Uploading…' : 'Add Deliverable'}
             </button>

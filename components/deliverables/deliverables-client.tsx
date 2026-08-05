@@ -166,7 +166,7 @@ export default function DeliverablesClient({
         {isAdmin && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-brand-400 hover:bg-brand-500 text-surface-950 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+            className="flex items-center gap-2 bg-brand-400 hover:bg-brand-300 text-surface-950 px-4 py-2 rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             <Plus size={16} />
             Add Deliverable
@@ -181,7 +181,7 @@ export default function DeliverablesClient({
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className={`text-xs px-3 py-1.5 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400 ${
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
                 activeFilter === f.key
                   ? "bg-brand-400 text-surface-950 border-brand-400 font-medium"
                   : "bg-surface-800/50 text-surface-300 border-surface-600/50 hover:text-surface-200 hover:border-surface-500"
@@ -194,7 +194,7 @@ export default function DeliverablesClient({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortType)}
-            className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-surface-500"
+            className="bg-surface-800 border border-surface-600 text-surface-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
           >
             <option value="needs-attention">Needs attention first</option>
             <option value="newest">Newest</option>
@@ -236,7 +236,7 @@ export default function DeliverablesClient({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search deliverables…"
-            className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-4 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-1 focus:ring-surface-500"
+            className="w-full bg-surface-800 border border-surface-600 rounded-lg pl-9 pr-4 py-2 text-sm text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400"
           />
         </div>
       </div>

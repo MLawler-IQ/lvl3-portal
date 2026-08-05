@@ -112,8 +112,8 @@ export default function TrendChart({
             border: '1px solid var(--chart-tooltip-border)',
             borderRadius: 2,
           }}
-          labelStyle={{ color: 'var(--chart-label)' }}
-          itemStyle={{ color: 'var(--chart-tick)' }}
+          labelStyle={{ color: 'var(--chart-tooltip-fg)' }}
+          itemStyle={{ color: 'var(--chart-tooltip-fg)' }}
         />
         {hasCompare && (
           <Legend

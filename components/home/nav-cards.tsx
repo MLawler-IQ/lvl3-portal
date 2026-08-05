@@ -17,7 +17,7 @@ export default function NavCards({ compact = false }: { compact?: boolean }) {
           <Link
             key={href}
             href={href}
-            className="flex flex-col items-center gap-1.5 rounded-sm border border-surface-700 bg-surface-900 p-3 transition-colors duration-200 hover:border-surface-600 hover:bg-surface-850 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-500"
+            className="flex flex-col items-center gap-1.5 rounded-sm border border-surface-700 bg-surface-900 p-3 transition-colors duration-200 hover:border-surface-600 hover:bg-surface-850 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             <Icon size={16} className="text-surface-400" strokeWidth={1.8} />
             <p className="text-xs text-surface-400">{title}</p>
@@ -33,7 +33,7 @@ export default function NavCards({ compact = false }: { compact?: boolean }) {
         <Link
           key={href}
           href={href}
-          className="group flex flex-col gap-3 rounded-sm border border-surface-700 bg-surface-900 p-4 transition-colors duration-200 hover:border-surface-600 hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-500"
+          className="group flex flex-col gap-3 rounded-sm border border-surface-700 bg-surface-900 p-4 transition-colors duration-200 hover:border-surface-600 hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         >
           <div className="flex items-center justify-between">
             <div className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-surface-800 text-surface-400 transition-colors group-hover:bg-surface-700 group-hover:text-surface-400">

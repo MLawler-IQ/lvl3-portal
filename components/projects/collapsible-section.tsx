@@ -10,7 +10,7 @@ export function ProgressBar({ value, total }: { value: number; total: number }) 
   return (
     <div className="flex items-center gap-3">
       <div className="flex-1 bg-surface-800 rounded-full h-2">
-        <div className="bg-brand-500 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
+        <div className="bg-brand-400 h-2 rounded-full transition-all" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-xs text-surface-400 whitespace-nowrap">{value}/{total} ({pct}%)</span>
     </div>

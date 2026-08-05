@@ -77,7 +77,7 @@ export default function BatchesTable({ batches }: { batches: BatchWithProgress[]
                   <CopyLinkButton url={reviewUrl(batch.token)} />
                   <Link
                     href={`/reviews/${batch.id}`}
-                    className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors"
+                    className="inline-flex items-center text-xs font-medium px-2.5 py-1.5 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 transition-colors"
                   >
                     View
                   </Link>

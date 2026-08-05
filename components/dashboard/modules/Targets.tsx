@@ -16,7 +16,7 @@ const STATUS_STYLES: Record<
   { bar: string; chip: string; label: string }
 > = {
   ahead: {
-    bar: 'bg-accent-400',
+    bar: 'bg-brand-400',
     chip: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
     label: 'Ahead',
   },

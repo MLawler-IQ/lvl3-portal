@@ -68,7 +68,7 @@ export default function UrlInputTool({
           type="submit"
           disabled={isRunning || (touched && !isValid)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}
+          style={{ backgroundColor: 'var(--color-primary)', color: 'rgb(var(--surface-950))' }}
         >
           {isRunning ? 'Running\u2026' : 'Run'}
           {!isRunning && <ArrowRight size={14} />}

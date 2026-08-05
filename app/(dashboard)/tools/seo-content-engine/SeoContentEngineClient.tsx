@@ -258,7 +258,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                     px-4 py-2 text-sm font-medium rounded-full border transition-colors
                     ${
                       mode === opt.value
-                        ? 'bg-brand-500 border-brand-500 text-white'
+                        ? 'bg-brand-400 border-brand-500 text-surface-950'
                         : 'bg-surface-800 border-surface-700 text-surface-400 hover:text-surface-300 hover:border-surface-600'
                     }
                   `}
@@ -284,7 +284,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
               onChange={(e) => setBrandContext(e.target.value)}
               placeholder="e.g. Professional, authoritative tone. Avoid first person. Focus on residential services..."
               rows={4}
-              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 resize-y"
+              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm text-surface-100 placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 resize-y"
             />
           </div>
 
@@ -293,7 +293,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
             <button
               onClick={startRun}
               disabled={isRunning || topics.length === 0}
-              className="flex-1 rounded-lg bg-brand-500 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 rounded-lg bg-brand-400 px-4 py-3 text-sm font-semibold text-surface-950 transition-colors hover:bg-brand-300 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isRunning
                 ? 'Pipeline Running...'
@@ -304,7 +304,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
             {isRunning && (
               <button
                 onClick={stopRun}
-                className="rounded-lg bg-red-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                className="rounded-lg bg-error px-6 py-3 text-sm font-semibold text-surface-950 transition-colors hover:opacity-90"
               >
                 Stop
               </button>
@@ -352,7 +352,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                 <div className="flex justify-end">
                   <button
                     onClick={stopRun}
-                    className="rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700"
+                    className="rounded-lg bg-error px-5 py-2 text-sm font-semibold text-surface-950 transition-colors hover:opacity-90"
                   >
                     Stop Pipeline
                   </button>
@@ -473,7 +473,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                           }
                         }}
                         disabled={zipping}
-                        className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-lg bg-brand-400 px-4 py-2 text-sm font-semibold text-surface-950 transition-colors hover:bg-brand-300 disabled:opacity-50"
                       >
                         <FileArchive className={`h-4 w-4 ${zipping ? 'animate-pulse' : ''}`} />
                         {zipping ? 'Preparing ZIP...' : `Download ZIP (${withDocx.length})`}

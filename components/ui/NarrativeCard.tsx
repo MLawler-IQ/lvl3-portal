@@ -31,7 +31,7 @@ export default function NarrativeCard({
       {shouldTruncate && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-xs text-surface-400 hover:text-surface-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400 rounded"
+          className="mt-2 text-xs text-surface-400 hover:text-surface-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded"
         >
           {expanded ? "Show less" : "Read more"}
         </button>

@@ -95,7 +95,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
             <button
               onClick={submit}
               disabled={pending}
-              className="text-xs bg-brand-500 hover:bg-brand-600 text-white rounded px-3 py-1.5 disabled:opacity-50 transition-colors"
+              className="text-xs bg-brand-400 hover:bg-brand-300 text-surface-950 rounded px-3 py-1.5 disabled:opacity-50 transition-colors"
             >
               {pending ? 'Saving…' : 'Save note'}
             </button>

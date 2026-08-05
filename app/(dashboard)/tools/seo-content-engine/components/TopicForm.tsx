@@ -112,7 +112,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
         type="button"
         onClick={handleAdd}
         disabled={disabled || !title.trim()}
-        className="bg-brand-500 hover:bg-brand-600 text-white rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="bg-brand-400 hover:bg-brand-300 text-surface-950 rounded-lg px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         Add Topic
       </button>

@@ -67,7 +67,7 @@ export default function ContentPerformance({ rows, maxRows = 25 }: ContentPerfor
                   <td className="py-2 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <span
-                        className="h-1.5 rounded-full bg-brand-500"
+                        className="h-1.5 rounded-full bg-brand-400"
                         style={{
                           width: `${maxClicks > 0 ? Math.max(2, (row.clicks / maxClicks) * 56) : 2}px`,
                         }}

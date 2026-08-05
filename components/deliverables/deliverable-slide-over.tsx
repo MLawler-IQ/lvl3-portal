@@ -132,7 +132,7 @@ export default function DeliverableSlideOver({
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+            className="shrink-0 p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label="Close"
           >
             <X size={18} />
@@ -143,7 +143,7 @@ export default function DeliverableSlideOver({
         <div className="flex items-center gap-2 px-6 py-3 border-b border-surface-700 bg-surface-900/40 shrink-0 flex-wrap">
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+            className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             <LinkIcon size={12} />
             Copy link
@@ -153,7 +153,7 @@ export default function DeliverableSlideOver({
               href={deliverable.file_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+              className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
               <ExternalLink size={12} />
               Open source

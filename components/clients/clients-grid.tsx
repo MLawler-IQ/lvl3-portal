@@ -19,7 +19,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
         <h1 className="text-surface-100 text-2xl font-medium">Clients</h1>
         <button
           onClick={() => setNewOpen(true)}
-          className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-brand-500 transition-colors"
+          className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-brand-300 transition-colors"
         >
           <Plus size={15} />
           New client
@@ -31,7 +31,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
           <p className="text-surface-400 text-sm mb-4">No clients yet.</p>
           <button
             onClick={() => setNewOpen(true)}
-            className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-brand-500 transition-colors"
+            className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-sm font-semibold rounded-lg px-4 py-2 hover:bg-brand-300 transition-colors"
           >
             <Plus size={15} />
             Add your first client

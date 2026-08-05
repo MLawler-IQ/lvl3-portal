@@ -78,7 +78,7 @@ export default function AdminTriageStrip({ rows }: { rows: TriageRow[] }) {
           onClick={() => handleSelect(row.clientId)}
           disabled={pendingId !== null}
           aria-label={`Open ${row.name} dashboard`}
-          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-surface-400 disabled:cursor-wait ${
+          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-850 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 disabled:cursor-wait ${
             pendingId === row.clientId ? 'opacity-60' : pendingId ? 'opacity-80' : ''
           }`}
         >

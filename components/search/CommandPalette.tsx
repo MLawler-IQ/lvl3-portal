@@ -162,7 +162,7 @@ export default function CommandPalette({ onClose }: Props) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search pages and tools…"
-              className="flex-1 bg-transparent text-surface-100 placeholder-surface-400 text-sm focus:outline-none"
+              className="flex-1 bg-transparent text-surface-100 placeholder-surface-400 text-sm rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               aria-label="Search"
             />
             <kbd className="text-[10px] text-surface-400 bg-surface-800 border border-surface-600 rounded px-1.5 py-0.5">
@@ -188,7 +188,7 @@ export default function CommandPalette({ onClose }: Props) {
                       <button
                         key={item.id}
                         onClick={() => handleSelect(item)}
-                        className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors focus-visible:outline-none ${
+                        className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400 ${
                           idx === activeIndex
                             ? "bg-surface-800 text-surface-100"
                             : "text-surface-200 hover:bg-surface-800/50"

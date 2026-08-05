@@ -77,7 +77,7 @@ export default function TopBar({
       {/* Hamburger — mobile only */}
       <button
         onClick={onMobileNavOpen}
-        className="md:hidden p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-lg -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+        className="md:hidden p-2 min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded-sm -ml-1 transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         style={{ color: 'var(--nav-text)' }}
         aria-label="Open menu"
       >
@@ -115,7 +115,7 @@ export default function TopBar({
           <select
             value={selectedClientId ?? ""}
             onChange={handleClientChange}
-            className="bg-transparent border-none text-sm focus:outline-none cursor-pointer truncate"
+            className="bg-transparent border border-transparent rounded-sm -ml-1 px-1 text-sm cursor-pointer truncate transition-colors hover:bg-surface-850 hover:border-surface-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             style={{ color: 'var(--nav-text-bright)', fontFamily: 'var(--font-archivo)' }}
           >
             <option value="" style={{ backgroundColor: 'var(--nav-bg)' }}>Select a client</option>
@@ -145,8 +145,16 @@ export default function TopBar({
           border: '1px solid var(--nav-border)',
           color: 'var(--nav-text)',
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--nav-text-bright)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--nav-text)' }}
+        onMouseEnter={e => {
+          const el = e.currentTarget as HTMLButtonElement
+          el.style.color = 'var(--nav-text-bright)'
+          el.style.backgroundColor = 'rgb(var(--surface-850))'
+        }}
+        onMouseLeave={e => {
+          const el = e.currentTarget as HTMLButtonElement
+          el.style.color = 'var(--nav-text)'
+          el.style.backgroundColor = 'var(--nav-hover)'
+        }}
         aria-label="Open search (Cmd+K)"
       >
         <Search size={13} />
@@ -189,7 +197,7 @@ export default function TopBar({
       >
         <Bell size={17} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[16px] h-4 text-[10px] font-bold rounded-full flex items-center justify-center px-0.5" style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>
+          <span className="absolute top-1 right-1 min-w-[16px] h-4 text-[10px] font-bold rounded-full flex items-center justify-center px-0.5" style={{ backgroundColor: 'var(--color-primary)', color: 'rgb(var(--surface-950))' }}>
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

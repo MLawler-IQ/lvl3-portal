@@ -23,7 +23,7 @@ export default function EngagementStrip({
           <div className="flex items-center gap-2">
             <div className="w-24 h-1.5 bg-surface-700 rounded-full overflow-hidden">
               <div
-                className="h-full bg-accent-400 rounded-full transition-all"
+                className="h-full bg-brand-400 rounded-full transition-all"
                 style={{
                   width: `${Math.round((projectProgress!.completed / projectProgress!.total) * 100)}%`,
                 }}
@@ -60,7 +60,7 @@ export default function EngagementStrip({
         {hasReview && (
           <Link
             href="/deliverables"
-            className="text-xs px-3 py-1.5 rounded-lg bg-brand-400 hover:bg-brand-500 text-surface-950 font-semibold transition-colors"
+            className="text-xs px-3 py-1.5 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 font-semibold transition-colors"
           >
             Review Deliverables
           </Link>

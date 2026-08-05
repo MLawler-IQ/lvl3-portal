@@ -196,7 +196,7 @@ export default function InsightDraftReview({ clientId, draft }: InsightDraftRevi
           type="button"
           onClick={handleApprove}
           disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-400 px-4 py-2 text-sm font-medium text-surface-950 transition-colors hover:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         >
           <Check size={14} />
           {approving ? 'Publishing…' : 'Approve & publish'}
@@ -205,7 +205,7 @@ export default function InsightDraftReview({ clientId, draft }: InsightDraftRevi
           type="button"
           onClick={handleDiscard}
           disabled={busy}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-surface-600 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-500 hover:text-surface-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-surface-600 bg-surface-800 px-4 py-2 text-sm font-medium text-surface-300 transition-colors hover:border-surface-500 hover:text-surface-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         >
           <Trash2 size={14} />
           {discarding ? 'Discarding…' : 'Discard'}

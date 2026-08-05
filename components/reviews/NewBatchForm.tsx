@@ -9,7 +9,7 @@ import { reviewUrl } from '@/lib/review/helpers'
 import CopyLinkButton from './CopyLinkButton'
 
 const INPUT_CLASS =
-  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-surface-400'
+  'w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 placeholder-surface-400'
 
 type DraftRow = {
   key: string
@@ -224,7 +224,7 @@ export default function NewBatchForm() {
             type="button"
             onClick={handleCreate}
             disabled={creating || !client.trim() || !title.trim()}
-            className="inline-flex items-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 transition-colors disabled:opacity-50"
           >
             {creating && <Loader2 size={14} className="animate-spin" />}
             {creating ? 'Creating…' : 'Create batch'}
@@ -422,7 +422,7 @@ export default function NewBatchForm() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href={`/reviews/${batch.id}`}
-                className="inline-flex items-center text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors"
+                className="inline-flex items-center text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 transition-colors"
               >
                 View batch
               </Link>
@@ -439,7 +439,7 @@ export default function NewBatchForm() {
             type="button"
             onClick={handleSave}
             disabled={saving || !batch || !rows.length}
-            className="inline-flex items-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 transition-colors disabled:opacity-50"
           >
             {saving && <Loader2 size={14} className="animate-spin" />}
             {saving

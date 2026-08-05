@@ -190,7 +190,7 @@ export default function Sidebar({
       >
         <Link
           href="/"
-          className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors"
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           style={{ color: pathname === "/" ? NAV_ACTIVE : NAV_TEXT }}
         >
           <Home size={20} />
@@ -198,7 +198,7 @@ export default function Sidebar({
         </Link>
         <Link
           href="/deliverables"
-          className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors"
+          className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           style={{ color: pathname.startsWith("/deliverables") ? NAV_ACTIVE : NAV_TEXT }}
         >
           <PackageOpen size={20} />
@@ -209,7 +209,7 @@ export default function Sidebar({
         </Link>
         <button
           onClick={onSearchOpen}
-          className="flex flex-col items-center gap-1 px-4 py-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+          className="flex flex-col items-center gap-1 px-4 py-2 rounded-sm transition-colors hover:bg-surface-850 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           style={{ color: NAV_TEXT }}
           aria-label="Search"
         >

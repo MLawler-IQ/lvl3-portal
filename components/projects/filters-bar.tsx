@@ -56,7 +56,7 @@ export default function FiltersBar({
       <select
         value={activeCategory}
         onChange={(e) => onCategoryChange(e.target.value)}
-        className="bg-surface-800 border border-surface-600 text-surface-300 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-surface-600"
+        className="bg-surface-800 border border-surface-600 text-surface-300 text-sm rounded-lg px-3 py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
       >
         <option value="">All Categories</option>
         {categories.map((c) => (

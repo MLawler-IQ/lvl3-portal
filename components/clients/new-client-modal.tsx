@@ -134,7 +134,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
               value={name}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Acme Corp"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 setSlug(e.target.value)
               }}
               placeholder="acme-corp"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm font-mono"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm font-mono"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="acme.com"
-                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
               />
               <button
                 type="button"
@@ -189,7 +189,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 value={logoUrl}
                 onChange={(e) => setLogoUrl(e.target.value)}
                 placeholder="https://..."
-                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="flex-1 bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
               />
               {logoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -216,7 +216,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
             <button
               type="submit"
               disabled={loading || !name.trim() || !slug.trim()}
-              className="flex-1 bg-brand-400 text-surface-950 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-brand-400 text-surface-950 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-brand-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating…' : 'Create client'}
             </button>

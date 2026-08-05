@@ -141,7 +141,7 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
         )}
         <div className="bg-surface-800 rounded-full h-1.5">
           <div
-            className="bg-brand-500 rounded-full h-1.5 transition-all duration-500"
+            className="bg-brand-400 rounded-full h-1.5 transition-all duration-500"
             style={{ width: `${Math.min(100, Math.max(0, state.pct * 100))}%` }}
           />
         </div>

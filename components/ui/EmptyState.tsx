@@ -49,7 +49,7 @@ export function EmptyState({
           <Link
             href={action.href}
             className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-            style={{ backgroundColor: "var(--color-primary)", color: "#fff" }}
+            style={{ backgroundColor: "var(--color-primary)", color: "rgb(var(--surface-950))" }}
           >
             {action.label}
           </Link>
@@ -58,7 +58,7 @@ export function EmptyState({
             type="button"
             onClick={action.onClick}
             className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors hover:opacity-90"
-            style={{ backgroundColor: "var(--color-primary)", color: "#fff" }}
+            style={{ backgroundColor: "var(--color-primary)", color: "rgb(var(--surface-950))" }}
           >
             {action.label}
           </button>

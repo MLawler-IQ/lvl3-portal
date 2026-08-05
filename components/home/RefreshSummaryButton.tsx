@@ -23,7 +23,7 @@ export default function RefreshSummaryButton({ clientId }: { clientId: string })
     <button
       onClick={handleRefresh}
       disabled={refreshing}
-      className="flex items-center gap-1.5 rounded-lg border border-surface-600 bg-surface-800 px-3 py-1.5 text-xs font-medium text-surface-300 transition-colors hover:border-surface-500 hover:text-surface-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+      className="flex items-center gap-1.5 rounded-lg border border-surface-600 bg-surface-800 px-3 py-1.5 text-xs font-medium text-surface-300 transition-colors hover:border-surface-500 hover:text-surface-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
     >
       <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
       {refreshing ? "Refreshing…" : "Refresh summary"}

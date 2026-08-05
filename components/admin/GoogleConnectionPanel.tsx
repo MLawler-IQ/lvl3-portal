@@ -118,7 +118,7 @@ export default function GoogleConnectionPanel({ googleParam }: Props) {
         ) : (
           <button
             onClick={handleConnect}
-            className="text-sm font-medium bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg transition-colors"
+            className="text-sm font-medium bg-brand-400 hover:bg-brand-300 text-surface-950 px-4 py-2 rounded-lg transition-colors"
           >
             Connect Google Account
           </button>

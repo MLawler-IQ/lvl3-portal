@@ -16,7 +16,7 @@ function scoreTone(score: number): ScoreTone {
 const TONE_STYLES: Record<ScoreTone, { text: string; bar: string; chip: string }> = {
   good: {
     text: 'text-accent-400',
-    bar: 'bg-accent-400',
+    bar: 'bg-brand-400',
     chip: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
   },
   warn: {

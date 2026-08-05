@@ -221,7 +221,7 @@ export default function ContentRefreshFinderClient({
             ) : (
               <button
                 onClick={handleRun}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-surface-950 transition-colors"
                 style={{ backgroundColor: 'var(--color-primary)' }}
               >
                 Find Refresh Candidates

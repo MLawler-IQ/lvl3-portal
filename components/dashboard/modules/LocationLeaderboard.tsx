@@ -80,7 +80,7 @@ function SortHeader({ col, active, onSort }: SortHeaderProps) {
       <button
         type="button"
         onClick={() => onSort(col.key)}
-        className="inline-flex items-center gap-1 rounded transition-colors hover:text-surface-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-600"
+        className="inline-flex items-center gap-1 rounded transition-colors hover:text-surface-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         aria-label={`Sort by ${col.label}`}
       >
         <span>{col.short}</span>

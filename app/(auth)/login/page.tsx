@@ -96,7 +96,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setSubmitted(false); setEmail('') }}
-                className="text-xs text-surface-400 hover:text-surface-400 transition-colors mt-2"
+                className="text-xs text-surface-400 hover:text-surface-100 transition-colors mt-2"
               >
                 Use a different email
               </button>
@@ -128,14 +128,12 @@ export default function LoginPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                     style={{
                       backgroundColor: 'rgb(var(--surface-950))',
                       border: '1px solid var(--color-border)',
                       color: 'var(--foreground)',
                     }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
-                    onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
 
@@ -153,14 +151,12 @@ export default function LoginPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                    className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                     style={{
                       backgroundColor: 'rgb(var(--surface-950))',
                       border: '1px solid var(--color-border)',
                       color: 'var(--foreground)',
                     }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
-                    onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
                   />
                 </div>
               </div>
@@ -173,10 +169,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--foreground)', color: 'var(--color-cream)' }}
-                onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgb(var(--surface-300))' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--foreground)' }}
+                className="w-full rounded-sm px-4 py-2.5 text-sm font-semibold bg-brand-400 text-surface-950 transition-colors duration-200 hover:bg-brand-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Signing in…' : 'Sign in'}
               </button>
@@ -184,7 +177,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(false); setError(null) }}
-                className="w-full text-xs text-surface-400 hover:text-surface-400 transition-colors py-1"
+                className="w-full text-xs text-surface-400 hover:text-surface-100 transition-colors py-1"
               >
                 Use magic link instead →
               </button>
@@ -215,14 +208,12 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@company.com"
-                  className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors focus:outline-none"
+                  className="w-full rounded-sm px-4 py-2.5 text-sm transition-colors hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                   style={{
                     backgroundColor: 'rgb(var(--surface-950))',
                     border: '1px solid var(--color-border)',
                     color: 'var(--foreground)',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--active-bg-bold)' }}
-                  onBlur={e => { e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
 
@@ -245,7 +236,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setUsePassword(true); setError(null) }}
-                className="w-full text-xs text-surface-400 hover:text-surface-400 transition-colors py-1"
+                className="w-full text-xs text-surface-400 hover:text-surface-100 transition-colors py-1"
               >
                 Sign in with password instead →
               </button>

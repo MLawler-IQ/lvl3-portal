@@ -215,7 +215,7 @@ export default function GBPAuditClient({
                 <button
                   onClick={handleRun}
                   disabled={!selectedAccount}
-                  className="px-5 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-medium rounded-lg disabled:opacity-40 transition-colors"
+                  className="px-5 py-2 bg-brand-400 hover:bg-brand-300 text-surface-950 text-sm font-medium rounded-lg disabled:opacity-40 transition-colors"
                 >
                   Run Audit
                 </button>
@@ -239,7 +239,7 @@ export default function GBPAuditClient({
               </div>
               <div className="h-1.5 bg-surface-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-brand-500 rounded-full transition-all duration-300"
+                  className="h-full bg-brand-400 rounded-full transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>

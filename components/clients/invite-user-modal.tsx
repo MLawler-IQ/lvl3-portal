@@ -63,7 +63,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
             </p>
             <button
               onClick={onClose}
-              className="mt-2 bg-brand-400 text-surface-950 rounded-lg px-6 py-2 text-sm font-semibold hover:bg-brand-500 transition-colors"
+              className="mt-2 bg-brand-400 text-surface-950 rounded-lg px-6 py-2 text-sm font-semibold hover:bg-brand-300 transition-colors"
             >
               Done
             </button>
@@ -81,7 +81,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@company.com"
-                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-surface-100/20 text-sm"
+                className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm"
               />
             </div>
 
@@ -131,7 +131,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
               <button
                 type="submit"
                 disabled={loading || !email.trim()}
-                className="flex-1 bg-brand-400 text-surface-950 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-brand-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-brand-400 text-surface-950 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-brand-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Sending…' : 'Send invite'}
               </button>

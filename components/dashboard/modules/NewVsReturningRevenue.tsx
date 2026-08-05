@@ -53,7 +53,7 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
         <p className="text-sm font-semibold text-surface-100">New-customer revenue share</p>
         <div className="relative group">
           <button
-            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-400 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-surface-700"
+            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-400 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label="About new vs returning revenue"
           >
             ?

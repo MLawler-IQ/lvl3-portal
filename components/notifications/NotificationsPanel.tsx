@@ -97,7 +97,7 @@ export default function NotificationsPanel({
             {hasNotifications && unviewedDeliverables.length > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400 rounded"
+                className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded"
               >
                 <CheckCheck size={13} />
                 Mark all read
@@ -105,7 +105,7 @@ export default function NotificationsPanel({
             )}
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+              className="p-1.5 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
               aria-label="Close notifications"
             >
               <X size={16} />
@@ -133,7 +133,7 @@ export default function NotificationsPanel({
                       key={d.id}
                       href="/deliverables"
                       onClick={onClose}
-                      className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-surface-500"
+                      className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                     >
                       <div className="mt-0.5 w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
                         <PackageOpen size={14} className="text-emerald-400" />
@@ -164,7 +164,7 @@ export default function NotificationsPanel({
                       key={d.deliverableId}
                       href="/deliverables"
                       onClick={onClose}
-                      className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-surface-500"
+                      className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                     >
                       <div className="mt-0.5 w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
                         <MessageSquare size={14} className="text-amber-400" />

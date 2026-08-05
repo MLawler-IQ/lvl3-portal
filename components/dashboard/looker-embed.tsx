@@ -31,7 +31,7 @@ export default function LookerEmbed({ url, clientName, isActive = true }: Props)
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400"
+            className="flex items-center gap-1.5 text-xs text-surface-300 hover:text-surface-100 bg-surface-800 border border-surface-600 px-3 py-1.5 rounded-lg transition-colors shrink-0 ml-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             Open in Looker Studio
             <ExternalLink className="w-3.5 h-3.5" />
@@ -75,7 +75,7 @@ export default function LookerEmbed({ url, clientName, isActive = true }: Props)
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-brand-400 hover:bg-brand-500 text-surface-950 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 bg-brand-400 hover:bg-brand-300 text-surface-950 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             Open Dashboard
             <ExternalLink className="w-4 h-4" />

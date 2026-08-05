@@ -43,7 +43,7 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
           <h2 className="text-surface-100 font-medium">Users with access</h2>
           <button
             onClick={() => setInviteOpen(true)}
-            className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-xs font-semibold rounded-lg px-3 py-1.5 hover:bg-brand-500 transition-colors"
+            className="flex items-center gap-1.5 bg-brand-400 text-surface-950 text-xs font-semibold rounded-lg px-3 py-1.5 hover:bg-brand-300 transition-colors"
           >
             <UserPlus size={13} />
             Add access

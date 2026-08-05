@@ -33,7 +33,7 @@ export default function DeliverableCard({
   return (
     <button
       onClick={(e) => onClick(deliverable, e.currentTarget)}
-      className={`w-full text-left p-4 rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400 hover:bg-surface-850 ${
+      className={`w-full text-left p-4 rounded-xl border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 hover:bg-surface-850 ${
         isSelected
           ? "border-brand-400/30 bg-surface-800"
           : "border-surface-700 bg-surface-850 hover:border-surface-600 hover:bg-surface-800"

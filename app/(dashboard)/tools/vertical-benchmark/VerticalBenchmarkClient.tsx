@@ -442,7 +442,7 @@ export default function VerticalBenchmarkClient({
             <button
               onClick={handleRun}
               disabled={!vertical.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-surface-950 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: 'var(--color-primary)' }}
               onMouseEnter={e => {
                 if (vertical.trim()) {

@@ -25,7 +25,7 @@ export default async function ReviewsPage() {
         </div>
         <Link
           href="/reviews/new"
-          className="inline-flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600 text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-medium px-3.5 py-2 rounded-lg bg-brand-400 hover:bg-brand-300 text-surface-950 transition-colors"
         >
           <Plus size={15} />
           New review

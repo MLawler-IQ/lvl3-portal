@@ -78,7 +78,7 @@ export default function KeywordResearchClient() {
             <button
               type="submit"
               disabled={isPending}
-              className="bg-brand-500 hover:bg-brand-400 text-surface-100 text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors"
+              className="bg-brand-400 hover:bg-brand-300 text-surface-950 text-sm font-medium px-5 py-2 rounded-lg disabled:opacity-50 transition-colors"
             >
               {isPending ? 'Researching...' : 'Research'}
             </button>

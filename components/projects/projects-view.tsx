@@ -182,7 +182,7 @@ export default function ProjectsView({
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="flex items-center gap-1.5 text-xs text-surface-400 hover:text-surface-100 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-surface-400 rounded"
+              className="flex items-center gap-1.5 text-xs text-surface-400 hover:text-surface-100 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 rounded"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? "Syncing…" : "Sync Now"}
