@@ -88,7 +88,18 @@ function slugify(text: string) {
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 
-export async function createClient(formData: FormData) {
+/**
+ * Create a client and return its id.
+ *
+ * Deliberately minimal: a client row has to exist before an onboarding session
+ * can reference it (FK), so creation captures only name/slug/logo and the caller
+ * hands straight off to the onboarding interview, which is where every other
+ * field — GA4, GSC, GBP, client_type, competitors — is actually captured.
+ *
+ * Returns the id rather than void so the modal can route into the interview.
+ * Still throws on failure; the modal catches and renders the message.
+ */
+export async function createClient(formData: FormData): Promise<{ id: string }> {
   await requireAdmin()
   const service = await createServiceClient()
 
@@ -97,10 +108,17 @@ export async function createClient(formData: FormData) {
   const slug = rawSlug && rawSlug.length > 0 ? rawSlug : slugify(name)
   const logo_url = (formData.get('logo_url') as string | null)?.trim() || null
 
-  const { error } = await service.from('clients').insert({ name, slug, logo_url })
+  const { data, error } = await service
+    .from('clients')
+    .insert({ name, slug, logo_url })
+    .select('id')
+    .single()
+
   if (error) throw new Error(error.message)
+  if (!data?.id) throw new Error('Client was created but no id came back')
 
   revalidatePath('/clients')
+  return { id: data.id as string }
 }
 
 export async function updateClient(clientId: string, formData: FormData) {

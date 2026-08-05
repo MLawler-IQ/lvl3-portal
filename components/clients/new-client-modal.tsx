@@ -94,9 +94,12 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
       fd.set('name', name)
       fd.set('slug', slug)
       fd.set('logo_url', logoUrl)
-      await createClient(fd)
-      router.refresh()
+      const { id } = await createClient(fd)
       onClose()
+      // Creation captures only name/slug/logo. Everything else — GA4, GSC, GBP,
+      // client type, competitors — is captured by the onboarding interview, so
+      // go straight there rather than leaving a half-configured client behind.
+      router.push(`/clients/${id}/onboarding`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
       setLoading(false)
@@ -114,16 +117,22 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
         className="relative bg-surface-900 border border-surface-700 rounded-sm w-full max-w-md p-6"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 id="new-client-title" className="text-surface-100 font-medium text-lg">New client</h2>
+          <h2 id="new-client-title" className="font-serif text-surface-100 text-lg">New client</h2>
           <button onClick={onClose} aria-label="Close dialog" className="text-surface-400 hover:text-surface-100 transition-colors">
             <X size={18} />
           </button>
         </div>
 
+        <p className="text-xs text-surface-400 mb-5 leading-relaxed">
+          Just the basics here. Saving opens the onboarding interview, which captures
+          the analytics properties, service area, job values and everything else the
+          pipeline needs.
+        </p>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Name <span className="text-red-400">*</span>
+              Name <span className="text-brand-400">*</span>
             </label>
             <input
               ref={nameRef}
