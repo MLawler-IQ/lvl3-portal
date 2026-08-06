@@ -1,27 +1,11 @@
 import type { HealthItem } from './ExecutiveSummaryBand'
+import { GRADE_CHIP, scoreToGrade } from '@/lib/grade-tone'
 
-/** Maps a letter grade to its chip colors (Tailwind tokens used elsewhere in-app). */
-const GRADE_STYLES: Record<NonNullable<HealthItem['grade']>, string> = {
-  A: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
-  B: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
-  C: 'text-amber-400 border-amber-400/40 bg-amber-400/10',
-  D: 'text-amber-400 border-amber-400/40 bg-amber-400/10',
-  F: 'text-rose-400 border-rose-400/40 bg-rose-400/10',
-}
-
-/** Derive a letter grade from a 0–100 score when no explicit grade is supplied. */
-function scoreToGrade(score: number): NonNullable<HealthItem['grade']> {
-  if (score >= 90) return 'A'
-  if (score >= 80) return 'B'
-  if (score >= 70) return 'C'
-  if (score >= 60) return 'D'
-  return 'F'
-}
 
 function GradeChip({ grade }: { grade: NonNullable<HealthItem['grade']> }) {
   return (
     <span
-      className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs font-bold ${GRADE_STYLES[grade]}`}
+      className={`inline-flex h-6 w-6 items-center justify-center rounded-md border text-xs font-bold ${GRADE_CHIP[grade]}`}
       style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
       aria-label={`Grade ${grade}`}
     >

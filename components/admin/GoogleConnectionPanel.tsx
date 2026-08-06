@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { getAdminGoogleStatus, disconnectAdminGoogle } from '@/app/actions/admin-google'
+import ConnectionBanner from './ConnectionBanner'
 
 interface Props {
   googleParam: string | null
@@ -83,17 +84,7 @@ export default function GoogleConnectionPanel({ googleParam }: Props) {
         )}
       </div>
 
-      {banner && (
-        <div
-          className={`rounded-lg px-4 py-2.5 text-sm ${
-            banner.type === 'success'
-              ? 'bg-accent-400/10 border border-accent-400/20 text-accent-400'
-              : 'bg-rose-500/10 border border-rose-500/20 text-rose-300'
-          }`}
-        >
-          {banner.message}
-        </div>
-      )}
+      <ConnectionBanner banner={banner} />
 
       {!loading && (
         connected ? (
@@ -109,7 +100,7 @@ export default function GoogleConnectionPanel({ googleParam }: Props) {
               <button
                 onClick={handleDisconnect}
                 disabled={disconnecting}
-                className="text-xs text-rose-400 hover:text-rose-300 transition-colors disabled:opacity-50"
+                className="text-xs text-error hover:text-error/80 transition-colors disabled:opacity-50"
               >
                 {disconnecting ? 'Disconnecting...' : 'Disconnect'}
               </button>
