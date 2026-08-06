@@ -14,6 +14,19 @@ const CANONICAL_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
 const LEGACY_HOST = 'lvl3-portal.vercel.app'
 
 const nextConfig = {
+  // Let a build target a different output directory.
+  //
+  // `next build` and `next dev` both write .next, so running a production build
+  // while a dev server is up replaces the chunk files the dev server still holds
+  // references to. It then 500s on every request with "Cannot find module
+  // './1234.js'" from .next/server/webpack-runtime.js — including on the CSS
+  // bundle, so the page renders completely unstyled and looks like a CSS bug
+  // rather than a stale-artifact one. This bit us three times in one session.
+  //
+  // Gate builds now run as `NEXT_DIST_DIR=.next-build npm run build`, so the two
+  // never share a directory. Unset in normal use, so Vercel is unaffected.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
+
   async redirects() {
     // Old dashboard link folds into the single-link report shell.
     // (Redirects run before middleware, so no auth whitelist is needed.)
