@@ -205,40 +205,11 @@ h1, h2, h3, h4, h5, h6 {
   /* Two-tone declarative headline — primary clause + reflective clause */
   .headline-reflective { color: var(--color-muted); }
 
-  /* IgniteIQ form pattern — underline-only inputs.
-     Apply to <input>/<textarea>/<select>: <input className="iiq-input" />. */
-  .iiq-input {
-    width:           100%;
-    padding:         8px 0;
-    background:      transparent;
-    border:          0;
-    border-bottom:   1px solid var(--color-border);
-    border-radius:   0;
-    color:           var(--foreground);
-    font-family:     var(--font-archivo), sans-serif;
-    font-size:       15px;
-    line-height:     1.45;
-    transition:      border-color 140ms cubic-bezier(0.2, 0.0, 0.0, 1.0);
-  }
-  .iiq-input::placeholder { color: var(--color-muted); }
-  .iiq-input:focus {
-    outline:        none;
-    border-bottom:  1px solid var(--color-primary);
-  }
-  .iiq-label {
-    font-family:    var(--font-archivo), system-ui, sans-serif;
-    font-size:      13px;
-    font-weight:    500;
-    letter-spacing: 0;
-    text-transform: none;
-    color:          var(--color-muted);
-    display:        block;
-    margin-bottom:  6px;
-  }
-  .iiq-required::after {
-    content:    " *";
-    color:      var(--color-primary);
-  }
+  /* The .iiq-input / .iiq-label / .iiq-required utilities lived here: an IgniteIQ
+     underline-only form pattern with zero consumers anywhere in app/ or components/.
+     Removed rather than renamed — carrying the retired brand in a class name for the
+     sake of dead code is the worst of both. Stage 4's input treatment is per-component
+     (surface-900 field, hairline border, brand-400 focus ring). */
 }
 
 /* ── Print ──────────────────────────────────────────────────

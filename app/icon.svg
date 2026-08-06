@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Favicon. None existed before this, so the tab fell back to a generic globe.
+
+       Reduced to "L3." rather than the full "LVL3." wordmark: tabs render at 16-32px,
+       where five glyphs plus a period turn to mush. L3 stays legible at 16px and is
+       recognisably the mark.
+
+       Ink ground #171410, paper wordmark #F5F2EA, sienna period #E0703F — the one
+       piece of colour, exactly as on the site and in the sidebar. -->
+  <rect width="64" height="64" fill="#171410"/>
+  <text
+    x="8" y="46"
+    fill="#F5F2EA"
+    font-family="Archivo, ui-sans-serif, system-ui, -apple-system, Helvetica, Arial, sans-serif"
+    font-size="34"
+    font-weight="800"
+    letter-spacing="-1.5"
+  >L3</text>
+  <circle cx="52" cy="42" r="4" fill="#E0703F"/>
+</svg>

@@ -51,6 +51,14 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Metadata image routes must be reachable unauthenticated: the clients fetching them
+  // are Slack, iMessage and the like, which never carry a session. The matcher below
+  // already lets /icon.svg through on its extension, but /opengraph-image has none, so
+  // without this it 307s to /login and every shared portal link previews as nothing.
+  if (pathname === '/opengraph-image' || pathname === '/icon' || pathname === '/apple-icon') {
+    return supabaseResponse
+  }
+
   // Redirect unauthenticated users to login
   if (!user) {
     const url = request.nextUrl.clone()

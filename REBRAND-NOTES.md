@@ -77,6 +77,38 @@ title, `components/report-shell.tsx` (`IgniteIQ`, `Ask IgniteIQ`), and the
 
 ---
 
+## Stage 6: IgniteIQ strings that stay, and why
+
+The spec says in-app copy "drop IgniteIQ entirely" and that exceptions need a written
+reason. There are two clearly separable groups here, and only one of them is portal
+chrome.
+
+**Rebranded (portal chrome).** `app/layout.tsx` metadata: title is now
+`LVL3 Portal` with a `%s | LVL3 Portal` template, description and OG likewise.
+
+**Kept, deliberately — IgniteIQ client deliverables served from this repo.** These are
+IgniteIQ *company* artifacts that happen to be hosted by the portal, not surfaces of
+the LVL3 Portal product:
+
+| Surface | Why it stays |
+|---|---|
+| `app/(public)/mm-image-review/**` | A client-facing content-review deliverable, IgniteIQ-branded, with its own logo asset and light theme. Re-branding it would alter an artifact already sent to a client |
+| `app/(public)/market-eval/**`, `components/report-shell.tsx` | The market-evaluation deliverable, same reasoning |
+| `app/api/report-chat/route.ts` | The assistant prompt for that deliverable, which names the IgniteIQ voice it is speaking in |
+| `lib/review/email.ts` sender `reviews@send.igniteiq.com` | Changing it breaks mail delivery — the domain, SPF and DKIM are all on igniteiq.com. A rename is a DNS task, not a string edit |
+| `app/actions/seo-content-engine.ts` docx Author field | Metadata on a generated document. Worth revisiting with the wider deliverable branding, not alone |
+
+Both public deliverable pages now set `title: { absolute: … }`. Without that the new
+root template would render them as "IgniteIQ · Content Review **| LVL3 Portal**",
+stamping the portal's product name onto an IgniteIQ artifact.
+
+**`metadataBase` stays `portal.igniteiq.com`** until the stage-7 flip. Pointing it at
+`portal.lvl3.com` early would emit absolute OG URLs for a host that does not resolve.
+
+**Still owned by Matt (dashboard, not code):** the Supabase auth email templates —
+sender name, logo and copy. The spec calls these out as the easiest thing to forget,
+and they are not in this repo.
+
 ## Notable divergences from the spec
 
 ### Delta colours keep green/red instead of sienna (stage 4)

@@ -33,17 +33,27 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
 })
 
+// Product name is "LVL3 Portal". `%s | LVL3 Portal` gives every page that sets its
+// own title the suffix for free, and `default` covers the ones that don't.
+//
+// metadataBase deliberately stays on portal.igniteiq.com: that is the live host until
+// the stage-7 domain flip, and pointing it at portal.lvl3.com early would emit
+// absolute OG URLs for a host that does not resolve yet.
 export const metadata: Metadata = {
   metadataBase: new URL('https://portal.igniteiq.com'),
-  title: 'IgniteIQ Portal · Own Your Intelligence',
-  description: 'The Decision Engine for Modern Trades.',
+  title: {
+    default: 'LVL3 Portal',
+    template: '%s | LVL3 Portal',
+  },
+  description: 'Search, analytics and delivery for the work we do together.',
   openGraph: {
-    title: 'IgniteIQ Portal',
-    description: 'The Decision Engine for Modern Trades.',
+    title: 'LVL3 Portal',
+    description: 'Search, analytics and delivery for the work we do together.',
     url: 'https://portal.igniteiq.com',
-    siteName: 'IgniteIQ Portal',
+    siteName: 'LVL3 Portal',
     type: 'website',
   },
+  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({
