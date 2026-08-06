@@ -95,13 +95,22 @@ describe('the recorded figures are internally coherent', () => {
   })
 
   it('ties each check to the denominator it was measured against', () => {
-    // TECH-011 excludes the 4 pages missing from mobile_friendly.csv; MEAS-001 is
-    // measured against the full backbone. Those two denominators differing is the
-    // point of the four-state model, so pin them.
-    expect(recorded.checks['TECH-011'].measured).toBe(recorded.pagesWithMeasuredWords)
+    // TECH-011 excludes the pages missing from mobile_friendly.csv; MEAS-001 is measured
+    // against the full backbone. Those two denominators differing is the point of the
+    // four-state model, so pin them — but pin them SEPARATELY.
+    //
+    // An earlier version asserted TECH-011.measured === pagesWithMeasuredWords. Both are
+    // 202 on this export, and that is a coincidence: one counts pages present in the
+    // mobile-friendly report, the other counts pages with both word-count columns. An
+    // export where they legitimately diverge would fail that assertion for a reason
+    // unrelated to what it claims to check.
+    expect(recorded.checks['TECH-011'].measured).toBe(202)
+    expect(recorded.unmeasured.hasViewportMeta).toBe(
+      recorded.urls - recorded.checks['TECH-011'].measured,
+    )
+
     expect(recorded.checks['MEAS-001'].measured).toBe(recorded.urls)
     expect(recorded.checks['MEAS-001'].affected).toBe(recorded.untaggedPages)
-    expect(recorded.unmeasured.hasViewportMeta).toBe(recorded.urls - recorded.checks['TECH-011'].measured)
   })
 
   it('keeps the uniqueShare quantiles ordered and inside (0, 1)', () => {

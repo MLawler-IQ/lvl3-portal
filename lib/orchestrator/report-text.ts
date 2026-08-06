@@ -356,9 +356,20 @@ function renderRow(
   )
 }
 
-/** `label  value`, wrapped onto continuation lines aligned under the value. */
+/**
+ * `label  value`, wrapped onto continuation lines aligned under the value.
+ *
+ * The VALUE is wrapped, never `label + value` as one string. Wrapping the joined string
+ * puts the label and the value through the same word splitter, which collapses the padEnd
+ * alignment and — once the value is long enough to wrap at all — leaves the label sitting
+ * alone on its own line with the value starting underneath it.
+ */
 function kv(label: string, value: string): string[] {
-  return wrapAt(0, label.padEnd(LABEL_WIDTH) + value, LABEL_WIDTH)
+  const prefix = label.padEnd(LABEL_WIDTH)
+  if (prefix.length + value.length <= MAX_WIDTH) return [prefix + value]
+
+  const chunks = wrapText(value, MAX_WIDTH - LABEL_WIDTH)
+  return chunks.map((chunk, i) => (i === 0 ? prefix : ' '.repeat(LABEL_WIDTH)) + chunk)
 }
 
 /**
@@ -375,32 +386,43 @@ function wrapAt(indent: number, text: string, hangingIndent = 0): string[] {
   // padEnd column alignment in a `label   value` line is made of exactly that whitespace.
   if (text.length <= MAX_WIDTH - indent) return [pad + text]
 
-  const [head, ...rest] = wrapText(text, MAX_WIDTH - indent)
-  // Re-wrap the remainder at the narrower continuation width so no line overruns.
-  const tail = wrapText(rest.join(' '), MAX_WIDTH - indent - hangingIndent)
-  return [pad + head, ...tail.map((line) => contPad + line)]
+  // ONE pass with two widths, never wrap-then-rejoin-then-rewrap. Rejoining the tail with
+  // ' ' and wrapping it again inserted a space that was not in the source: a long unbroken
+  // token gets hard-split into fragments, and the join put a separator between fragments of
+  // ONE word, which the second pass then placed mid-token. It printed a filesystem path
+  // with a space in the middle of a directory name — an operator copying that gets a path
+  // that does not exist.
+  return wrapText(text, MAX_WIDTH - indent, MAX_WIDTH - indent - hangingIndent).map(
+    (line, i) => (i === 0 ? pad : contPad) + line,
+  )
 }
 
-/** Greedy word wrap. A single word longer than the budget is hard-split, never dropped. */
-function wrapText(text: string, width: number): string[] {
+/**
+ * Greedy word wrap. A single word longer than the budget is hard-split, never dropped.
+ *
+ * `restWidth` is the budget for every line after the first, so a hanging indent is honoured
+ * inside the single pass that produces the lines.
+ */
+function wrapText(text: string, width: number, restWidth = width): string[] {
   if (text.length === 0) return []
   if (width <= 0) return [text]
 
   const out: string[] = []
   let line = ''
+  const budget = () => (out.length === 0 ? width : restWidth)
 
   for (const word of text.split(/\s+/).filter((w) => w.length > 0)) {
     if (line.length === 0) {
       line = word
-    } else if (line.length + 1 + word.length <= width) {
+    } else if (line.length + 1 + word.length <= budget()) {
       line += ' ' + word
     } else {
       out.push(line)
       line = word
     }
-    while (line.length > width) {
-      out.push(line.slice(0, width))
-      line = line.slice(width)
+    while (line.length > budget()) {
+      out.push(line.slice(0, budget()))
+      line = line.slice(budget())
     }
   }
 

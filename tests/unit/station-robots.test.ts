@@ -158,6 +158,43 @@ describe('the soft-404 guard', () => {
     const { data } = await station(() => textResponse('# comment\nUser-agent: *\nDisallow: /x/\n'))
     expect(data.robotsTxtStatus).toBe('ok')
   })
+
+  it('keeps a real robots.txt served as text/html, because the MIME type is not evidence', async () => {
+    // Serving robots.txt as text/html is routine on default Nginx/Apache configs and
+    // through some CDN transforms. Treating the content type as decisive set
+    // robotsTxt: null, which TECH-001 reads as "nothing is blocked" — so a file whose
+    // first directive is Disallow: / reported a clean bill of health on a critical check.
+    const body = 'User-agent: *\nDisallow: /\n'
+    const { data } = await station(() =>
+      textResponse(body, { headers: { 'content-type': 'text/html; charset=utf-8' } }),
+    )
+    expect(data.robotsTxtStatus).toBe('ok')
+    expect(data.robotsTxt).toBe(body)
+  })
+
+  it('reports the block on that mislabelled file instead of a fabricated pass', async () => {
+    const merged = withSiteFiles(
+      crawlOk(),
+      await station(() =>
+        textResponse('User-agent: *\nDisallow: /\n', {
+          headers: { 'content-type': 'text/html' },
+        }),
+      ),
+    )
+    const findings = runChecks(CHECKS, { crawl: merged })
+    expect(findingFor(findings, 'TECH-001').status).toBe('fail')
+  })
+
+  it('still treats a text/html body with no directives as absent', async () => {
+    // The genuine soft 404: HTML content type and nothing a robots parser would act on.
+    const { data, notes } = await station(() =>
+      textResponse('Sorry, that page could not be found.', {
+        headers: { 'content-type': 'text/html' },
+      }),
+    )
+    expect(data.robotsTxtStatus).toBe('not-found')
+    expect((notes ?? []).join(' ')).toMatch(/HTML page rather than a text file/)
+  })
 })
 
 describe('the byte cap', () => {

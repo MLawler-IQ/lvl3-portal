@@ -314,6 +314,25 @@ describe('the whole report', () => {
     expect(overlong, overlong.join('\n')).toEqual([])
   })
 
+  it('never inserts whitespace into a value that had none', () => {
+    // A long unbroken token used to be hard-split into fragments and then rejoined with
+    // a space before being re-wrapped, so the separator landed mid-token. It printed a
+    // filesystem path with a space inside a directory name, which an operator would copy
+    // and find does not exist.
+    const path = '/private/tmp/claude-501/-Users-matthewlawler-lvl3-portal/7e6eb63e-4009-4d5f-a07a-4060fef55de2/scratchpad/mini'
+    const rendered = formatAuditRun(runResult(), { exportLabel: path })
+    // Every non-space run of the original must survive intact somewhere in the output.
+    const rejoined = rendered
+      .split('\n')
+      .map((line) => line.trimEnd())
+      .join('')
+      .replace(/\s+/g, '')
+    expect(rejoined).toContain(path.replace(/\s+/g, ''))
+    for (const line of rendered.split('\n')) {
+      expect(line.length).toBeLessThanOrEqual(MAX_WIDTH)
+    }
+  })
+
   it('leads with the header facts', () => {
     expect(out).toContain('2026-08-06T12:00:00.000Z')
     expect(out).toContain('scoring-v1')

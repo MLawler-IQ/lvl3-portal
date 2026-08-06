@@ -160,12 +160,18 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
   const crawlTask = (async () => {
     const startedStation = now()
     try {
-      const run = await runCrawl(options.crawl)
-      coverage = run.coverage
+      // The ingest runs INSIDE the recorded body, so the row's started_at/completed_at
+      // bracket the actual work. Running it first and then recording an already-resolved
+      // value would write a row whose duration is zero, and slice 4 reads those timings.
+      // `coverage` escapes through the closure because ToolResult cannot carry it.
       const { result, runId } = await recorder.record(
         SLUGS.crawl,
         { ...attribution, export: options.crawl.label },
-        async () => run.result,
+        async () => {
+          const run = await runCrawl(options.crawl)
+          coverage = run.coverage
+          return run.result
+        },
       )
       if (runId !== null) recording.recorded.push(SLUGS.crawl)
       stationStatus.crawl = report('crawl', {

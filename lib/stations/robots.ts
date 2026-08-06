@@ -239,10 +239,34 @@ async function fetchFile(
   return { body, status: 'ok', httpStatus: res.status, notes }
 }
 
-/** Whether a 200 response is really an HTML page. */
+/**
+ * Whether a 200 response is really an HTML page rather than the file we asked for.
+ *
+ * THE BODY DECIDES, NOT THE CONTENT TYPE. An earlier version returned true as soon as the
+ * content type contained `text/html`, which is a fabricated pass waiting to happen:
+ * serving a perfectly good robots.txt as `text/html` is routine (default-type Nginx and
+ * Apache configs, WordPress rewrite handlers, some CDN transforms), and classifying it as
+ * absent sets `robotsTxt: null`, which TECH-001 reads as "No robots.txt served; nothing is
+ * blocked" — `pass`. A file whose first line is `Disallow: /` would have been reported as a
+ * clean bill of health on a check that is critical and auto-tier. That is failure mode 1
+ * exactly, and the wrong MIME type is not evidence about the file's contents.
+ *
+ * So: markup in the body means HTML. A body carrying robots directives is the file,
+ * whatever the server labelled it.
+ */
 function looksLikeHtml(res: Response, body: string): boolean {
-  const type = res.headers.get('content-type') ?? ''
-  if (type.toLowerCase().includes('text/html')) return true
   const head = body.trimStart().slice(0, 200).toLowerCase()
-  return head.startsWith('<!doctype html') || head.startsWith('<html') || head.startsWith('<?xml')
+  const markup =
+    head.startsWith('<!doctype html') || head.startsWith('<html') || head.startsWith('<?xml')
+  if (markup) return true
+
+  // The content type is a tiebreaker only, for a body that says nothing either way. A
+  // `text/html` response whose body holds real directives is still the real file.
+  const htmlType = (res.headers.get('content-type') ?? '').toLowerCase().includes('text/html')
+  return htmlType && !hasRobotsDirectives(body)
+}
+
+/** Whether a body contains anything a robots.txt parser would act on. */
+function hasRobotsDirectives(body: string): boolean {
+  return /^\s*(user-agent|disallow|allow|sitemap|crawl-delay)\s*:/im.test(body)
 }

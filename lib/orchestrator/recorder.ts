@@ -26,7 +26,7 @@
 // With `client_id` null AND `user_id` null every branch is false, for reasons worth
 // spelling out because two of them are SQL null semantics rather than logic:
 //   - Branch 1's first half is TRUE, but `user_id = auth.uid()` is `null = <uuid>`,
-//     which is NULL, not true — and `null AND true` is NULL, which RLS treats as a
+//     which is NULL, not true — and `true AND NULL` is NULL, which RLS treats as a
 //     non-match. This is the branch someone will assume saves them; it does not.
 //   - Branches 2 and 3 compare `u.client_id`/`uca.client_id` to NULL, which is NULL
 //     for every candidate row, so both EXISTS subqueries are empty.
