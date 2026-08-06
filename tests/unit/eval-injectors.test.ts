@@ -224,9 +224,8 @@ describe('generated manifests', () => {
         expect(['affectedUrls', 'value']).toContain(entry.magnitude.metric)
       }
       expect(loaded.must_not_find.length).toBeGreaterThan(0)
-      // Only checks with a registered detector — no manifest may demand what
-      // nothing can produce (ONPAGE-012 is the live example: the ai-page-spree
-      // fixture violates it in its data and records it as unassertable).
+      // Only checks with a registered detector — no manifest may demand what nothing
+      // can produce.
       for (const id of [
         ...loaded.must_find.map((e) => e.id),
         ...loaded.must_not_find,
@@ -236,6 +235,15 @@ describe('generated manifests', () => {
       }
     })
   }
+
+  // The guarantee the test below states is only as wide as REGISTERED_CHECK_IDS, so that
+  // list drifting away from CHECK_IDS silently narrows it. That is exactly what happened:
+  // ONPAGE-012 was in CHECK_IDS and not in REGISTERED_CHECK_IDS, so every generated
+  // manifest asserted nothing about it in either variant, and a detector/predicate
+  // disagreement the harness exists to catch sat there unnoticed.
+  it('REGISTERED_CHECK_IDS equals CHECK_IDS — no silently-unasserted check', () => {
+    expect(new Set(REGISTERED_CHECK_IDS)).toEqual(CHECK_IDS)
+  })
 
   it('asserts every non-cluster check as must_pass, so a half-dead pipeline cannot score well', () => {
     for (const fx of suite) {
@@ -248,9 +256,9 @@ describe('generated manifests', () => {
   })
 
   it('generates genuinely template-dominated content, and ONPAGE-012 now catches it', () => {
-    // This test used to assert ONPAGE-012 had no detector and was merely RECORDED as
-    // unassertable. The integration pass registered it, so the assertion inverts:
-    // the generated corpus is template-dominated AND the detector says so.
+    // This test used to assert ONPAGE-012 had no detector and was merely RECORDED, in a
+    // `unassertable` field nothing read. The detector is registered, the id is in
+    // REGISTERED_CHECK_IDS, and the dead field is gone.
     const spree = generateFixture('ai-page-spree', SEED, { variant: 'defect' })
     expect(CHECK_IDS.has('ONPAGE-012')).toBe(true)
 

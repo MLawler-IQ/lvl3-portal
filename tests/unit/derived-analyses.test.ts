@@ -449,8 +449,96 @@ describe('uniqueShare', () => {
     )
   })
 
-  it('treats a zero-word page as zero percent unique rather than skipping it', () => {
-    expect(uniqueShare(page({ url: 'https://x.com/a/1/', wordCount: 0, uniqueWordCount: 0 }))).toBe(0)
+  // Was: "treats a zero-word page as zero percent unique rather than skipping it".
+  // 0/0 is undefined, and the detector returning 0 (maximally dominated) while the eval
+  // predicate returned 1 (pristine) meant both invented a number, in opposite
+  // directions. null forces every caller to decide explicitly.
+  it('returns null when the crawl measured no words at all', () => {
+    expect(uniqueShare(page({ url: 'https://x.com/a/1/', wordCount: 0, uniqueWordCount: 0 }))).toBeNull()
+  })
+
+  // The case the old rule was defending never needed defending: zero CONTENT words
+  // behind a 3,551-word template is wordCount 3551, not 0.
+  it('scores a content-less page behind a real template as near-zero, not null', () => {
+    const share = uniqueShare(page({ url: 'https://x.com/a/1/', wordCount: 3551, uniqueWordCount: 0 }))
+    expect(share).toBe(0)
+  })
+})
+
+// Written from the ONPAGE-012 decision record and §9's documented data points, not from
+// content-template-ratio.ts. The two implementations that used to disagree here were
+// both written by the same author from the same misunderstanding, so a second
+// implementation bought a disagreement rather than a cross-check; the independence now
+// lives in this suite.
+describe('ONPAGE-012 semantics: unmeasured pages are excluded, counted, and surfaced', () => {
+  const fam = (n: number, wordCount: number, uniqueWordCount: number, from = 0) =>
+    Array.from({ length: n }, (_, i) =>
+      page({ url: `https://x.com/service/p${from + i}/`, wordCount, uniqueWordCount }),
+    )
+
+  it('fails a family at the documented Tornado ratio of 29% unique', () => {
+    const a = contentToTemplateRatio(fam(6, 1420, 412), [])
+    expect(a.dominated).toHaveLength(1)
+    expect(a.dominatedPages).toBe(6)
+  })
+
+  it('passes a family of genuinely unique pages', () => {
+    const a = contentToTemplateRatio(fam(6, 1000, 900), [])
+    expect(a.dominated).toHaveLength(0)
+    expect(a.unmeasuredInJudged).toBe(0)
+  })
+
+  it('does NOT let unmeasured pages drag a healthy family under the threshold', () => {
+    // 8 real pages at 85% unique beside 8 unmeasured ones. Under the old
+    // zero-word-is-0%-unique rule the median fell to 0.425 and all 16 pages fired.
+    const a = contentToTemplateRatio([...fam(8, 1000, 850), ...fam(8, 0, 0, 8)], [])
+    expect(a.dominatedPages).toBe(0)
+    expect(a.unmeasuredInJudged).toBe(8)
+  })
+
+  it('does NOT let unmeasured pages manufacture a pass either', () => {
+    // The mirror failure: 3 unmeasured + 3 genuine 60%-unique pages. Treating the
+    // unmeasured as pristine medians the group to 0.80 and passes it.
+    const a = contentToTemplateRatio([...fam(3, 0, 0), ...fam(3, 1000, 600, 3)], [])
+    // Only 3 measured pages, below the floor of 5 — so it is not judged at all.
+    expect(a.groups).toHaveLength(0)
+    expect(a.unjudgeableGroups).toBe(1)
+    expect(a.pagesUnjudgeable).toBe(6)
+  })
+
+  it('treats a group with too few MEASURED pages as unjudgeable, never as clean', () => {
+    const a = contentToTemplateRatio([...fam(2, 1000, 900), ...fam(6, 0, 0, 2)], [])
+    expect(a.groups).toHaveLength(0)
+    expect(a.unjudgeableGroups).toBe(1)
+    expect(a.dominatedPages).toBe(0)
+  })
+
+  it('does not judge an exact 50/50 group as dominated', () => {
+    const a = contentToTemplateRatio(fam(6, 1000, 500), [])
+    expect(a.dominated).toHaveLength(0)
+  })
+
+  it('fires at a median share of 0.42 — the band the two old thresholds straddled', () => {
+    const a = contentToTemplateRatio(fam(6, 1000, 420), [])
+    expect(a.dominatedPages).toBe(6)
+  })
+
+  it('groups by URL even when templateGroup is null, which is real-crawl shape', () => {
+    const pages = fam(6, 1000, 200).map((p) => ({ ...p, templateGroup: null }))
+    const a = contentToTemplateRatio(pages, [])
+    expect(a.dominatedPages).toBe(6)
+  })
+
+  it('leaves a group of four below the floor rather than judging it', () => {
+    const a = contentToTemplateRatio(fam(4, 1420, 412), [])
+    expect(a.groups).toHaveLength(0)
+    expect(a.pagesBelowGroupFloor).toBe(4)
+    expect(a.unjudgeableGroups).toBe(0)
+  })
+
+  it('names the excluded pages in the detail rather than dropping them silently', () => {
+    const a = contentToTemplateRatio([...fam(6, 1000, 850), ...fam(2, 0, 0, 6)], [])
+    expect(a.detail).toMatch(/carried no word count/)
   })
 })
 

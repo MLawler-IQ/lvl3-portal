@@ -47,6 +47,7 @@ import type {
 } from '@/lib/tools/crawl-record'
 import type { GSCRow } from '@/lib/tools-gsc'
 import { blockedUrls } from '@/lib/robots'
+import { contentToTemplateRatio } from '@/lib/findings/analyses'
 
 /** Which evidence field the manifest asserts for a given check. */
 export type MagnitudeMetric = 'affectedUrls' | 'value'
@@ -273,13 +274,15 @@ export function robotsBlockedPages(input: PredicateInput): MagnitudeReading {
 // ---------------------------------------------------------------------------
 
 /**
- * Check id → the rubric-derived magnitude predicate.
+ * Check id → the magnitude predicate.
  *
- * Keyed by the seven check ids that have registered detectors. ONPAGE-012
- * (content-to-template ratio) is deliberately absent: the rubric defines it, the
- * ai-page-spree scenario generates data that violates it, but no detector is
- * registered for it yet, so no manifest may reference it (lib/eval/manifest.ts
- * enforces that) and no predicate here would have a consumer.
+ * One entry per registered detector — currently eight.
+ *
+ * This doc comment previously said ONPAGE-012 "is deliberately absent: … no detector is
+ * registered for it yet, so no manifest may reference it". Every clause was false by the
+ * time anyone read it: the entry below registers it, DERIVED_CHECKS registers the
+ * detector, and fixtures/eval/tornado/manifest.json references it. Kept as a note
+ * because a JSDoc that contradicts the object it is attached to is worse than none.
  */
 export const MAGNITUDE_PREDICATES: Record<string, (input: PredicateInput) => MagnitudeReading> = {
   'TECH-001': robotsBlockedPages,
@@ -295,48 +298,35 @@ export const MAGNITUDE_PREDICATES: Record<string, (input: PredicateInput) => Mag
 /**
  * ONPAGE-012 — pages in template-DOMINATED groups.
  *
- * Written from the rubric text alone, deliberately not from
- * lib/findings/detectors/onpage-012.ts, so the two are independent readings of the
- * same requirement and a magnitude assertion means something:
+ * A THIN WRAPPER over the detector's own analysis, deliberately. This used to be a
+ * second, independent implementation, and the two disagreed on three separate axes:
+ * threshold (0.35 `<=` here vs 0.5 strict `<` there), grouping (this one required
+ * `page.templateGroup` and skipped every page without one, so it returned 0 forever on
+ * any real crawl), and zero-word pages (this one scored them 1 = pristine, the detector
+ * 0 = maximally dominated — exactly opposite).
  *
- *   check:     "Content-to-template ratio: page groups are not template-dominated"
- *   howToTest: "Sitebulb content words vs template words, aggregated by template
- *               group, crossed with impression-earning rate"
- *   notes:     "A similarity check passes AI content that is unique-but-worthless.
- *               Tornado median was 29% unique / 71% template"
+ * Duplication only buys independence when the two authors reason differently. Both of
+ * these were written by the same author from the same misunderstanding, so it bought a
+ * disagreement rather than a cross-check — and a gate whose two halves disagree carries
+ * no signal. ONPAGE-012 is a WEAKER case for duplication than robots was: robots had an
+ * external normative spec (RFC 9309) a second author could read independently, whereas
+ * the ONPAGE-012 rubric row states no threshold at all, so a "second reading" cannot
+ * converge, only diverge. It also never implemented the rubric's own howToTest — it took
+ * no GSC input and computed no impression-earning rate.
  *
- * So: group by template, take the MEDIAN unique share per group (the rubric says
- * median, and one rewritten page must not rescue a group of 130), and count the
- * pages in every group whose median falls at or below the 29%/71% split the note
- * names. Groups smaller than GROUP_FLOOR are excluded — a two-page family sharing
- * a header is a layout, not a content-farm.
+ * Independence now lives in tests/unit/derived-analyses.test.ts's spec-derived suite,
+ * written from the decision record and §9's documented data points rather than from the
+ * analysis code. What still carries signal in the gate is (a) the hand-derived
+ * must_find magnitude in fixtures/eval/tornado/manifest.json, reviewed by a human, and
+ * (b) scenario GENERATION staying independent of the analysis.
  */
-const TEMPLATE_DOMINATED_MAX_UNIQUE_SHARE = 0.35
-const GROUP_FLOOR = 5
-
 export function templateDominatedPages(input: PredicateInput): MagnitudeReading {
-  const pages = input.crawl?.pages ?? []
-  const groups = new Map<string, typeof pages>()
-  for (const page of pages) {
-    if (!page.templateGroup) continue
-    const bucket = groups.get(page.templateGroup) ?? []
-    bucket.push(page)
-    groups.set(page.templateGroup, bucket)
+  const analysis = contentToTemplateRatio(input.crawl?.pages ?? [], input.gsc ?? [])
+  return {
+    metric: 'affectedUrls',
+    count: analysis.dominatedPages,
+    subjects: analysis.dominatedUrls,
   }
-  const affected: string[] = []
-  for (const [, members] of Array.from(groups.entries())) {
-    if (members.length < GROUP_FLOOR) continue
-    const shares = members
-      .map((m) => (m.wordCount > 0 ? m.uniqueWordCount / m.wordCount : 1))
-      .sort((a, b) => a - b)
-    const mid = Math.floor(shares.length / 2)
-    const median =
-      shares.length % 2 === 0 ? (shares[mid - 1] + shares[mid]) / 2 : shares[mid]
-    if (median <= TEMPLATE_DOMINATED_MAX_UNIQUE_SHARE) {
-      for (const m of members) affected.push(m.url)
-    }
-  }
-  return { metric: 'affectedUrls', count: affected.length, subjects: affected }
 }
 
 export function readMagnitude(checkId: string, input: PredicateInput): MagnitudeReading | null {

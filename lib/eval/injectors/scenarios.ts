@@ -64,13 +64,23 @@ import {
   type SiteVocab,
 } from './site'
 
-/** The seven check ids with registered detectors, in rubric order. */
+/**
+ * The check ids with registered detectors, in rubric order.
+ *
+ * MUST equal CHECK_IDS. generate.ts builds every generated manifest's `must_pass` from
+ * this list, so an id missing here is an id no generated fixture asserts, in either
+ * variant. ONPAGE-012 was missing while CHECK_IDS had it — which is precisely why the
+ * detector/predicate divergence went unnoticed for as long as it did: the harness that
+ * exists to catch a disagreement could not see this one. tests/unit/eval-injectors.test.ts
+ * now asserts set equality so the two cannot drift again.
+ */
 export const REGISTERED_CHECK_IDS = [
   'TECH-001',
   'ONPAGE-003',
   'TECH-011',
   'MEAS-001',
   'ONPAGE-006',
+  'ONPAGE-012',
   'LOCAL-016',
   'LOCAL-003',
 ] as const
@@ -119,12 +129,6 @@ export interface FixtureData {
   gbp: GbpProfileRecord
   /** check id → the surface encoding ids this build actually used. */
   encodingsUsed: Record<string, string[]>
-  /**
-   * Rubric checks this data violates that NO manifest may assert, because no
-   * detector is registered for them (lib/eval/manifest.ts rejects such ids).
-   * Recorded rather than dropped so the gap is visible instead of forgotten.
-   */
-  unassertable: string[]
 }
 
 export interface ScenarioTemplate {
@@ -468,7 +472,6 @@ const templateBug: ScenarioTemplate = {
       gsc: gsc.rows,
       gbp: healthyGbpWithNearMiss(vocab, rng, tracker),
       encodingsUsed: tracker.used,
-      unassertable: [],
     }
   },
 }
@@ -489,7 +492,10 @@ const aiPageSpree: ScenarioTemplate = {
     'impressions — including against the hand-built legacy page that used to rank for it. ' +
     'This is the Tornado failure mode: mass unique-but-worthless content, which a ' +
     'near-duplicate similarity check passes and a content-to-template ratio catches.',
-  cluster: ['ONPAGE-003', 'ONPAGE-006'],
+  // ONPAGE-012 belongs here: a template-dominated generated corpus IS the story. It was
+  // omitted while the id was absent from REGISTERED_CHECK_IDS, which left the scenario
+  // generating the defect and asserting nothing about it.
+  cluster: ['ONPAGE-003', 'ONPAGE-006', 'ONPAGE-012'],
   // The generated titles name cities the profile never declared while their
   // targetGeo stays null: naming a city is not targeting it.
   fpTraps: ['LOCAL-016', 'LOCAL-003'],
@@ -514,9 +520,16 @@ const aiPageSpree: ScenarioTemplate = {
           path: `/Service/${service}-in-${city}-${n}/`,
           templateGroup: 'service-generated',
           wordCount: words,
-          // ONPAGE-012's signal: 26-33% unique. Generated, not asserted — see
-          // `unassertable` below.
-          uniqueWordCount: Math.round(words * (0.26 + rng.next() * 0.07)),
+          // ONPAGE-012's signal, and it MUST follow the variant. This wrote 26-33%
+          // unique unconditionally, so the near-miss build — the false-positive control
+          // — carried the defect too. Nothing caught that, because the id was missing
+          // from REGISTERED_CHECK_IDS and so was asserted in neither variant.
+          //
+          // The near-miss share is a legitimately thin-but-fine page: comfortably above
+          // the 0.5 threshold, close enough to it to be a real test of precision.
+          uniqueWordCount: Math.round(
+            words * (variant === 'defect' ? 0.26 + rng.next() * 0.07 : 0.65 + rng.next() * 0.13),
+          ),
           override: {
             title: `${service.replace(/-/g, ' ')} in ${city.replace(/-/g, ' ')} | ${vocab.brand}`,
             internalLinksOut: 184, // the mega-menu that links everything to everything
@@ -559,10 +572,6 @@ const aiPageSpree: ScenarioTemplate = {
       gsc: gsc.rows,
       gbp: healthyGbpWithNearMiss(vocab, rng, tracker),
       encodingsUsed: tracker.used,
-      // The template-dominated corpus violates ONPAGE-012, which the rubric
-      // defines but no detector implements. Recorded, never asserted: manifest.ts
-      // rejects ids without a registered detector, and it is right to.
-      unassertable: variant === 'defect' ? ['ONPAGE-012'] : [],
     }
   },
 }
@@ -696,7 +705,6 @@ const migrationGoneWrong: ScenarioTemplate = {
       gsc: gsc.rows,
       gbp: healthyGbpWithNearMiss(vocab, rng, tracker),
       encodingsUsed: tracker.used,
-      unassertable: [],
     }
   },
 }
@@ -767,7 +775,6 @@ const gbpMisconfig: ScenarioTemplate = {
       gsc: gsc.rows,
       gbp,
       encodingsUsed: tracker.used,
-      unassertable: [],
     }
   },
 }

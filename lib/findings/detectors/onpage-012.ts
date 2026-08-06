@@ -38,7 +38,10 @@ export const onpage012: CheckDefinition = {
         status: 'not_run',
         evidence: { detail: analysis.detail },
         source: 'derived',
-        reason: `no template group of ${analysis.minGroupSize}+ pages to aggregate over`,
+        reason:
+          analysis.unjudgeableGroups > 0
+            ? `${analysis.unjudgeableGroups} template group(s) had fewer than ${analysis.minGroupSize} pages with a word count`
+            : `no template group of ${analysis.minGroupSize}+ pages to aggregate over`,
       }
     }
 
@@ -57,6 +60,26 @@ export const onpage012: CheckDefinition = {
             ),
         },
         source: 'derived',
+      }
+    }
+
+    // A clean ratio computed over a partially-measured group is not a pass.
+    //
+    // `pass` asserts every judged group was fully measurable. Where it was not, the
+    // ratio still ran and is still worth reporting, but the coverage claim behind `pass`
+    // does not hold — that is exactly what `degraded` is for, and this detector had
+    // never emitted it. Note the dominated branch above stays `fail`: a real defect
+    // outranks a coverage caveat, and the caveat is carried in the detail either way.
+    if (analysis.unmeasuredInJudged > 0) {
+      return {
+        checkId: 'ONPAGE-012',
+        status: 'degraded',
+        evidence: {
+          value: analysis.groups.length,
+          detail: analysis.detail,
+        },
+        source: 'derived',
+        reason: `${analysis.unmeasuredInJudged} page(s) in judged groups carried no word count`,
       }
     }
 
