@@ -289,6 +289,28 @@ const local016: CheckDefinition = {
       return geo !== home && !served.has(geo)
     })
 
+    // Nothing to test is NOT a clean bill of health.
+    //
+    // targetGeo is `string | null` and the only code that derives it is
+    // lib/ingest/sitebulb/geo.ts, which is unwired — so on the first real crawl every
+    // page has targetGeo: null, locationPages is empty, incoherent is empty, and this
+    // returned `pass` with "No location pages found". That is §17 failure mode 1
+    // exactly: "we did not look" rendered as "it is fine", on a check that is one of
+    // §9's five documented Tornado P1s. The crawl station is non-empty, so the engine's
+    // empty-station rule cannot catch this — it has to be caught in the check body.
+    // Mirrors what the ONPAGE-012 detector already does for the same situation.
+    if (locationPages.length === 0) {
+      return {
+        checkId: 'LOCAL-016',
+        status: 'not_run',
+        evidence: {
+          detail: `No page carries a targetGeo, so none of the ${pages.length} crawled URLs could be tested against the profile's service area.`,
+        },
+        source: 'derived',
+        reason: 'no page carries a targetGeo to compare against the service area',
+      }
+    }
+
     if (incoherent.length > 0) {
       return {
         checkId: 'LOCAL-016',
@@ -305,10 +327,7 @@ const local016: CheckDefinition = {
       checkId: 'LOCAL-016',
       status: 'pass',
       evidence: {
-        detail:
-          locationPages.length > 0
-            ? `All ${locationPages.length} location pages target geography the profile serves.`
-            : 'No location pages found to test against the service area.',
+        detail: `All ${locationPages.length} location pages target geography the profile serves.`,
       },
       source: 'derived',
     }
