@@ -1,5 +1,6 @@
 import MetricTable, { ColumnDef } from '@/components/analytics/shared/MetricTable'
 import type { UrlRow } from '@/lib/google-search-console'
+import { DELTA_TONE_TEXT, deltaTone } from '@/lib/delta-tone'
 
 type Row = UrlRow & Record<string, unknown>
 
@@ -26,7 +27,7 @@ const columns: ColumnDef<Row>[] = [
     render: (v) => {
       const n = Number(v)
       return (
-        <span className={`text-xs ${n > 0 ? 'text-accent-400' : n < 0 ? 'text-rose-400' : 'text-surface-400'}`}>
+        <span className={`text-xs ${DELTA_TONE_TEXT[deltaTone(n)]}`}>
           {n > 0 ? '+' : ''}{n.toLocaleString()}
         </span>
       )

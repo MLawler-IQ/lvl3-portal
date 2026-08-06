@@ -39,6 +39,7 @@ import type { CompetitiveResult } from "@/app/actions/dashboard-competitive";
 import type { MetricTableRow } from "@/app/actions/dashboard-metrics-table";
 import type { PacingRow } from "@/lib/dashboard/pacing";
 import type { Granularity, TrendPoint, InsightCard, DashboardModuleId, ClientType, DashboardAlert } from "@/lib/dashboard/types";
+import { DELTA_TONE_TEXT, deltaTone } from "@/lib/delta-tone";
 
 interface ModuleData {
   ecomFunnel: GA4EcomFunnel | null;
@@ -146,8 +147,8 @@ function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
             <p className="text-xs text-surface-400 truncate">{t.label}</p>
             <p className="text-lg font-semibold text-surface-100 tabular-nums">{Math.round(t.value).toLocaleString()}</p>
             {typeof t.delta === "number" && (
-              <p className={`text-xs ${t.delta >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                {t.delta >= 0 ? "+" : ""}
+              <p className={`text-xs ${DELTA_TONE_TEXT[deltaTone(t.delta)]}`}>
+                {t.delta > 0 ? "+" : ""}
                 {t.delta.toFixed(0)}%
               </p>
             )}

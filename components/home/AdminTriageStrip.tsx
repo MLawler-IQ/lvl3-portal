@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
 import { setSelectedClient } from '@/app/actions/client-selection'
 import type { TriageRow, TriageGbpGrade } from '@/app/actions/admin-triage'
+import { DELTA_TONE_TEXT, deltaTone } from '@/lib/delta-tone'
 
 const MONO = { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }
 
@@ -24,26 +25,12 @@ function fmtNum(n: number): string {
 }
 
 function SessionsDelta({ delta }: { delta: number }) {
-  if (delta > 0) {
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs text-emerald-500">
-        <span aria-hidden="true">↑</span>
-        {delta}%
-      </span>
-    )
-  }
-  if (delta < 0) {
-    return (
-      <span className="inline-flex items-center gap-0.5 text-xs text-rose-500">
-        <span aria-hidden="true">↓</span>
-        {Math.abs(delta)}%
-      </span>
-    )
-  }
+  const tone = deltaTone(delta)
+  const arrow = tone === 'flat' ? '→' : delta > 0 ? '↑' : '↓'
   return (
-    <span className="inline-flex items-center gap-0.5 text-xs text-surface-400">
-      <span aria-hidden="true">→</span>
-      0%
+    <span className={`inline-flex items-center gap-0.5 text-xs ${DELTA_TONE_TEXT[tone]}`}>
+      <span aria-hidden="true">{arrow}</span>
+      {Math.abs(delta)}%
     </span>
   )
 }

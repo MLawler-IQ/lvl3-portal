@@ -1,3 +1,5 @@
+import { DELTA_TONE_TEXT, toneFromDirection } from '@/lib/delta-tone'
+
 interface DeltaChipProps {
   direction: "up" | "down" | "flat";
   percent: string;
@@ -20,18 +22,17 @@ export default function DeltaChip({
 }: DeltaChipProps) {
   if (direction === "flat") {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-surface-400">
+      <span className={`inline-flex items-center gap-1 text-xs ${DELTA_TONE_TEXT.flat}`}>
         <span aria-hidden="true">→</span>
         <span>Flat</span>
         {absolute && <span className="text-surface-400">({absolute})</span>}
       </span>
     );
   }
-  const positive = direction === goodDirection;
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs ${
-        positive ? "text-emerald-500" : "text-rose-500"
+        DELTA_TONE_TEXT[toneFromDirection(direction, goodDirection)]
       }`}
     >
       <span aria-hidden="true">{direction === "up" ? "↑" : "↓"}</span>

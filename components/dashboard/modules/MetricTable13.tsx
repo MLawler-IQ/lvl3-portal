@@ -1,6 +1,7 @@
 import { EmptyState } from '@/components/ui/EmptyState'
 import { CalendarRange, ArrowUpRight, ArrowDownRight, Minus, AlertTriangle } from 'lucide-react'
 import type { MetricTableRow } from '@/app/actions/dashboard-metrics-table'
+import { DELTA_TONE_TEXT, deltaTone } from '@/lib/delta-tone'
 
 export interface MetricTable13Props {
   /** One row per month, expected sorted ascending (oldest → newest). */
@@ -47,11 +48,10 @@ function DeltaBadge({ pct }: { pct: number | null }) {
     return <span className="text-xs text-surface-400">—</span>
   }
   const up = pct > 0
-  const flat = pct === 0
-  const Icon = flat ? Minus : up ? ArrowUpRight : ArrowDownRight
-  const color = flat ? 'text-surface-400' : up ? 'text-emerald-500' : 'text-rose-500'
+  const tone = deltaTone(pct)
+  const Icon = tone === 'flat' ? Minus : up ? ArrowUpRight : ArrowDownRight
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${color}`}>
+    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${DELTA_TONE_TEXT[tone]}`}>
       <Icon className="w-3 h-3" aria-hidden="true" />
       {up ? '+' : ''}
       {pct}%
