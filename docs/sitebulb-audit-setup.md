@@ -26,7 +26,7 @@ crawl-backed checks below.
 |---|---|---|
 | **Chrome Crawler** | **ON** | `TECH-003` noindex on money pages, `TECH-011` mobile rendering, `CRO-001` tap-to-call position — all specify *rendered DOM*. An HTML-only crawl cannot see them |
 | **Response vs Render** report | **ON** | `TECH-004` (content and links in raw HTML, not only rendered) and `GEO-002` (AI crawlers do not execute JavaScript). This diff IS the check — it is why Sitebulb replaced building our own renderer |
-| **Check Similar** | **ON — off by default** | `ONPAGE-012` content-to-template ratio. Supplies the near-duplicate/similarity data behind `uniqueWordCount`. §7 records why this check exists: a pure duplicate check *passed* Tornado while its pages were 71% boilerplate |
+| **Check Similar** | **ON — off by default** | Genuine near-duplicate detection. NOTE, revised after the first real export: `ONPAGE-012` does NOT depend on this — `No. Content Words` / `No. Template Words` ship on every row regardless and are a better signal. See §8 |
 | **Structured data checks** | **ON — off by default** | `TECH-013` LocalBusiness/HVACBusiness markup matching visible NAP, `TECH-014`, `GEO-006`. §16 names this as the specific reason the last Tornado audit needs re-running |
 | **Mobile crawl / mobile viewport** | **ON** | `TECH-011`, `TECH-012` mobile parity, `CRO-001`. HVAC emergency search is mobile and converts by tapping to call — these are revenue checks, not hygiene |
 | **Core Web Vitals** | ON | Complements the PageSpeed station; gives per-URL coverage where the API's daily quota won't stretch |
@@ -45,22 +45,17 @@ which is the whole point of `TECH-008` (no orphan money pages).
 The GA and GSC connections are the orphan detector. A page earning impressions that
 no internal link points to is exactly the finding, and it is invisible without them.
 
-## 4. Custom extractions — required, and easy to miss
+## 4. Analytics detection — no custom extraction needed
 
-`MEAS-001` (GA4 installed and firing) is **critical severity** and was the finding
-that mattered most on Tornado: **no GA or GTM code on any of 187 HTML pages, and zero
-goal conversions against the 37 URLs receiving traffic.** Nothing was measurable.
+**CORRECTION (2026-08-06).** An earlier version of this file told you to add two
+custom regex extractions for GA4 and GTM. That was wrong: Sitebulb detects both
+natively and ships them as hints. The real Tornado export contains
+`url_contains_no_google_analytics_code.csv` and
+`url_contains_no_google_tag_manager_code.csv` with no extra configuration.
 
-Sitebulb will not report that per-URL without being told to look. Add two custom
-extractions (Regex, applied to page source):
-
-| Name | Pattern | Populates |
-|---|---|---|
-| `ga4` | `G-[A-Z0-9]{6,}` | `CrawlPageRecord.analytics.ga4` |
-| `gtm` | `GTM-[A-Z0-9]{4,}` | `CrawlPageRecord.analytics.gtm` |
-
-Without these, `MEAS-001` must report `not_run` — which is correct behaviour, but it
-means the audit cannot tell you the site is unmeasurable.
+Note the inverted logic when reading them — a URL listed in those files is one that
+**lacks** the tag. On the Tornado crawl that is 202 of 202 HTML pages, which
+independently confirms §9's "no GA or GTM code detected on any of 187 HTML pages".
 
 ## 5. What to export and hand over
 
@@ -80,8 +75,10 @@ Hand over:
    most useful negative result (earning and invisible pages both had ~186 inbound
    links, killing the internal-linking hypothesis and revealing a mega-menu that
    signalled no priority at all)
-4. The **Response vs Render** report — `TECH-004`, `GEO-002`
-5. The **similarity / near-duplicate** report — `ONPAGE-012`
+4. The **Response vs Render** report — `TECH-004`, `GEO-002`. *Absent from the first
+   export; those checks report `not_run` until it is enabled.*
+5. The **on-page export** — carries `No. Content Words` / `No. Template Words`, which is
+   what `ONPAGE-012` actually reads (not the similarity report). *Present.*
 
 ## 6. What the crawl cannot supply
 
@@ -101,3 +98,60 @@ under this configuration is §16's blocker 5, and it turns the eval harness's
 hand-built `tornado` fixture into a **record-and-replay snapshot of real station
 output**, which is the plan's L2 step. That is the moment the harness stops being
 scored against transcribed prose and starts being scored against the real thing.
+
+---
+
+## 8. What the real Tornado export taught us (2026-08-06)
+
+The first real export is in hand. Three things it settled.
+
+### The backbone rule is not theoretical — it is worth 4 URLs on this export
+
+§11 says read `summary.xlsx` (and the wide `internal.csv`), not just the hints folder,
+because hints only exist for triggered issues. Measured on this export:
+
+| Source | Pages with no H1 |
+|---|---|
+| `hints/..._h1_tag_is_missing.csv` | **187** |
+| `internal.csv` column `No. H1s == 0` | **191** |
+
+The four missing from the hint file are a 404, a `_wp_link_placeholder` artifact, an
+old contact page and `/heating/` — Sitebulb suppresses hints for non-indexable URLs.
+**§9's documented figure of 191 only reproduces from the backbone.** A hints-only
+ingester would have under-reported the site's single biggest template defect by 2%
+and had no way to know.
+
+### Content vs template words beats similarity for ONPAGE-012
+
+`No. Content Words` and `No. Template Words` are present on every row without any
+extra setting, and they are a *better* signal than near-duplicate similarity: this
+site carries **3,551 template words on every single page** against 333–1,782 content
+words, so some pages are ~9% unique. Meanwhile `URLs with Similar Content` is **0
+everywhere** because Check Similar was off — and it barely mattered.
+
+Keep Check Similar ON anyway for genuine near-duplicate detection, but ONPAGE-012 does
+not depend on it.
+
+### What this crawl could NOT evaluate
+
+| Missing from the export | Checks that must report `not_run` |
+|---|---|
+| Structured-data reports | `TECH-013`, `TECH-014`, `GEO-006` |
+| Response vs Render | `TECH-004`, `GEO-002` |
+| hreflang | `TECH-019` |
+| **URL sources: `Crawl Source` is `Crawler` for all 206 rows** — no sitemap, GA or GSC | `TECH-008` orphan detection is impossible |
+
+That last one is the most consequential and the easiest to fix: without GA and GSC
+wired as URL sources, a page earning impressions that nothing links to cannot be
+found, which is the entire orphan check.
+
+### For the re-run, change exactly four things
+
+1. Structured-data checks **ON**
+2. Response vs Render report **ON**
+3. Check Similar **ON**
+4. URL sources: add **sitemaps + Google Analytics + Google Search Console**
+
+Everything else in this crawl was configured correctly: 206 URLs, mobile-friendly
+data present, indexability complete, and the content/template split intact.
+
