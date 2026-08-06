@@ -3,11 +3,12 @@
 import { FileText, Monitor, Table2, ExternalLink } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import type { DeliverableWithCounts } from "@/app/(dashboard)/deliverables/page";
+import { STATUS_TONE } from "@/lib/status-tone";
 
 const FILE_TYPE_CONFIG = {
-  pdf: { icon: FileText, color: "text-red-400", bg: "bg-red-400/10" },
+  pdf: { icon: FileText, color: "text-surface-400", bg: "bg-surface-800" },
   slides: { icon: Monitor, color: "text-orange-400", bg: "bg-orange-400/10" },
-  sheets: { icon: Table2, color: "text-green-400", bg: "bg-green-400/10" },
+  sheets: { icon: Table2, color: "text-surface-400", bg: "bg-surface-800" },
   link: { icon: ExternalLink, color: "text-brand-400", bg: "bg-brand-400/10" },
 } as const;
 
@@ -46,7 +47,7 @@ export default function DeliverableCard({
         <div className="flex items-center gap-1.5 flex-wrap justify-end min-w-0">
           {derivedStatus && <StatusBadge status={derivedStatus} />}
           {hasOpenThreads && (
-            <span className="text-xs bg-amber-500/15 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+            <span className={`text-xs border px-2 py-0.5 rounded-full shrink-0 ${STATUS_TONE.warning.chip}`}>
               {deliverable.unresolvedCount} open
             </span>
           )}

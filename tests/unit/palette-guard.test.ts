@@ -81,17 +81,18 @@ function scan(re: RegExp): { file: string; hits: string[] }[] {
 }
 
 /**
- * Occurrences of raw palette classes still to be swept, across 54 files.
+ * Occurrences of raw palette classes still to be swept, across 47 files.
  *
  * Set to the exact current count, so ANY new one fails immediately — slack here
  * would let a handful creep back in unnoticed. LOWER IT as sweep slices land; never
  * raise it. If a change pushes the count up, the fix is a token, not a bigger number.
  *
- * Session 1 took this from 348 to 302; the status-chip slice to 251. The three worst
+ * 348 at the start; 302 after session 1; 191 after the status-chip sweep. Of what is
+ * left, 135 sits in app/(dashboard)/tools/ (internal) and 56 everywhere else. The worst
  * files (TfkGeneratorClient 36, PipelineProgress 24, SeoContentEngineClient 19) are 79
  * between them and are all internal tool screens.
  */
-const BUDGET = 251
+const BUDGET = 191
 
 describe('palette regression guard', () => {
   it('does not add raw Tailwind palette classes', () => {

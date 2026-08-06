@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { STATUS_TONE } from "@/lib/status-tone";
 
 interface EngagementStripProps {
   projectProgress: { completed: number; total: number } | null
@@ -35,12 +36,12 @@ export default function EngagementStrip({
           </div>
         )}
         {hasReview && (
-          <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+          <span className={`text-xs font-medium border px-2 py-0.5 rounded-full ${STATUS_TONE.warning.chip}`}>
             {unviewedCount} to review
           </span>
         )}
         {hasThreads && (
-          <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+          <span className={`text-xs font-medium border px-2 py-0.5 rounded-full ${STATUS_TONE.warning.chip}`}>
             {openThreadCount} open {openThreadCount === 1 ? 'thread' : 'threads'}
           </span>
         )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
+import { STATUS_TONE } from "@/lib/status-tone";
 
 interface Props {
   totalOpenThreads: number;
@@ -32,7 +33,7 @@ export default function OpenLoopsCard({
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="flex items-start gap-2 mb-4">
-        <MessageSquare size={14} className="text-amber-400 mt-0.5 shrink-0" />
+        <MessageSquare size={14} className={`mt-0.5 shrink-0 ${STATUS_TONE.warning.text}`} />
         <p className="text-sm text-surface-200">
           <span className="font-semibold text-surface-100">{totalOpenThreads}</span>{" "}
           unresolved {totalOpenThreads === 1 ? "thread" : "threads"} across{" "}
@@ -49,7 +50,7 @@ export default function OpenLoopsCard({
             <p className="text-sm text-surface-300 truncate flex-1">
               {item.deliverableTitle}
             </p>
-            <span className="shrink-0 text-xs bg-amber-500/15 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+            <span className={`shrink-0 text-xs border px-2 py-0.5 rounded-full ${STATUS_TONE.warning.chip}`}>
               {item.count} {item.count === 1 ? "thread" : "threads"}
             </span>
           </div>

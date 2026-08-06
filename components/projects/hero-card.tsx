@@ -3,6 +3,8 @@
 import type { SheetRow } from '@/app/actions/projects'
 import { SEGMENT_DEFS, isCurrentMonth, type MonthGroup } from './project-helpers'
 import TaskTable from './task-table'
+import { STATUS_TONE } from '@/lib/status-tone'
+import { PROJECT_STATUS_TONE } from './project-helpers'
 
 function SegmentedProgressBar({ rows }: { rows: SheetRow[] }) {
   const total = rows.length
@@ -53,12 +55,12 @@ function StatPills({
     if (counts[r.status] !== undefined) counts[r.status]++
   }
 
-  const defs = [
-    { status: 'Completed', active: 'bg-green-700/60 text-green-300 ring-1 ring-green-500/50', inactive: 'bg-green-900/30 text-green-400/70 border-green-800/50' },
-    { status: 'In Progress', active: 'bg-brand-700/60 text-brand-300 ring-1 ring-brand-500/50', inactive: 'bg-brand-900/30 text-brand-400/70 border-brand-800/50' },
-    { status: 'Blocked', active: 'bg-red-700/60 text-red-300 ring-1 ring-red-500/50', inactive: 'bg-red-900/30 text-red-400/70 border-red-800/50' },
-    { status: 'Not Started', active: 'bg-surface-700 text-surface-300 ring-1 ring-surface-500/50', inactive: 'bg-surface-800 text-surface-400 border-surface-600/50' },
-  ]
+  // Selection is a stronger fill plus a ring, from the tone's own scale — it used to
+  // be a jump between the -700 and -900 rungs of a raw palette family.
+  const defs = (['Completed', 'In Progress', 'Blocked', 'Not Started'] as const).map((status) => {
+    const tone = STATUS_TONE[PROJECT_STATUS_TONE[status]]
+    return { status, active: tone.chipActive, inactive: tone.chip }
+  })
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -95,14 +97,14 @@ export default function HeroCard({
     : globalFilteredRows
 
   return (
-    <div className="bg-surface-800 border border-surface-600 border-l-4 border-l-indigo-500 rounded-lg overflow-hidden">
+    <div className="bg-surface-800 border border-surface-600 border-l-4 border-l-brand-400 rounded-lg overflow-hidden">
       <div className="px-5 pt-4 pb-3">
         <div className="flex items-start justify-between gap-4 mb-3">
           <div className="flex items-center gap-3">
             <span className="text-lg font-semibold text-surface-100">{group.month}</span>
             {isCurrent ? (
-              <span className="flex items-center gap-1.5 text-xs text-green-400">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className={`flex items-center gap-1.5 text-xs ${STATUS_TONE.success.text}`}>
+                <span className={`w-2 h-2 rounded-full animate-pulse ${STATUS_TONE.success.bar}`} />
                 This Month
               </span>
             ) : (

@@ -16,6 +16,7 @@ import HeroCard from "./hero-card";
 import FiltersBar from "./filters-bar";
 import CollapsibleSection from "./collapsible-section";
 import NarrativeCard from "@/components/ui/NarrativeCard";
+import { STATUS_TONE } from "@/lib/status-tone";
 
 type Props = {
   rows: SheetRow[];
@@ -62,7 +63,7 @@ export default function ProjectsView({
   const statusCounts: { label: string; color: string; count: number }[] = [
     { label: "Completed", color: "text-accent-400", count: rows.filter((r) => r.status === "Completed").length },
     { label: "In Progress", color: "text-brand-400", count: rows.filter((r) => r.status === "In Progress").length },
-    { label: "Blocked", color: "text-amber-400", count: rows.filter((r) => r.status === "Blocked").length },
+    { label: "Blocked", color: STATUS_TONE.error.text, count: rows.filter((r) => r.status === "Blocked").length },
     { label: "Not Started", color: "text-surface-400", count: rows.filter((r) => !["Completed", "In Progress", "Blocked"].includes(r.status)).length },
   ].filter((s) => s.count > 0);
 
@@ -148,11 +149,11 @@ export default function ProjectsView({
 
       {/* Waiting on you callout */}
       {blockedCount > 0 && (
-        <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3">
-          <span className="text-amber-400 font-semibold text-sm">
+        <div className={`flex items-center gap-3 border rounded-xl px-4 py-3 ${STATUS_TONE.warning.row}`}>
+          <span className={`font-semibold text-sm ${STATUS_TONE.warning.text}`}>
             {blockedCount}
           </span>
-          <p className="text-sm text-amber-300">
+          <p className="text-sm text-surface-100">
             {blockedCount === 1 ? "item" : "items"} may need your input
           </p>
         </div>
@@ -169,7 +170,7 @@ export default function ProjectsView({
             <span
               className={`text-xs px-2 py-0.5 rounded-full border ${
                 minutesAgo < 5
-                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                  ? STATUS_TONE.success.chip
                   : "bg-surface-800 border-surface-600 text-surface-400"
               }`}
             >
@@ -208,7 +209,7 @@ export default function ProjectsView({
                 </p>
                 <p className="text-xs text-surface-400 mt-0.5">tasks done</p>
                 {thisMonthBlocked > 0 && (
-                  <p className="text-xs text-amber-400 mt-2">
+                  <p className={`text-xs mt-2 ${STATUS_TONE.warning.text}`}>
                     {thisMonthBlocked} blocked
                   </p>
                 )}

@@ -8,6 +8,7 @@ import {
   discardSnapshotInsightsDraft,
   type SnapshotInsightsDraft,
 } from '@/app/actions/analytics'
+import { STATUS_TONE } from "@/lib/status-tone";
 
 export interface InsightDraftReviewProps {
   clientId: string
@@ -99,7 +100,7 @@ export default function InsightDraftReview({ clientId, draft }: InsightDraftRevi
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] text-amber-400">
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.1em] ${STATUS_TONE.warning.chip}`}>
             <AlertTriangle className="h-3 w-3" aria-hidden="true" />
             Draft — pending review
           </span>
@@ -189,7 +190,7 @@ export default function InsightDraftReview({ clientId, draft }: InsightDraftRevi
         </div>
       </div>
 
-      {error && <p className="mt-3 text-xs text-rose-400">{error}</p>}
+      {error && <p className={`mt-3 text-xs ${STATUS_TONE.error.text}`}>{error}</p>}
 
       <div className="mt-5 flex items-center gap-3">
         <button

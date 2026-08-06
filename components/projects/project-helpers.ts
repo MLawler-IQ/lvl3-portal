@@ -1,4 +1,5 @@
 import type { SheetRow } from '@/app/actions/projects'
+import { STATUS_TONE, type StatusTone } from '@/lib/status-tone'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -7,24 +8,35 @@ export type CategoryGroup = { category: string; rows: SheetRow[] }
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
+/**
+ * Project status → tone. The only place in the app still using the `green-*` and
+ * `red-*` families, and the only user of the `bg-{c}-900/40` chip idiom.
+ */
+export const PROJECT_STATUS_TONE = {
+  'Completed': 'success',
+  'In Progress': 'accent',
+  'Not Started': 'neutral',
+  'Blocked': 'error',
+} as const satisfies Record<string, StatusTone>
+
 export const STATUS_STYLES: Record<string, string> = {
-  'Completed': 'bg-green-900/40 text-green-400 border border-green-700/50',
-  'In Progress': 'bg-brand-900/40 text-brand-400 border border-brand-700/50',
-  'Not Started': 'bg-surface-800 text-surface-400 border border-surface-600/50',
-  'Blocked': 'bg-red-900/40 text-red-400 border border-red-700/50',
+  'Completed': `border ${STATUS_TONE.success.chip}`,
+  'In Progress': `border ${STATUS_TONE.accent.chip}`,
+  'Not Started': `border ${STATUS_TONE.neutral.chip}`,
+  'Blocked': `border ${STATUS_TONE.error.chip}`,
 }
 
 export const SEGMENT_DEFS = [
-  { status: 'Completed', color: 'bg-green-500', label: 'Done' },
-  { status: 'In Progress', color: 'bg-brand-500', label: 'Active' },
-  { status: 'Blocked', color: 'bg-red-500', label: 'Blocked' },
-  { status: 'Not Started', color: 'bg-surface-600', label: 'Todo' },
+  { status: 'Completed', color: STATUS_TONE.success.bar, label: 'Done' },
+  { status: 'In Progress', color: STATUS_TONE.accent.bar, label: 'Active' },
+  { status: 'Blocked', color: STATUS_TONE.error.bar, label: 'Blocked' },
+  { status: 'Not Started', color: STATUS_TONE.neutral.bar, label: 'Todo' },
 ] as const
 
 // ── Pure Functions ───────────────────────────────────────────────────────────
 
 export function getStatusStyle(status: string): string {
-  return STATUS_STYLES[status] ?? 'bg-surface-800 text-surface-400 border border-surface-600/50'
+  return STATUS_STYLES[status] ?? `border ${STATUS_TONE.neutral.chip}`
 }
 
 export function formatFee(fee: number | null): string {

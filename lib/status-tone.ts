@@ -28,6 +28,12 @@ export interface ToneStyles {
   text: string
   /** Pill/badge: tinted fill, coloured text, visible border. */
   chip: string
+  /**
+   * Selected state of a filter chip. Stronger fill plus a ring, so selection is
+   * legible without a second hue — the projects filters previously distinguished
+   * on/off by jumping between the -700 and -900 rungs of a raw palette family.
+   */
+  chipActive: string
   /** Callout row: subtle wash plus border, for alerts. */
   row: string
   /** Solid fill, for progress bars. Tints are invisible at 2px tall. */
@@ -42,6 +48,7 @@ export const STATUS_TONE: Record<StatusTone, ToneStyles> = {
   accent: {
     text: 'text-brand-400',
     chip: 'bg-brand-400/10 text-brand-400 border-brand-400/40',
+    chipActive: 'bg-brand-400/20 text-brand-400 border-brand-400/60 ring-1 ring-brand-400/40',
     row: 'bg-brand-400/10 border-brand-400/30',
     bar: 'bg-brand-400',
     border: 'border-brand-400/30',
@@ -49,6 +56,7 @@ export const STATUS_TONE: Record<StatusTone, ToneStyles> = {
   neutral: {
     text: 'text-surface-400',
     chip: 'bg-surface-800 text-surface-400 border-surface-600',
+    chipActive: 'bg-surface-700 text-surface-300 border-surface-500 ring-1 ring-surface-500/40',
     row: 'bg-surface-800/60 border-surface-700',
     bar: 'bg-surface-600',
     border: 'border-surface-700',
@@ -56,6 +64,7 @@ export const STATUS_TONE: Record<StatusTone, ToneStyles> = {
   success: {
     text: 'text-success',
     chip: 'bg-success/10 text-success border-success/40',
+    chipActive: 'bg-success/20 text-success border-success/60 ring-1 ring-success/40',
     row: 'bg-success/10 border-success/30',
     bar: 'bg-success',
     border: 'border-success/30',
@@ -63,6 +72,7 @@ export const STATUS_TONE: Record<StatusTone, ToneStyles> = {
   warning: {
     text: 'text-warning',
     chip: 'bg-warning/10 text-warning border-warning/40',
+    chipActive: 'bg-warning/20 text-warning border-warning/60 ring-1 ring-warning/40',
     row: 'bg-warning/10 border-warning/30',
     bar: 'bg-warning',
     border: 'border-warning/30',
@@ -70,6 +80,7 @@ export const STATUS_TONE: Record<StatusTone, ToneStyles> = {
   error: {
     text: 'text-error',
     chip: 'bg-error/10 text-error border-error/40',
+    chipActive: 'bg-error/20 text-error border-error/60 ring-1 ring-error/40',
     row: 'bg-error/10 border-error/30',
     bar: 'bg-error',
     border: 'border-error/30',

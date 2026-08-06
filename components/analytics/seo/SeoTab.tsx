@@ -10,6 +10,7 @@ import GscTrendChart from './searchconsole/GscTrendChart'
 import GscQueriesTable from './searchconsole/GscQueriesTable'
 import GscUrlsTable from './searchconsole/GscUrlsTable'
 import SerpDistributionChart from './searchconsole/SerpDistributionChart'
+import { STATUS_TONE } from "@/lib/status-tone";
 
 interface Props {
   ga4: GA4Report | null
@@ -30,9 +31,9 @@ export default function SeoTab({ ga4, gsc, gscError, isAdmin, trendGranularity, 
           <p className="text-sm text-surface-400 italic">No SEO data available. Configure GA4 and/or GSC in client settings.</p>
         </div>
         {isAdmin && gscError && (
-          <div className="rounded-xl border border-rose-900/50 bg-rose-950/30 px-5 py-3">
-            <p className="text-xs font-medium text-rose-400 mb-1">Admin — GSC error</p>
-            <p className="text-xs text-rose-300/80 font-mono break-all">{gscError}</p>
+          <div className={`rounded-xl border px-5 py-3 ${STATUS_TONE.error.row}`}>
+            <p className={`text-xs font-medium mb-1 ${STATUS_TONE.error.text}`}>Admin — GSC error</p>
+            <p className="text-xs text-surface-300 font-mono break-all">{gscError}</p>
           </div>
         )}
       </div>
@@ -82,9 +83,9 @@ export default function SeoTab({ ga4, gsc, gscError, isAdmin, trendGranularity, 
             </p>
           </div>
           {isAdmin && gscError && (
-            <div className="rounded-xl border border-rose-900/50 bg-rose-950/30 px-5 py-3">
-              <p className="text-xs font-medium text-rose-400 mb-1">Admin — GSC error</p>
-              <p className="text-xs text-rose-300/80 font-mono break-all">{gscError}</p>
+            <div className={`rounded-xl border px-5 py-3 ${STATUS_TONE.error.row}`}>
+              <p className={`text-xs font-medium mb-1 ${STATUS_TONE.error.text}`}>Admin — GSC error</p>
+              <p className="text-xs text-surface-300 font-mono break-all">{gscError}</p>
             </div>
           )}
         </div>
