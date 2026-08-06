@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { siteMatchesDomain } from '@/lib/normalize-domain'
 import {
+  discoverClientConfig,
   inferTypeFromDiscovery,
   matchGa4,
   matchGbpLocations,
@@ -371,5 +372,142 @@ describe('Tornado HVAC — reproduces the stored production config', () => {
     expect(patch['client_type']?.value).toBe('local_service')
     expect(isFilled(patch['client_type'])).toBe(true)
     expect(patch['gbp_account_id']?.value).toBe(STORED.gbp_account_id)
+  })
+})
+
+/**
+ * The orchestrator. These are the tests the plan required and the first pass
+ * missed: they prove a source that ACTUALLY THROWS becomes `failed` rather than
+ * rejecting the whole run. Reading the code showed it was correct; nothing
+ * stopped a refactor from breaking it.
+ */
+describe('discoverClientConfig — partial failure', () => {
+  const DOMAIN = 'tornadohvacca.com'
+  const gbpAuth = {} as never
+
+  const workingDeps = () => ({
+    gbpAuth,
+    buildGa4Index: async () => idx([['222', 'Tornado HVAC', DOMAIN]]),
+    listGscSites: async () => ['https://tornadohvacca.com/'],
+    listGbpAccounts: async () => [{ name: 'accounts/1', accountName: 'IgniteIQ' }],
+    listGbpLocations: async () =>
+      [{ title: 'Sherman Oaks', websiteUri: 'https://tornadohvacca.com' }] as never,
+  })
+
+  it('finds all three when everything works', async () => {
+    const d = await discoverClientConfig(DOMAIN, workingDeps())
+    expect([d.ga4.status, d.gsc.status, d.gbp.status]).toEqual(['ok', 'ok', 'ok'])
+    expect(d.clientType?.value).toBe('local_service')
+  })
+
+  it('GA4 throwing does not cost the GSC or GBP match', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      buildGa4Index: async () => {
+        throw new Error('token expired')
+      },
+    })
+    expect(d.ga4.status).toBe('failed')
+    expect(d.ga4.message).toContain('token expired')
+    expect(d.ga4.data).toBeNull()
+    // The whole point:
+    expect(d.gsc.status).toBe('ok')
+    expect(d.gbp.status).toBe('ok')
+  })
+
+  it('GSC throwing does not cost the GA4 or GBP match', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      listGscSites: async () => {
+        throw new Error('quota')
+      },
+    })
+    expect(d.gsc.status).toBe('failed')
+    expect(d.ga4.status).toBe('ok')
+    expect(d.gbp.status).toBe('ok')
+  })
+
+  it('never rejects, even when every source throws', async () => {
+    const boom = async () => {
+      throw new Error('down')
+    }
+    const d = await discoverClientConfig(DOMAIN, {
+      gbpAuth,
+      buildGa4Index: boom,
+      listGscSites: boom,
+      listGbpAccounts: boom,
+      listGbpLocations: boom,
+    })
+    expect([d.ga4.status, d.gsc.status, d.gbp.status]).toEqual(['failed', 'failed', 'failed'])
+    // And a failed GBP must NOT be read as "no locations", which would infer lead_gen.
+    expect(d.clientType).toBeNull()
+  })
+
+  it('suppresses the client_type inference when GBP failed', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      listGbpAccounts: async () => {
+        throw new Error('gbp down')
+      },
+    })
+    expect(d.gbp.status).toBe('failed')
+    expect(d.clientType).toBeNull()
+  })
+
+  it('still infers a type when GBP genuinely found nothing', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      listGbpLocations: async () => [] as never,
+    })
+    expect(d.gbp.status).toBe('no_match')
+    expect(d.clientType?.value).toBe('lead_gen')
+  })
+
+  it('reports GBP unavailable rather than empty when there is no GBP token', async () => {
+    const d = await discoverClientConfig(DOMAIN, { ...workingDeps(), gbpAuth: null })
+    expect(d.gbp.status).toBe('failed')
+    expect(d.gbp.message).toContain('not connected')
+    expect(d.clientType).toBeNull()
+  })
+
+  it('keeps looking after one unreadable GBP account', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      listGbpAccounts: async () => [
+        { name: 'accounts/broken', accountName: 'Broken' },
+        { name: 'accounts/good', accountName: 'Good' },
+      ],
+      listGbpLocations: async (accountName: string) => {
+        if (accountName === 'accounts/broken') throw new Error('403')
+        return [{ title: 'Sherman Oaks', websiteUri: 'https://tornadohvacca.com' }] as never
+      },
+    })
+    expect(d.gbp.status).toBe('ok')
+    expect(d.gbp.data?.accountName).toBe('Good')
+  })
+
+  it('calls it failed when every GBP account is unreadable, not no_match', async () => {
+    const d = await discoverClientConfig(DOMAIN, {
+      ...workingDeps(),
+      listGbpAccounts: async () => [{ name: 'accounts/a', accountName: 'A' }],
+      listGbpLocations: async () => {
+        throw new Error('403')
+      },
+    })
+    // Reporting "no location matched" here would be a silent pass over data we
+    // never actually read.
+    expect(d.gbp.status).toBe('failed')
+    expect(d.gbp.message).toContain('Could not read locations')
+  })
+
+  it('normalizes the input, so a full URL works as the match key', async () => {
+    const d = await discoverClientConfig('https://www.tornadohvacca.com/contact', workingDeps())
+    expect(d.domain).toBe(DOMAIN)
+    expect(d.ga4.status).toBe('ok')
+  })
+
+  it('records a duration for every source', async () => {
+    const d = await discoverClientConfig(DOMAIN, workingDeps())
+    for (const s of [d.ga4, d.gsc, d.gbp]) expect(s.durationMs).toBeGreaterThanOrEqual(0)
   })
 })

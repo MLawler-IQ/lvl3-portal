@@ -40,6 +40,13 @@ const FANOUT_CONCURRENCY = 8
 /** Hard ceiling on the fan-out, so one misconfigured account can't run away. */
 const MAX_PROPERTIES = 400
 
+/**
+ * Above this share of failed data-stream lookups the index is treated as
+ * unusable and is NOT cached. A couple of inaccessible properties are normal;
+ * half of them failing means the connection is broken, not the properties.
+ */
+const DEGRADED_INDEX_THRESHOLD = 0.5
+
 export type SourceStatus = 'ok' | 'no_match' | 'failed'
 export type MatchConfidence = 'high' | 'low'
 
@@ -217,19 +224,32 @@ export async function buildGa4DomainIndex(auth: OAuth2Client): Promise<Ga4IndexE
   return cachedFetch(GA4_INDEX_CACHE_KEY, GA4_INDEX_TTL_SECONDS, async () => {
     const admin = google.analyticsadmin({ version: 'v1beta', auth })
 
-    const summaries = await admin.accountSummaries.list({ pageSize: 200 })
+    // Paginated: listGA4Properties elsewhere reads only the first page, which
+    // silently drops properties past the limit and would surface here as an
+    // unexplained "no match".
     const properties: { propertyId: string; displayName: string }[] = []
-    for (const account of summaries.data.accountSummaries ?? []) {
-      for (const prop of account.propertySummaries ?? []) {
-        const propertyId = (prop.property ?? '').replace('properties/', '')
-        if (propertyId) {
-          properties.push({ propertyId, displayName: prop.displayName ?? 'Unnamed property' })
+    let pageToken: string | undefined = undefined
+    for (let page = 0; page < 10; page++) {
+      const summaries: { data: { accountSummaries?: unknown[]; nextPageToken?: string | null } } =
+        await admin.accountSummaries.list({ pageSize: 200, pageToken })
+      for (const raw of summaries.data.accountSummaries ?? []) {
+        const account = raw as {
+          propertySummaries?: Array<{ property?: string | null; displayName?: string | null }>
+        }
+        for (const prop of account.propertySummaries ?? []) {
+          const propertyId = (prop.property ?? '').replace('properties/', '')
+          if (propertyId) {
+            properties.push({ propertyId, displayName: prop.displayName ?? 'Unnamed property' })
+          }
         }
       }
+      pageToken = summaries.data.nextPageToken ?? undefined
+      if (!pageToken) break
     }
 
     const bounded = properties.slice(0, MAX_PROPERTIES)
 
+    let failures = 0
     const entries = await mapLimit(bounded, FANOUT_CONCURRENCY, async (p) => {
       try {
         const { data } = await admin.properties.dataStreams.list({
@@ -240,9 +260,22 @@ export async function buildGa4DomainIndex(auth: OAuth2Client): Promise<Ga4IndexE
         return { ...p, domain: uri ? normalizeDomain(uri) : '' }
       } catch {
         // One inaccessible property must not fail the whole index.
+        failures += 1
         return { ...p, domain: '' }
       }
     })
+
+    // But a BROADLY failed fan-out must not be cached as though it were a good
+    // index. Without this, an expired token or a quota wall mid-run yields an
+    // index where every domain is '' — cachedFetch stores that happily, and GA4
+    // then reports "no match" for 12 hours with nothing indicating the index is
+    // broken. Throwing keeps it out of the cache and surfaces the source as
+    // `failed`, which is a visible gap rather than a silent pass.
+    if (bounded.length > 0 && failures / bounded.length > DEGRADED_INDEX_THRESHOLD) {
+      throw new Error(
+        `GA4 property index is unreliable: ${failures} of ${bounded.length} data-stream lookups failed. Not caching. Check the analytics@ Google connection.`,
+      )
+    }
 
     return entries
   })
@@ -257,8 +290,9 @@ export async function buildGa4DomainIndex(auth: OAuth2Client): Promise<Ga4IndexE
 export async function discoverClientConfig(
   websiteOrDomain: string,
   deps: {
-    auth: OAuth2Client
     gbpAuth: OAuth2Client | null
+    /** Injected so the partial-failure paths are testable without Google. */
+    buildGa4Index: () => Promise<Ga4IndexEntry[]>
     listGscSites: () => Promise<string[]>
     listGbpAccounts: (auth: OAuth2Client) => Promise<{ name: string; accountName: string }[]>
     listGbpLocations: (accountName: string, auth: OAuth2Client) => Promise<GBPLocation[]>
@@ -283,7 +317,7 @@ export async function discoverClientConfig(
 
   const [ga4, gsc, gbp] = await Promise.all([
     timed<Ga4Match>(async () => {
-      const index = await buildGa4DomainIndex(deps.auth)
+      const index = await deps.buildGa4Index()
       const match = matchGa4(index, domain)
       return match
         ? { status: 'ok', data: match, durationMs: 0 }
@@ -318,8 +352,17 @@ export async function discoverClientConfig(
         }
       }
       const accounts = await deps.listGbpAccounts(deps.gbpAuth)
+      let accountErrors = 0
       for (const account of accounts) {
-        const locations = await deps.listGbpLocations(account.name, deps.gbpAuth)
+        // Per-account catch: a throw on the first account must not lose a match
+        // that exists on the second.
+        let locations: GBPLocation[]
+        try {
+          locations = await deps.listGbpLocations(account.name, deps.gbpAuth)
+        } catch {
+          accountErrors += 1
+          continue
+        }
         const matched = matchGbpLocations(locations, domain)
         if (matched.length > 0) {
           return {
@@ -336,9 +379,22 @@ export async function discoverClientConfig(
           }
         }
       }
+      // Every account erroring is a failure, not an absence — reporting
+      // "no location matched" would be a silent pass over unread data.
+      if (accountErrors > 0 && accountErrors === accounts.length) {
+        return {
+          status: 'failed',
+          message: `Could not read locations for any of the ${accounts.length} Business Profile account${accounts.length === 1 ? '' : 's'}.`,
+          data: null,
+          durationMs: 0,
+        }
+      }
+
       return {
         status: 'no_match',
-        message: `No Business Profile location lists ${domain} as its website. Checked ${accounts.length} account${accounts.length === 1 ? '' : 's'}.`,
+        message:
+          `No Business Profile location lists ${domain} as its website. Checked ${accounts.length} account${accounts.length === 1 ? '' : 's'}` +
+          (accountErrors > 0 ? `, ${accountErrors} of which could not be read.` : '.'),
         data: null,
         durationMs: 0,
       }

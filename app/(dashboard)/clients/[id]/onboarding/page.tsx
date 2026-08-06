@@ -9,6 +9,14 @@ import { getActiveSession } from '@/app/actions/onboarding'
 import OnboardingWorkspace from '@/components/onboarding/OnboardingWorkspace'
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton'
 
+/**
+ * Server actions inherit the invoking page's duration budget, and runDiscovery's
+ * cold-cache path fans out one dataStreams.list call per GA4 property. On the
+ * Vercel default that can be cut off mid-index. Precedent:
+ * app/api/generate-blog-images/route.ts.
+ */
+export const maxDuration = 300
+
 interface ClientRow {
   id: string
   name: string

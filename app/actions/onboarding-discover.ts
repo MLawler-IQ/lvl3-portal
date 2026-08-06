@@ -13,7 +13,11 @@ import { getAdminOAuthClient } from '@/lib/google-auth'
 import { getAdminGBPOAuthClient } from '@/lib/gbp-auth'
 import { listGSCSites } from '@/lib/google-search-console'
 import { listGBPAccounts, listGBPLocations } from '@/lib/connectors/gbp'
-import { discoverClientConfig, type Discovery } from '@/lib/onboarding/discover'
+import {
+  buildGa4DomainIndex,
+  discoverClientConfig,
+  type Discovery,
+} from '@/lib/onboarding/discover'
 import { describeDiscovery, seedFromDiscovery } from '@/lib/onboarding/seed'
 import { computeCompleteness, type Completeness } from '@/lib/onboarding/completeness'
 import { answersSchema, type Answers } from '@/lib/onboarding/schema'
@@ -75,8 +79,8 @@ export async function runDiscovery(sessionId: string): Promise<DiscoveryOutcome>
     }
 
     const discovery = await discoverClientConfig(seedDomain, {
-      auth,
       gbpAuth,
+      buildGa4Index: () => buildGa4DomainIndex(auth),
       listGscSites: listGSCSites,
       listGbpAccounts: async (a) =>
         (await listGBPAccounts(a)).map((x) => ({ name: x.name, accountName: x.accountName })),
