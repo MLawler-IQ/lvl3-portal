@@ -66,7 +66,10 @@ function page(over: Partial<CrawlPageRecord> & { url: string }): CrawlPageRecord
     tapTargetsOk: true,
     analytics: { ga4: false, gtm: false },
     internalLinksOut: 186, // §9: the mega-menu links everything to everything
+    internalLinksIn: 186, // §9: median identical for earning and invisible pages
     wordCount: 1420,
+    // §9: the AI-generated pages are 71% boilerplate — 29% unique of 1420.
+    uniqueWordCount: 412,
     templateGroup: null,
     targetGeo: null,
     ...over,
@@ -116,6 +119,7 @@ function buildCrawl(): CrawlStationData {
         url: `${SITE}/blog/post-${i + 1}/`,
         templateGroup: 'blog',
         wordCount: 650,
+        uniqueWordCount: 520,
         analytics: { ga4: false, gtm: i < 4 },
       }),
     )
@@ -137,7 +141,9 @@ function buildCrawl(): CrawlStationData {
         h1s: [slug.replace(/-/g, ' ')],
         analytics: { ga4: false, gtm: true },
         wordCount: 1500,
+        uniqueWordCount: 1350, // hand-built: little shared boilerplate
         internalLinksOut: 24,
+        internalLinksIn: 31,
       }),
     )
   }

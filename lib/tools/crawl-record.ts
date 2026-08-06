@@ -31,7 +31,26 @@ export interface CrawlPageRecord {
   }
   /** Outbound internal links from this page. */
   internalLinksOut: number
+  /**
+   * INBOUND internal links to this page.
+   *
+   * The signal behind §9's most useful negative result: earning and invisible
+   * Tornado pages both had a median of ~186 inbound links, which killed the
+   * internal-linking hypothesis and revealed a mega-menu linking everything to
+   * everything — i.e. internal linking signalling no priority at all.
+   */
+  internalLinksIn: number
   wordCount: number
+  /**
+   * Words on this page that are NOT shared boilerplate with its template
+   * siblings (Sitebulb's near-duplicate / "Check Similar" data supplies this).
+   *
+   * ONPAGE-012 exists because a pure near-duplicate check PASSED Tornado while
+   * its pages were 71% boilerplate: similarity detection cannot catch content
+   * that is unique-but-worthless. uniqueWordCount / wordCount is the ratio that
+   * can.
+   */
+  uniqueWordCount: number
   /**
    * Template family this URL belongs to (path-pattern clustering), e.g.
    * 'service-la' for /Service/x-in-los-angeles-ca/. Null for one-off pages.
