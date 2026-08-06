@@ -24,12 +24,12 @@ const COLOR_EYEBROW = '64748B'
 const COLOR_HEADING = '1E293B'
 const COLOR_BODY = '334055'
 const COLOR_MUTED = '94A3B8'
-const COLOR_ACCENT = '8B5CF6'
+const COLOR_ACCENT = 'C55427' // sienna (brand-500); replaced the retired violet accent
 const COLOR_TABLE_HEADER_BG = '18181B'
 const COLOR_TABLE_BORDER = '3F3F46'
 
-const FONT_BODY = 'Inter'
-const FONT_HEADING = 'JetBrains Mono'
+const FONT_BODY = 'Archivo'      // was Inter, retired by the rebrand
+const FONT_HEADING = 'Newsreader' // was JetBrains Mono; serif headings per stage 2
 
 // ── Helpers ────────────────────────────────────────────────────
 

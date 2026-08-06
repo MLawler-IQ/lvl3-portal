@@ -75,8 +75,8 @@ export default function EcomFunnel({ funnel }: EcomFunnelProps) {
                   <span className="text-xs font-medium text-surface-300">{stage.label}</span>
                   <div className="flex items-center gap-2.5">
                     <span
-                      className="text-sm font-bold leading-none"
-                      style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
+                      className="text-surface-100 text-sm font-bold leading-none"
+                      style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                     >
                       {fmtNum(stage.count)}
                     </span>
@@ -100,8 +100,8 @@ export default function EcomFunnel({ funnel }: EcomFunnelProps) {
                 View → Purchase
               </span>
               <span
-                className="text-sm font-bold"
-                style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
+                className="text-surface-100 text-sm font-bold"
+                style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
               >
                 {((stages[3].count / top) * 100).toFixed(1)}%
               </span>

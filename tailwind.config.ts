@@ -5,6 +5,12 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // lib/ holds class strings too — the token maps (lib/grade-tone.ts,
+    // lib/delta-tone.ts) and some generated CSS. Without this Tailwind never sees
+    // them, so classes defined ONLY in lib/ are silently never generated and the
+    // element renders untinted. That is exactly what happened to the C/D grade
+    // chips: bg-warning/10 and border-warning/40 live nowhere else.
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {

@@ -56,11 +56,14 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
             type="button"
             className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:border-surface-600 hover:text-surface-100 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label="About new vs returning revenue"
+            aria-describedby="nvr-revenue-tip"
           >
             ?
           </button>
-          {/* Focus as well as hover — see the note in KpiCard. */}
+          {/* Focus as well as hover, and associated via aria-describedby — see the
+              note in KpiCard. */}
           <div
+            id="nvr-revenue-tip"
             role="tooltip"
             className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 rounded-sm px-3 py-2 text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal"
             style={{
@@ -89,8 +92,8 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
           <p className="text-sm text-surface-300">
             New-customer share of revenue:{' '}
             <span
-              className="font-bold"
-              style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
+              className="text-surface-100 font-bold"
+              style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
             >
               {pctText(newShare)}
             </span>

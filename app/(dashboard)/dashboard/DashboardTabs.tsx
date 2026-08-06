@@ -157,12 +157,20 @@ function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
             >
               {Math.round(t.value).toLocaleString()}
             </p>
-            {typeof t.delta === "number" && (
-              <p className={`shrink-0 text-right text-xs tabular-nums ${DELTA_TONE_TEXT[deltaTone(t.delta)]}`}>
-                {t.delta > 0 ? "+" : ""}
-                {t.delta.toFixed(0)}%
-              </p>
-            )}
+            {typeof t.delta === "number" && (() => {
+              // Round ONCE, then derive sign, tone and digits from the same
+              // number. gbp.ts computes deltaPct unrounded, so reading the tone
+              // off the raw value while printing toFixed(0) rendered a green
+              // "+0%" for anything in (0, 0.5) — the same symptom as the >= 0 bug,
+              // one step further along.
+              const shown = Math.round(t.delta)
+              return (
+                <p className={`shrink-0 text-right text-xs tabular-nums ${DELTA_TONE_TEXT[deltaTone(shown)]}`}>
+                  {shown > 0 ? "+" : ""}
+                  {shown}%
+                </p>
+              )
+            })()}
           </div>
         ))}
       </div>

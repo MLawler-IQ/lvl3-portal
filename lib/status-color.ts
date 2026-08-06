@@ -1,8 +1,7 @@
 /**
  * Single source of truth for semantic status colors, mapped to the
- * design-system CSS variables (light-canvas tuned). Use instead of hardcoded
- * Tailwind classes (text-green-400 / #34D399 / #FBBF24 / #F87171) so status
- * colors stay consistent and theme-aware.
+ * design-system CSS variables. Use these instead of hardcoded Tailwind palette
+ * classes or raw hexes, so status colours stay consistent and theme-aware.
  *
  * Usage: <span style={{ color: statusColor(scoreLevel(score)) }}>…</span>
  */

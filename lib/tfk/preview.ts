@@ -94,7 +94,7 @@ export function buildPreviewHtml(row: TfkLocation): string {
   <style>${TFK_CSS}</style>
   <style>
     body { margin: 0; }
-    .preview-banner { position: sticky; top: 0; z-index: 999; background: #1a1a2e; color: #a78bfa; font-family: 'Courier New', monospace; font-size: 11px; padding: 6px 16px; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: center; }
+    .preview-banner { position: sticky; top: 0; z-index: 999; background: #171410; color: #E0703F; font-family: 'Courier New', monospace; font-size: 11px; padding: 6px 16px; letter-spacing: .05em; display: flex; justify-content: space-between; align-items: center; }
     .preview-banner .meta { color: #71717a; }
   </style>
 </head>

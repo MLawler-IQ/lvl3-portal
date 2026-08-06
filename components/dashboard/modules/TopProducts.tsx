@@ -53,8 +53,8 @@ export default function TopProducts({ products }: TopProductsProps) {
                     {product.itemName}
                   </td>
                   <td
-                    className="py-2 text-right font-medium tabular-nums"
-                    style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
+                    className="text-surface-100 py-2 text-right font-medium tabular-nums"
+                    style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
                   >
                     {fmtCurrency(product.itemRevenue)}
                   </td>

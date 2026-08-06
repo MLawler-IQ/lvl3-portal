@@ -89,16 +89,23 @@ export default function LedgerRow({ label, value, delta, tooltip, sparkline }: L
  * surface-700 border.
  */
 function InfoTip({ label, text }: { label: string; text: string }) {
+  // Associated, not just present. A role="tooltip" with nothing pointing at it is
+  // inert — no screen reader announces it, and because opacity-0 leaves the node
+  // in the accessibility tree the text reads as a loose string next to the button.
+  // aria-describedby is what makes the role mean anything.
+  const id = `tip-${label.replace(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}`
   return (
     <span className="group relative inline-flex">
       <button
         type="button"
         aria-label={`What ${label} measures`}
+        aria-describedby={id}
         className="flex h-4 w-4 items-center justify-center rounded-full border border-surface-700 text-[10px] text-surface-400 transition-colors hover:border-surface-600 hover:text-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
       >
         ?
       </button>
       <span
+        id={id}
         role="tooltip"
         className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 w-48 -translate-x-1/2 whitespace-normal rounded-sm px-3 py-2 text-xs opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
         style={{
