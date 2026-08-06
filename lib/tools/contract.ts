@@ -99,8 +99,14 @@ export interface ToolOk<T> {
    * True when the result is usable but incomplete — a source failed, a quota
    * was hit, a page wouldn't render. The caller MUST surface this; a degraded
    * result presented as complete is the failure the whole design guards against.
+   *
+   * REQUIRED, not optional, as of the eval-harness work: an optional flag lets a
+   * connector that simply never sets it convert absence-of-data into apparent
+   * completeness (`{ok:true, data:[]}` reading as a healthy empty result). Every
+   * ToolOk now states its degradation status explicitly; `toolOk()` defaults it
+   * to false so no call site changes.
    */
-  degraded?: boolean
+  degraded: boolean
   /** Why it's degraded, in words a client could read. */
   notes?: string[]
   durationMs: number
@@ -125,7 +131,7 @@ export function toolOk<T>(
     ok: true,
     data,
     sources: opts.sources,
-    ...(opts.degraded ? { degraded: true } : {}),
+    degraded: opts.degraded ?? false,
     ...(opts.notes && opts.notes.length > 0 ? { notes: opts.notes } : {}),
     durationMs: opts.durationMs ?? 0,
   }

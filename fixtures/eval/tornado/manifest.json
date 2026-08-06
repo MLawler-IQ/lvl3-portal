@@ -1,0 +1,28 @@
+{
+  "case": "tornado",
+  "description": "The documented Tornado HVAC audit (AUTOMATION-CONTEXT.md §9), transcribed as ground truth. A correct run surfaces the five headline defects at their documented magnitudes, does not fault the service-area business for its correctly hidden address, and affirms the things §9 found healthy.",
+  "must_find": [
+    {
+      "id": "ONPAGE-003",
+      "magnitude": { "metric": "affectedUrls", "expected": 191, "tolerancePct": 0 }
+    },
+    {
+      "id": "TECH-011",
+      "magnitude": { "metric": "affectedUrls", "expected": 92, "tolerancePct": 0 }
+    },
+    {
+      "id": "MEAS-001",
+      "magnitude": { "metric": "affectedUrls", "expected": 187, "tolerancePct": 0 }
+    },
+    {
+      "id": "ONPAGE-006",
+      "magnitude": { "metric": "value", "expected": 7, "tolerancePct": 0 }
+    },
+    {
+      "id": "LOCAL-016",
+      "magnitude": { "metric": "affectedUrls", "expected": 8, "tolerancePct": 0 }
+    }
+  ],
+  "must_not_find": ["LOCAL-003"],
+  "must_pass": ["TECH-001", "LOCAL-003"]
+}

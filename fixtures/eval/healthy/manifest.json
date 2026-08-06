@@ -1,0 +1,15 @@
+{
+  "case": "healthy",
+  "description": "A correctly configured site and GBP profile with zero defects — the false-positive control. must_pass on all seven detectors is the positive evidence: every check must have RUN and cleared it, so a pipeline that looks at nothing cannot pass vacuously. Includes the documented real-world FP trap: a service-area business with a correctly hidden storefront address.",
+  "must_find": [],
+  "must_not_find": ["LOCAL-003"],
+  "must_pass": [
+    "TECH-001",
+    "ONPAGE-003",
+    "TECH-011",
+    "MEAS-001",
+    "ONPAGE-006",
+    "LOCAL-016",
+    "LOCAL-003"
+  ]
+}

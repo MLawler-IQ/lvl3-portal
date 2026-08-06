@@ -12,24 +12,27 @@ import type { ParsedPage } from '@/lib/connectors/crawler'
 function page(over: Partial<ParsedPage> = {}): ParsedPage {
   return {
     url: 'https://example.com/p',
+    statusCode: 200,
+    ogTags: {},
+    hreflang: [],
     title: 'A good title',
     metaDescription: 'A good meta description.',
     headings: [{ level: 1, text: 'The one H1' }],
     images: [{ src: '/a.png', hasAlt: true, alt: 'a' }],
     links: [
-      { href: '/x', isInternal: true, text: 'x' },
-      { href: '/y', isInternal: true, text: 'y' },
-      { href: '/z', isInternal: true, text: 'z' },
-      { href: 'https://other.com', isInternal: false, text: 'o' },
+      { href: '/x', isInternal: true, isNofollow: false, text: 'x' },
+      { href: '/y', isInternal: true, isNofollow: false, text: 'y' },
+      { href: '/z', isInternal: true, isNofollow: false, text: 'z' },
+      { href: 'https://other.com', isInternal: false, isNofollow: false, text: 'o' },
     ],
     canonical: 'https://example.com/p',
     robots: 'index,follow',
-    structuredData: [{ '@type': 'WebPage' }],
+    structuredData: [{ type: 'WebPage', raw: '{}' }],
     wordCount: 1200,
     contentToHtmlRatio: 30,
     bodyText: 'Short words are easy to read. This is a plain sentence.',
-    ...(over as object),
-  } as ParsedPage
+    ...over,
+  }
 }
 
 describe('pageSeoIssues', () => {
