@@ -38,7 +38,7 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   if (variant === "running") {
     return (
       <span
-        className={`${BASE} border bg-brand-400/15 text-brand-400 border-brand-400/20 ${className}`}
+        className={`${BASE} border bg-brand-400/10 text-brand-400 border-brand-400/20 ${className}`}
       >
         <span className="animate-pulse w-1.5 h-1.5 rounded-full bg-brand-400 mr-1" />
         Running
@@ -67,7 +67,7 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   }
 
   const variantClasses: Record<Exclude<RunStatus, "stable" | "running" | "complete" | "failed">, string> = {
-    new: "bg-brand-400/15 text-brand-400 border border-brand-400/20",
+    new: "bg-brand-400/10 text-brand-400 border border-brand-400/20",
     beta: "bg-surface-700 text-surface-300 border border-surface-600",
     deprecated: "bg-surface-800 text-surface-400 border border-surface-700",
     "coming-soon": "bg-surface-800 text-surface-400 border border-surface-700",

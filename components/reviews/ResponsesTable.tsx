@@ -5,7 +5,7 @@ function DecisionPill({ decision }: { decision: ReviewResponse['decision'] | und
     'inline-flex items-center text-[10px] font-medium uppercase tracking-[0.1em] px-2 py-0.5 rounded-full border'
   if (decision === 'approve') {
     return (
-      <span className={`${base} bg-brand-400/15 text-brand-400 border-brand-400/20`}>
+      <span className={`${base} bg-brand-400/10 text-brand-400 border-brand-400/20`}>
         Approved
       </span>
     )
