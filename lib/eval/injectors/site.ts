@@ -178,6 +178,7 @@ export function healthyPage(vocab: SiteVocab, seed: PageSeed): CrawlPageRecord {
 export function healthySite(vocab: SiteVocab): CrawlSiteRecord {
   return {
     robotsTxt: `User-agent: *\nDisallow: /wp-admin/\nSitemap: ${vocab.origin}/sitemap.xml\n`,
+    robotsTxtStatus: 'ok',
     sitemapUrls: [`${vocab.origin}/sitemap.xml`],
   }
 }

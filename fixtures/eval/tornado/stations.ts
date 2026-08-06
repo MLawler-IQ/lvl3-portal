@@ -151,6 +151,7 @@ function buildCrawl(): CrawlStationData {
   return {
     site: {
       robotsTxt: 'User-agent: *\nAllow: /\nSitemap: https://tornadohvacca.com/sitemap.xml',
+      robotsTxtStatus: 'ok',
       sitemapUrls: [`${SITE}/sitemap.xml`],
     },
     pages,

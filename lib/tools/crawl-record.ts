@@ -22,12 +22,25 @@ export interface CrawlPageRecord {
   /** Content of the robots meta tag, '' when absent. */
   robotsMeta: string
   /** TECH-011 signals, as Sitebulb's mobile-friendly hints report them. */
-  hasViewportMeta: boolean
-  tapTargetsOk: boolean
-  /** MEAS-001 signals: analytics tags detected in the served HTML. */
+  /**
+   * TECH-011 signals. `null` means THE CRAWL DID NOT MEASURE THIS, not `false`.
+   *
+   * These were non-nullable, so an ingester that cannot measure tap targets had to
+   * invent a value — and `true` yields `pass`, i.e. a clean bill of health over data
+   * nobody looked at. See lib/findings/coverage.ts for the rule that replaced it.
+   */
+  hasViewportMeta: boolean | null
+  tapTargetsOk: boolean | null
+  /**
+   * MEAS-001 signals: analytics tags detected in the served HTML. `null` means not
+   * measured.
+   *
+   * Same shape as above, pointing the other way: an invented `false` yields `fail`,
+   * telling a client their analytics are broken when nothing was checked.
+   */
   analytics: {
-    ga4: boolean
-    gtm: boolean
+    ga4: boolean | null
+    gtm: boolean | null
   }
   /** Outbound internal links from this page. */
   internalLinksOut: number
@@ -95,8 +108,25 @@ export interface CrawlPageRecord {
 
 /** Site-level facts that don't belong to any single URL. */
 export interface CrawlSiteRecord {
-  /** Raw robots.txt body, null when the fetch 404'd. */
+  /**
+   * Raw robots.txt body. Null when there is no body to hold — see robotsTxtStatus for
+   * WHY, because "the site serves none" and "we never asked" are different facts and
+   * this field alone cannot tell them apart.
+   */
   robotsTxt: string | null
+  /**
+   * Why robotsTxt is null, when it is.
+   *
+   * Required, not optional, and deliberately so: an ingester that forgets to set it will
+   * not compile. Previously null meant "the fetch 404'd" by convention, so a station
+   * that never attempted the fetch was indistinguishable from a site serving no
+   * robots.txt — and TECH-001 returned `pass` for both.
+   *
+   *   'ok'          a body was fetched and is in robotsTxt
+   *   'not-found'   fetched, and the site genuinely serves none. Blocks nothing: pass.
+   *   'not-fetched' never attempted, or the attempt failed. TECH-001 reports not_run.
+   */
+  robotsTxtStatus: 'ok' | 'not-found' | 'not-fetched'
   sitemapUrls: string[]
 }
 

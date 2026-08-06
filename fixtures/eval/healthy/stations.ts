@@ -84,6 +84,7 @@ function buildCrawl(): CrawlStationData {
   return {
     site: {
       robotsTxt: 'User-agent: *\nDisallow: /wp-admin/\nSitemap: https://example-plumbing.com/sitemap.xml',
+      robotsTxtStatus: 'ok',
       sitemapUrls: [`${SITE}/sitemap.xml`],
     },
     pages, // 25 total

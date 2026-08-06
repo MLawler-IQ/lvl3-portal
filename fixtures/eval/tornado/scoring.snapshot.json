@@ -59,7 +59,7 @@
       "notes": [
         "fixed weight by design: a measurement gap invalidates every other number, so it does not scale with page count"
       ],
-      "detail": "187 of 206 pages carry no GA4 or GTM tag — measurement is effectively off."
+      "detail": "187 of 206 measured pages carry no GA4 or GTM tag — measurement is effectively off."
     },
     {
       "rank": 3,
@@ -119,7 +119,7 @@
         "no bonus: no affected URL was observed earning impressions",
         "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
       ],
-      "detail": "92 of 206 pages fail mobile viewport or tap-target sizing."
+      "detail": "92 of 206 measured pages fail mobile viewport or tap-target sizing."
     },
     {
       "rank": 5,

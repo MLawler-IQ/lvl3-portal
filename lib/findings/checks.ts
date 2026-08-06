@@ -22,6 +22,12 @@ import type { CrawlPageRecord } from '@/lib/tools/crawl-record'
 // tests/unit/robots.test.ts, which is written from RFC 9309 rather than from the
 // implementation — a spec-derived test suite, not a duplicate implementation.
 import { blockedUrls, blocksSiteRoot, disallowPatterns } from '@/lib/robots'
+import {
+  coverageCaveat,
+  coverageReason,
+  coverageStatus,
+  partitionMeasured,
+} from './coverage'
 import type { GSCRow } from '@/lib/tools-gsc'
 
 const cap = <T>(arr: T[], n = 5): T[] => arr.slice(0, n)
@@ -33,12 +39,25 @@ const tech001: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s: StationBundle): Finding => {
     const data = s.crawl!.ok ? s.crawl!.data : null
-    const site = data?.site ?? { robotsTxt: null, sitemapUrls: [] }
+    const site = data?.site ?? { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-fetched' as const }
     const pages = data?.pages ?? []
     const txt = site.robotsTxt
 
+    // "We never fetched it" is not "the site serves none". This returned `pass` for
+    // both, so an ingester that could not reach robots.txt produced a clean bill of
+    // health on a check that is critical and auto-tier.
+    if (site.robotsTxtStatus === 'not-fetched') {
+      return {
+        checkId: 'TECH-001',
+        status: 'not_run',
+        evidence: { detail: 'robots.txt was never fetched, so nothing could be evaluated.' },
+        source: 'crawl',
+        reason: 'the crawl did not fetch robots.txt',
+      }
+    }
+
     if (txt == null) {
-      // No robots.txt at all blocks nothing.
+      // Fetched, and the site genuinely serves none. That blocks nothing.
       return {
         checkId: 'TECH-001',
         status: 'pass',
@@ -148,24 +167,38 @@ const tech011: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const affected = pages.filter((p) => !p.hasViewportMeta || !p.tapTargetsOk)
-    if (affected.length === 0) {
-      return {
-        checkId: 'TECH-011',
-        status: 'pass',
-        evidence: { detail: `All ${pages.length} pages pass viewport and tap-target checks.` },
-        source: 'crawl',
-      }
-    }
+    // A page the crawl could not measure is excluded, counted and named — not scored as
+    // passing. hasViewportMeta/tapTargetsOk used to be non-nullable, so an ingester that
+    // cannot measure tap targets had to invent `true`, which reported `pass`.
+    const { measured, unmeasured } = partitionMeasured(
+      pages,
+      (p) => p.hasViewportMeta !== null && p.tapTargetsOk !== null,
+    )
+    const affected = measured.filter((p) => !p.hasViewportMeta || !p.tapTargetsOk)
+    const cov = { measured: measured.length, unmeasured: unmeasured.length, affected: affected.length }
+    const caveat = coverageCaveat(unmeasured.length, pages.length, 'mobile-rendering data')
+    const status = coverageStatus(cov)
+
     return {
       checkId: 'TECH-011',
-      status: 'fail',
-      evidence: {
-        affectedUrls: affected.length,
-        detail: `${affected.length} of ${pages.length} pages fail mobile viewport or tap-target sizing.`,
-        examples: cap(affected.map((p) => p.url)),
-      },
+      status,
+      evidence:
+        affected.length > 0
+          ? {
+              affectedUrls: affected.length,
+              detail: `${affected.length} of ${measured.length} measured pages fail mobile viewport or tap-target sizing.${caveat}`,
+              examples: cap(affected.map((p) => p.url)),
+            }
+          : {
+              detail:
+                measured.length > 0
+                  ? `All ${measured.length} measured pages pass viewport and tap-target checks.${caveat}`
+                  : `None of the ${pages.length} crawled pages carried mobile-rendering data.`,
+            },
       source: 'crawl',
+      ...(coverageReason(cov, 'mobile-rendering data') !== undefined
+        ? { reason: coverageReason(cov, 'mobile-rendering data')! }
+        : {}),
     }
   },
 }
@@ -177,8 +210,28 @@ const meas001: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const untagged = pages.filter((p) => !p.analytics.ga4 && !p.analytics.gtm)
-    const share = pages.length > 0 ? untagged.length / pages.length : 0
+    // Where TECH-011 invented `true` and passed, this invented `false` and FAILED —
+    // telling a client their measurement is off when nothing was checked. Same defect,
+    // opposite direction; lib/findings/coverage.ts now settles both the same way.
+    const { measured, unmeasured } = partitionMeasured(
+      pages,
+      (p) => p.analytics.ga4 !== null && p.analytics.gtm !== null,
+    )
+    const untagged = measured.filter((p) => !p.analytics.ga4 && !p.analytics.gtm)
+    const caveat = coverageCaveat(unmeasured.length, pages.length, 'analytics-tag data')
+    const cov = { measured: measured.length, unmeasured: unmeasured.length, affected: untagged.length }
+
+    if (measured.length === 0) {
+      return {
+        checkId: 'MEAS-001',
+        status: 'not_run',
+        evidence: { detail: `None of the ${pages.length} crawled pages carried analytics-tag data.` },
+        source: 'crawl',
+        reason: 'the crawl measured no analytics tags',
+      }
+    }
+
+    const share = measured.length > 0 ? untagged.length / measured.length : 0
     // Majority-untagged means measurement is broken site-wide, which gates every
     // outcome number the pipeline could ever report (the rubric weights this as
     // critical for exactly that reason).
@@ -188,7 +241,7 @@ const meas001: CheckDefinition = {
         status: 'fail',
         evidence: {
           affectedUrls: untagged.length,
-          detail: `${untagged.length} of ${pages.length} pages carry no GA4 or GTM tag — measurement is effectively off.`,
+          detail: `${untagged.length} of ${measured.length} measured pages carry no GA4 or GTM tag — measurement is effectively off.${caveat}`,
           examples: cap(untagged.map((p) => p.url)),
         },
         source: 'crawl',
@@ -200,7 +253,7 @@ const meas001: CheckDefinition = {
         status: 'fail',
         evidence: {
           affectedUrls: untagged.length,
-          detail: `${untagged.length} of ${pages.length} pages are missing analytics tags.`,
+          detail: `${untagged.length} of ${measured.length} measured pages are missing analytics tags.${caveat}`,
           examples: cap(untagged.map((p) => p.url)),
         },
         source: 'crawl',
@@ -208,9 +261,12 @@ const meas001: CheckDefinition = {
     }
     return {
       checkId: 'MEAS-001',
-      status: 'pass',
-      evidence: { detail: `Analytics tags detected on all ${pages.length} pages.` },
+      status: coverageStatus(cov),
+      evidence: { detail: `Analytics tags detected on all ${measured.length} measured pages.${caveat}` },
       source: 'crawl',
+      ...(coverageReason(cov, 'analytics-tag data') !== undefined
+        ? { reason: coverageReason(cov, 'analytics-tag data')! }
+        : {}),
     }
   },
 }

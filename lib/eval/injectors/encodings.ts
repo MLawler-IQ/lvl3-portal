@@ -535,7 +535,7 @@ export const ROBOTS_NEAR_MISS: SiteEncoding[] = [
     kind: 'near-miss',
     blocks: [],
     note: 'robots.txt 404s. Nothing is blocked — an absent file is not a block, and treating null as "unknown, assume bad" is a false positive.',
-    apply: (site) => ({ ...site, robotsTxt: null }),
+    apply: (site) => ({ ...site, robotsTxt: null, robotsTxtStatus: 'not-found' as const }),
   },
   {
     id: 'robots-blocks-only-intentional-staging',

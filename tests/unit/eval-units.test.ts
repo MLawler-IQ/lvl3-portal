@@ -95,7 +95,7 @@ describe('TECH-001: robots blocking — fail path', () => {
     runChecks([check('TECH-001')], {
       crawl: toolOk(
         {
-          site: { robotsTxt, sitemapUrls: [] },
+          site: { robotsTxt, sitemapUrls: [], robotsTxtStatus: 'ok' as const },
           pages: [
             {
               url: 'https://t.example/', status: 200, title: 't', metaDescription: 'd',
@@ -216,7 +216,7 @@ describe('LOCAL-016: service-area coherence', () => {
     const stations: StationBundle = {
       crawl: toolOk(
         {
-          site: { robotsTxt: null, sitemapUrls: [] },
+          site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const },
           pages: [
             {
               url: 'https://t.example/areas/pasadena/',
@@ -255,7 +255,7 @@ describe('LOCAL-016: service-area coherence', () => {
     const stations: StationBundle = {
       crawl: toolOk(
         {
-          site: { robotsTxt: null, sitemapUrls: [] },
+          site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const },
           pages: [
             {
               url: 'https://t.example/areas/pasadena/',

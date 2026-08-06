@@ -38,9 +38,9 @@ import {
 const tornado = tornadoStations()
 const healthy = healthyStations()
 
-const tornadoCrawl = tornado.crawl!.ok ? tornado.crawl!.data : { site: { robotsTxt: null, sitemapUrls: [] }, pages: [] }
+const tornadoCrawl = tornado.crawl!.ok ? tornado.crawl!.data : { site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const }, pages: [] }
 const tornadoGsc: GSCRow[] = tornado.gsc!.ok ? tornado.gsc!.data : []
-const healthyCrawl = healthy.crawl!.ok ? healthy.crawl!.data : { site: { robotsTxt: null, sitemapUrls: [] }, pages: [] }
+const healthyCrawl = healthy.crawl!.ok ? healthy.crawl!.data : { site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const }, pages: [] }
 const healthyGsc: GSCRow[] = healthy.gsc!.ok ? healthy.gsc!.data : []
 
 const page = (over: Partial<CrawlPageRecord> & { url: string }): CrawlPageRecord => ({
@@ -645,7 +645,7 @@ describe('ONPAGE-012 detector', () => {
     const f = findingFor({
       crawl: toolOk(
         {
-          site: { robotsTxt: null, sitemapUrls: [] },
+          site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const },
           pages: [
             page({ url: 'https://x.com/a/1/', wordCount: 100, uniqueWordCount: 1 }),
             page({ url: 'https://x.com/a/2/', wordCount: 100, uniqueWordCount: 1 }),
