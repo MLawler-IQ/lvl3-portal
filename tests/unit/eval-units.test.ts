@@ -95,13 +95,14 @@ describe('TECH-001: robots blocking — fail path', () => {
     runChecks([check('TECH-001')], {
       crawl: toolOk(
         {
-          site: { robotsTxt, sitemapUrls: [] },
+          site: { robotsTxt, sitemapUrls: [], robotsTxtStatus: 'ok' as const },
           pages: [
             {
               url: 'https://t.example/', status: 200, title: 't', metaDescription: 'd',
               h1s: ['h'], canonical: null, robotsMeta: '', hasViewportMeta: true,
               tapTargetsOk: true, analytics: { ga4: true, gtm: false },
-              internalLinksOut: 1, wordCount: 500, templateGroup: null, targetGeo: null,
+              internalLinksOut: 1, internalLinksIn: 1, wordCount: 500, uniqueWordCount: 450,
+              templateGroup: null, targetGeo: null,
             },
           ],
         },
@@ -215,7 +216,7 @@ describe('LOCAL-016: service-area coherence', () => {
     const stations: StationBundle = {
       crawl: toolOk(
         {
-          site: { robotsTxt: null, sitemapUrls: [] },
+          site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const },
           pages: [
             {
               url: 'https://t.example/areas/pasadena/',
@@ -229,7 +230,9 @@ describe('LOCAL-016: service-area coherence', () => {
               tapTargetsOk: true,
               analytics: { ga4: true, gtm: false },
               internalLinksOut: 3,
+              internalLinksIn: 2,
               wordCount: 900,
+              uniqueWordCount: 800,
               templateGroup: 'area',
               targetGeo: 'Pasadena, CA', // = businessCity, NOT in serviceAreas
             },
@@ -241,6 +244,49 @@ describe('LOCAL-016: service-area coherence', () => {
     }
     const [f] = runChecks([check('LOCAL-016')], stations)
     expect(f.status).toBe('pass')
+  })
+
+  // This returned `pass` with "No location pages found to test against the service
+  // area." targetGeo is only derived by lib/ingest/sitebulb/geo.ts, which is unwired, so
+  // the first real crawl has targetGeo: null on every page — and a documented Tornado P1
+  // would have reported a clean bill of health having looked at nothing. The crawl
+  // station is non-empty, so the engine's empty-station rule cannot catch it.
+  it('is not_run — never pass — when no page carries a targetGeo', () => {
+    const stations: StationBundle = {
+      crawl: toolOk(
+        {
+          site: { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-found' as const },
+          pages: [
+            {
+              url: 'https://t.example/areas/pasadena/',
+              status: 200,
+              title: 't',
+              metaDescription: 'd',
+              h1s: ['Plumber in Pasadena'],
+              canonical: null,
+              robotsMeta: '',
+              hasViewportMeta: true,
+              tapTargetsOk: true,
+              analytics: { ga4: true, gtm: false },
+              internalLinksOut: 3,
+              internalLinksIn: 2,
+              wordCount: 900,
+              uniqueWordCount: 800,
+              templateGroup: 'area',
+              targetGeo: null, // what a real, unwired-ingester crawl actually yields
+            },
+          ],
+        },
+        { sources: ['crawl'] },
+      ),
+      gbp: toolOk(gbpProfile(), { sources: ['gbp'] }),
+    }
+    const [f] = runChecks([check('LOCAL-016')], stations)
+    expect(f.status).toBe('not_run')
+    expect(f.status).not.toBe('pass')
+    expect(f.reason).toMatch(/targetGeo/)
+    // The magnitude must not be invented either.
+    expect(f.evidence.affectedUrls).toBeUndefined()
   })
 })
 

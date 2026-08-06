@@ -49,11 +49,15 @@ describe('eval gate', () => {
     })
   }
 
-  it('tornado recall is 5 of 5, not a smaller denominator', () => {
+  // Six since ONPAGE-012's detector landed — §9's five headline findings plus the
+  // content-to-template ratio. The point of the assertion is that the DENOMINATOR
+  // equals the manifest length, so a check quietly going not_run can never inflate
+  // recall by shrinking what it is measured against.
+  it('tornado recall is 6 of 6, not a smaller denominator', () => {
     const manifest = loadManifest(join(FIXTURES_DIR, 'tornado'), ROOT)
-    expect(manifest.must_find).toHaveLength(5)
+    expect(manifest.must_find).toHaveLength(6)
     const result = scoreCase(manifest, runChecks(CHECKS, tornadoStations()))
-    expect(result.recall).toEqual({ satisfied: 5, total: 5 })
+    expect(result.recall).toEqual({ satisfied: 6, total: 6 })
   })
 })
 

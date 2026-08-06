@@ -1,0 +1,298 @@
+// Opportunity sizing — position → CTR, applied over the impression pools a site
+// already has.
+//
+// The question it answers: a page sits at position 17.9 on 22,596 impressions and
+// takes one click. Moving it into the top three is worth how much? Impressions are
+// already-demonstrated demand, so the arithmetic is honest in a way that
+// keyword-volume estimates are not: no third-party volume number, no guess at
+// whether the site can rank for something it has never appeared for.
+//
+// ── CTR CURVE: INJECTED, NOT OWNED ───────────────────────────────────────────
+// The position→CTR model is a PARAMETER. `lib/scoring` is being built separately
+// and owns the canonical curve; this file deliberately does not import from it
+// (it may not exist yet) and deliberately does not become a second source of
+// truth for it. `DEFAULT_CTR_BY_POSITION` below is a documented local placeholder
+// so the analysis is runnable and testable standalone; the integration pass wires
+// the real curve in by passing `{ curve }`, and nothing else has to change.
+//
+// A detector-style note: every number here is modelled, and the field names say
+// so (`modelledCurrentCtr`, `projectedClicks`). Nothing in this file decides
+// whether an opportunity is worth doing — that is scoring's job.
+
+import type { GSCRow } from '@/lib/tools-gsc'
+import type { TemplateGrouping } from './template-groups'
+import { groupKeyFor, normalizeUrlKey } from './template-groups'
+
+/** Position (1-based, fractional allowed) → modelled organic CTR, 0-1. */
+export type CtrCurve = (position: number) => number
+
+/**
+ * LOCAL PLACEHOLDER curve, positions 1-20. Replace by injection, not by editing.
+ *
+ * A blended desktop/mobile organic click-through profile: ~28% at position one,
+ * halving by position two, under 3% by the foot of page one. The exact values
+ * matter less than the shape for prioritisation, which is precisely why the
+ * canonical version belongs in one place (`lib/scoring`) rather than here.
+ */
+export const DEFAULT_CTR_BY_POSITION: readonly number[] = [
+  0.281, 0.152, 0.11, 0.08, 0.061, 0.049, 0.04, 0.033, 0.028, 0.025,
+  0.021, 0.018, 0.016, 0.014, 0.013, 0.012, 0.011, 0.01, 0.009, 0.008,
+]
+
+/** Flat CTR past the end of the table. Page three onward is a rounding error. */
+export const DEFAULT_TAIL_CTR = 0.003
+
+/**
+ * Turn a lookup table into a curve, interpolating fractional positions.
+ *
+ * GSC average positions are fractional (17.9), so a curve that rounds throws
+ * away the only precision the input had. Beyond the table the value steps to
+ * `tailCtr` rather than extrapolating a fabricated decay.
+ */
+export function ctrFromTable(
+  table: readonly number[] = DEFAULT_CTR_BY_POSITION,
+  tailCtr: number = DEFAULT_TAIL_CTR,
+): CtrCurve {
+  return (position: number): number => {
+    if (!Number.isFinite(position)) return tailCtr
+    const n = table.length
+    if (n === 0) return tailCtr
+    if (position <= 1) return table[0]
+    if (position >= n) return position > n ? tailCtr : table[n - 1]
+    const lower = Math.floor(position)
+    const fraction = position - lower
+    const a = table[lower - 1]
+    const b = table[lower]
+    return a + (b - a) * fraction
+  }
+}
+
+/** The placeholder curve, ready to use. */
+export const defaultCtrCurve: CtrCurve = ctrFromTable()
+
+/** What an opportunity row is keyed on. */
+export type OpportunityUnit = 'page' | 'query' | 'page+query'
+
+export interface OpportunityRow {
+  key: string
+  page: string | null
+  query: string | null
+  impressions: number
+  clicks: number
+  /** Impression-weighted average position across the rows aggregated here. */
+  position: number
+  modelledCurrentCtr: number
+  targetPosition: number
+  targetCtr: number
+  /** impressions × targetCtr, to the nearest whole click. */
+  projectedClicks: number
+  /** projectedClicks − observed clicks, floored at zero. */
+  incrementalClicks: number
+}
+
+export interface OpportunitySizing {
+  unit: OpportunityUnit
+  targetPosition: number
+  minImpressions: number
+  /** Eligible rows, biggest incremental click gain first. */
+  rows: OpportunityRow[]
+  totalImpressions: number
+  totalCurrentClicks: number
+  totalIncrementalClicks: number
+  /**
+   * Why rows left the pool. Stated so the denominator is never silently
+   * narrowed — a sized opportunity that quietly excluded half the site is the
+   * same class of lie as a check that passes because it didn't look.
+   */
+  excluded: {
+    belowImpressionFloor: number
+    alreadyAtOrAboveTarget: number
+  }
+  detail: string
+}
+
+export interface OpportunitySizingOptions {
+  unit?: OpportunityUnit
+  /**
+   * The position the sizing assumes as achievable. Three, not one: top-three is
+   * the realistic ceiling for a page that already appears, and modelling
+   * everything at position one inflates every opportunity by roughly 2.5x.
+   */
+  targetPosition?: number
+  /** Rows below this many impressions are noise, not demand. */
+  minImpressions?: number
+  /** The position→CTR model. Inject `lib/scoring`'s curve here. */
+  curve?: CtrCurve
+}
+
+export const DEFAULT_TARGET_POSITION = 3
+export const DEFAULT_MIN_IMPRESSIONS = 100
+
+interface Aggregate {
+  key: string
+  page: string | null
+  query: string | null
+  impressions: number
+  clicks: number
+  weightedPosition: number
+}
+
+function keyFor(unit: OpportunityUnit, row: GSCRow): string {
+  const page = normalizeUrlKey(row.page)
+  const query = row.query.trim().toLowerCase()
+  if (unit === 'page') return page
+  if (unit === 'query') return query
+  return `${page}\u0000${query}`
+}
+
+/** Size the click opportunity in a set of GSC rows. Pure. */
+export function sizeOpportunity(
+  gscRows: readonly GSCRow[],
+  options: OpportunitySizingOptions = {},
+): OpportunitySizing {
+  const unit = options.unit ?? 'page'
+  const targetPosition = options.targetPosition ?? DEFAULT_TARGET_POSITION
+  const minImpressions = options.minImpressions ?? DEFAULT_MIN_IMPRESSIONS
+  const curve = options.curve ?? defaultCtrCurve
+  const targetCtr = curve(targetPosition)
+
+  const aggregates = new Map<string, Aggregate>()
+  for (const row of gscRows) {
+    const key = keyFor(unit, row)
+    const existing = aggregates.get(key)
+    if (existing) {
+      existing.impressions += row.impressions
+      existing.clicks += row.clicks
+      existing.weightedPosition += row.position * row.impressions
+    } else {
+      aggregates.set(key, {
+        key,
+        page: unit === 'query' ? null : row.page,
+        query: unit === 'page' ? null : row.query,
+        impressions: row.impressions,
+        clicks: row.clicks,
+        weightedPosition: row.position * row.impressions,
+      })
+    }
+  }
+
+  const rows: OpportunityRow[] = []
+  let belowImpressionFloor = 0
+  let alreadyAtOrAboveTarget = 0
+
+  for (const [, agg] of Array.from(aggregates.entries())) {
+    if (agg.impressions < minImpressions) {
+      belowImpressionFloor += 1
+      continue
+    }
+    // Weight by impressions, not a plain average: a page ranking 2nd on its big
+    // query and 80th on a stray one is not "at position 41".
+    const position = agg.impressions > 0 ? agg.weightedPosition / agg.impressions : 0
+    if (position <= targetPosition) {
+      alreadyAtOrAboveTarget += 1
+      continue
+    }
+    const projectedClicks = Math.round(agg.impressions * targetCtr)
+    rows.push({
+      key: agg.key,
+      page: agg.page,
+      query: agg.query,
+      impressions: agg.impressions,
+      clicks: agg.clicks,
+      position,
+      modelledCurrentCtr: curve(position),
+      targetPosition,
+      targetCtr,
+      projectedClicks,
+      incrementalClicks: Math.max(0, projectedClicks - agg.clicks),
+    })
+  }
+
+  rows.sort(
+    (a, b) => b.incrementalClicks - a.incrementalClicks || b.impressions - a.impressions || a.key.localeCompare(b.key),
+  )
+
+  const totalImpressions = rows.reduce((sum, r) => sum + r.impressions, 0)
+  const totalCurrentClicks = rows.reduce((sum, r) => sum + r.clicks, 0)
+  const totalIncrementalClicks = rows.reduce((sum, r) => sum + r.incrementalClicks, 0)
+  const top = rows[0]
+
+  const detail =
+    rows.length === 0
+      ? `No ${unit} pool above ${minImpressions} impressions sits below position ${targetPosition}; there is no ranking-improvement opportunity to size.`
+      : `${rows.length} ${unit} pools totalling ${totalImpressions.toLocaleString('en-US')} impressions currently take ${totalCurrentClicks.toLocaleString('en-US')} clicks; at position ${targetPosition} the same impressions model to ${totalIncrementalClicks.toLocaleString('en-US')} additional clicks. Largest single pool: ${top.page ?? top.query} at position ${top.position.toFixed(1)} on ${top.impressions.toLocaleString('en-US')} impressions (+${top.incrementalClicks.toLocaleString('en-US')}).`
+
+  return {
+    unit,
+    targetPosition,
+    minImpressions,
+    rows,
+    totalImpressions,
+    totalCurrentClicks,
+    totalIncrementalClicks,
+    excluded: { belowImpressionFloor, alreadyAtOrAboveTarget },
+    detail,
+  }
+}
+
+export interface TemplateFamilyOpportunity {
+  key: string
+  pattern: string
+  familySize: number
+  /** Distinct pages of this family that appear in the sized pool. */
+  pagesInPool: number
+  impressions: number
+  currentClicks: number
+  incrementalClicks: number
+}
+
+/**
+ * Roll a page-level sizing up to template families.
+ *
+ * This is why template grouping is infrastructure: "these 130 pages are worth
+ * 2,800 clicks between them and they share one template" is an actionable
+ * sentence, and "page 47 of 130 is worth 22 clicks" is not.
+ *
+ * Requires a page-unit sizing — a query-keyed row has no URL to attribute.
+ */
+export function opportunityByTemplateFamily(
+  sizing: OpportunitySizing,
+  grouping: TemplateGrouping,
+): TemplateFamilyOpportunity[] {
+  if (sizing.unit === 'query') return []
+  const groupByKey = new Map(grouping.groups.map((g) => [g.key, g]))
+  const totals = new Map<string, TemplateFamilyOpportunity>()
+  // A 'page+query' sizing has several rows per URL; pagesInPool must stay a page
+  // count, not a row count.
+  const pagesSeen = new Map<string, Set<string>>()
+
+  for (const row of sizing.rows) {
+    if (!row.page) continue
+    const key = groupKeyFor(row.page, grouping)
+    const group = groupByKey.get(key)
+    const pages = pagesSeen.get(key) ?? new Set<string>()
+    pages.add(normalizeUrlKey(row.page))
+    pagesSeen.set(key, pages)
+    const existing = totals.get(key)
+    if (existing) {
+      existing.pagesInPool = pages.size
+      existing.impressions += row.impressions
+      existing.currentClicks += row.clicks
+      existing.incrementalClicks += row.incrementalClicks
+    } else {
+      totals.set(key, {
+        key,
+        pattern: group?.pattern ?? key,
+        familySize: group?.size ?? 0,
+        pagesInPool: pages.size,
+        impressions: row.impressions,
+        currentClicks: row.clicks,
+        incrementalClicks: row.incrementalClicks,
+      })
+    }
+  }
+
+  return Array.from(totals.values()).sort(
+    (a, b) => b.incrementalClicks - a.incrementalClicks || b.impressions - a.impressions || a.key.localeCompare(b.key),
+  )
+}

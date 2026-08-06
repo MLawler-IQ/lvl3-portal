@@ -11,7 +11,23 @@
 // lives in the rubric, prioritisation in the scoring stage.
 
 import type { CheckDefinition, Finding, StationBundle } from './types'
+// The derived-analysis detectors live in ./detectors and wrap pure functions from
+// ./analyses. Registered here so the engine, the eval gate and the scoring stage
+// all see one list of checks.
+import { DERIVED_CHECKS } from './detectors'
 import type { CrawlPageRecord } from '@/lib/tools/crawl-record'
+// robots.txt semantics live in ONE place, shared with the eval predicates. The two
+// implementations that used to exist disagreed on three probes; see
+// docs/robots-parser-findings.md. Independence from the detector now lives in
+// tests/unit/robots.test.ts, which is written from RFC 9309 rather than from the
+// implementation — a spec-derived test suite, not a duplicate implementation.
+import { blockedUrls, blocksSiteRoot, disallowPatterns } from '@/lib/robots'
+import {
+  coverageCaveat,
+  coverageReason,
+  coverageStatus,
+  partitionMeasured,
+} from './coverage'
 import type { GSCRow } from '@/lib/tools-gsc'
 
 const cap = <T>(arr: T[], n = 5): T[] => arr.slice(0, n)
@@ -22,10 +38,26 @@ const tech001: CheckDefinition = {
   id: 'TECH-001',
   requires: ['crawl'],
   evaluate: (s: StationBundle): Finding => {
-    const site = s.crawl!.ok ? s.crawl!.data.site : { robotsTxt: null, sitemapUrls: [] }
+    const data = s.crawl!.ok ? s.crawl!.data : null
+    const site = data?.site ?? { robotsTxt: null, sitemapUrls: [], robotsTxtStatus: 'not-fetched' as const }
+    const pages = data?.pages ?? []
     const txt = site.robotsTxt
+
+    // "We never fetched it" is not "the site serves none". This returned `pass` for
+    // both, so an ingester that could not reach robots.txt produced a clean bill of
+    // health on a check that is critical and auto-tier.
+    if (site.robotsTxtStatus === 'not-fetched') {
+      return {
+        checkId: 'TECH-001',
+        status: 'not_run',
+        evidence: { detail: 'robots.txt was never fetched, so nothing could be evaluated.' },
+        source: 'crawl',
+        reason: 'the crawl did not fetch robots.txt',
+      }
+    }
+
     if (txt == null) {
-      // No robots.txt at all blocks nothing.
+      // Fetched, and the site genuinely serves none. That blocks nothing.
       return {
         checkId: 'TECH-001',
         status: 'pass',
@@ -33,39 +65,58 @@ const tech001: CheckDefinition = {
         source: 'crawl',
       }
     }
-    // A root disallow under *, or one aimed at Googlebot, blocks the whole site.
-    // Parsed as directives (split on the first colon), not exact strings — the
-    // verification pass showed 'Disallow:/' (no space) and 'Disallow: /*' are
-    // valid, root-blocking, and slipped past an exact-match comparison.
-    const lines = txt.split('\n').map((l) => l.trim().toLowerCase())
-    let agentAppliesToGoogle = false
-    const blockedRoots: string[] = []
-    for (const line of lines) {
-      const colon = line.indexOf(':')
-      if (colon === -1) continue
-      const directive = line.slice(0, colon).trim()
-      const value = line.slice(colon + 1).trim()
-      if (directive === 'user-agent') {
-        agentAppliesToGoogle = value === '*' || value.includes('googlebot')
-      } else if (agentAppliesToGoogle && directive === 'disallow' && (value === '/' || value === '/*')) {
-        blockedRoots.push(line)
-      }
-    }
-    if (blockedRoots.length > 0) {
+
+    // Which crawled URLs does a Googlebot-applicable Disallow actually block?
+    //
+    // This used to ask only whether the SITE ROOT was disallowed, so
+    // `Disallow: /services/` passed — despite the rubric note naming money pages
+    // explicitly ("No Disallow on money pages, CSS or JS for Googlebot"). It also
+    // reported evidence.value = 1, a yes/no dressed as a magnitude, which no
+    // rubric-derived magnitude assertion could ever match.
+    //
+    // Found by writing the eval injectors from the rubric text rather than from
+    // this file. Now it reports the blocked-URL count, which is the magnitude the
+    // rubric implies and the number a client can act on.
+    // `patterns` describes, `blocked` decides — they are not the same question, because
+    // an `Allow:` can override a Disallow that still belongs in the evidence string.
+    const patterns = disallowPatterns(txt)
+    const blocked = blockedUrls(txt, pages.map((p) => p.url))
+
+    if (blocked.length > 0) {
       return {
         checkId: 'TECH-001',
         status: 'fail',
         evidence: {
-          value: blockedRoots.length,
+          affectedUrls: blocked.length,
+          detail: `robots.txt blocks Googlebot from ${blocked.length} of ${pages.length} crawled URLs (rules: ${patterns.join(', ')}).`,
+          examples: cap(blocked),
+        },
+        source: 'crawl',
+      }
+    }
+
+    // A root block with no pages to attribute it to is still a root block.
+    if (blocksSiteRoot(txt)) {
+      return {
+        checkId: 'TECH-001',
+        status: 'fail',
+        evidence: {
+          affectedUrls: pages.length,
           detail: 'robots.txt disallows the site root for Googlebot.',
         },
         source: 'crawl',
       }
     }
+
     return {
       checkId: 'TECH-001',
       status: 'pass',
-      evidence: { detail: 'robots.txt does not block Googlebot from the site root.' },
+      evidence: {
+        detail:
+          patterns.length > 0
+            ? `robots.txt blocks no crawled URL (${patterns.length} Disallow rule(s), all scoped away from crawled paths).`
+            : 'robots.txt contains no Googlebot-applicable Disallow rules.',
+      },
       source: 'crawl',
     }
   },
@@ -78,12 +129,20 @@ const onpage003: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const affected = pages.filter((p) => p.h1s.length !== 1)
+    // Count H1s that carry USABLE TEXT, not array entries.
+    //
+    // This counted h1s.length, so `[""]`, `["   "]` and an <h1> wrapping only an
+    // image all read as one good heading and scored pass. Found by writing the
+    // eval injectors from the rubric text instead of from this file — the exact
+    // circularity the harness design exists to break. The rubric asks for "one H1
+    // per page DESCRIBING PRIMARY INTENT"; an empty element describes nothing.
+    const usableH1s = (p: { h1s: string[] }) => p.h1s.filter((h) => h.trim().length > 0).length
+    const affected = pages.filter((p) => usableH1s(p) !== 1)
     if (affected.length === 0) {
       return {
         checkId: 'ONPAGE-003',
         status: 'pass',
-        evidence: { detail: `All ${pages.length} pages carry exactly one H1.` },
+        evidence: { detail: `All ${pages.length} pages carry exactly one H1 with text.` },
         source: 'crawl',
       }
     }
@@ -93,7 +152,7 @@ const onpage003: CheckDefinition = {
       status: 'fail',
       evidence: {
         affectedUrls: affected.length,
-        detail: `${affected.length} of ${pages.length} pages do not have exactly one H1.`,
+        detail: `${affected.length} of ${pages.length} pages do not have exactly one H1 with text.`,
         examples: cap(affected.map((p) => p.url)),
       },
       source: 'crawl',
@@ -108,24 +167,38 @@ const tech011: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const affected = pages.filter((p) => !p.hasViewportMeta || !p.tapTargetsOk)
-    if (affected.length === 0) {
-      return {
-        checkId: 'TECH-011',
-        status: 'pass',
-        evidence: { detail: `All ${pages.length} pages pass viewport and tap-target checks.` },
-        source: 'crawl',
-      }
-    }
+    // A page the crawl could not measure is excluded, counted and named — not scored as
+    // passing. hasViewportMeta/tapTargetsOk used to be non-nullable, so an ingester that
+    // cannot measure tap targets had to invent `true`, which reported `pass`.
+    const { measured, unmeasured } = partitionMeasured(
+      pages,
+      (p) => p.hasViewportMeta !== null && p.tapTargetsOk !== null,
+    )
+    const affected = measured.filter((p) => !p.hasViewportMeta || !p.tapTargetsOk)
+    const cov = { measured: measured.length, unmeasured: unmeasured.length, affected: affected.length }
+    const caveat = coverageCaveat(unmeasured.length, pages.length, 'mobile-rendering data')
+    const status = coverageStatus(cov)
+
     return {
       checkId: 'TECH-011',
-      status: 'fail',
-      evidence: {
-        affectedUrls: affected.length,
-        detail: `${affected.length} of ${pages.length} pages fail mobile viewport or tap-target sizing.`,
-        examples: cap(affected.map((p) => p.url)),
-      },
+      status,
+      evidence:
+        affected.length > 0
+          ? {
+              affectedUrls: affected.length,
+              detail: `${affected.length} of ${measured.length} measured pages fail mobile viewport or tap-target sizing.${caveat}`,
+              examples: cap(affected.map((p) => p.url)),
+            }
+          : {
+              detail:
+                measured.length > 0
+                  ? `All ${measured.length} measured pages pass viewport and tap-target checks.${caveat}`
+                  : `None of the ${pages.length} crawled pages carried mobile-rendering data.`,
+            },
       source: 'crawl',
+      ...(coverageReason(cov, 'mobile-rendering data') !== undefined
+        ? { reason: coverageReason(cov, 'mobile-rendering data')! }
+        : {}),
     }
   },
 }
@@ -137,8 +210,28 @@ const meas001: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const untagged = pages.filter((p) => !p.analytics.ga4 && !p.analytics.gtm)
-    const share = pages.length > 0 ? untagged.length / pages.length : 0
+    // Where TECH-011 invented `true` and passed, this invented `false` and FAILED —
+    // telling a client their measurement is off when nothing was checked. Same defect,
+    // opposite direction; lib/findings/coverage.ts now settles both the same way.
+    const { measured, unmeasured } = partitionMeasured(
+      pages,
+      (p) => p.analytics.ga4 !== null && p.analytics.gtm !== null,
+    )
+    const untagged = measured.filter((p) => !p.analytics.ga4 && !p.analytics.gtm)
+    const caveat = coverageCaveat(unmeasured.length, pages.length, 'analytics-tag data')
+    const cov = { measured: measured.length, unmeasured: unmeasured.length, affected: untagged.length }
+
+    if (measured.length === 0) {
+      return {
+        checkId: 'MEAS-001',
+        status: 'not_run',
+        evidence: { detail: `None of the ${pages.length} crawled pages carried analytics-tag data.` },
+        source: 'crawl',
+        reason: 'the crawl measured no analytics tags',
+      }
+    }
+
+    const share = measured.length > 0 ? untagged.length / measured.length : 0
     // Majority-untagged means measurement is broken site-wide, which gates every
     // outcome number the pipeline could ever report (the rubric weights this as
     // critical for exactly that reason).
@@ -148,7 +241,7 @@ const meas001: CheckDefinition = {
         status: 'fail',
         evidence: {
           affectedUrls: untagged.length,
-          detail: `${untagged.length} of ${pages.length} pages carry no GA4 or GTM tag — measurement is effectively off.`,
+          detail: `${untagged.length} of ${measured.length} measured pages carry no GA4 or GTM tag — measurement is effectively off.${caveat}`,
           examples: cap(untagged.map((p) => p.url)),
         },
         source: 'crawl',
@@ -160,7 +253,7 @@ const meas001: CheckDefinition = {
         status: 'fail',
         evidence: {
           affectedUrls: untagged.length,
-          detail: `${untagged.length} of ${pages.length} pages are missing analytics tags.`,
+          detail: `${untagged.length} of ${measured.length} measured pages are missing analytics tags.${caveat}`,
           examples: cap(untagged.map((p) => p.url)),
         },
         source: 'crawl',
@@ -168,9 +261,12 @@ const meas001: CheckDefinition = {
     }
     return {
       checkId: 'MEAS-001',
-      status: 'pass',
-      evidence: { detail: `Analytics tags detected on all ${pages.length} pages.` },
+      status: coverageStatus(cov),
+      evidence: { detail: `Analytics tags detected on all ${measured.length} measured pages.${caveat}` },
       source: 'crawl',
+      ...(coverageReason(cov, 'analytics-tag data') !== undefined
+        ? { reason: coverageReason(cov, 'analytics-tag data')! }
+        : {}),
     }
   },
 }
@@ -249,6 +345,28 @@ const local016: CheckDefinition = {
       return geo !== home && !served.has(geo)
     })
 
+    // Nothing to test is NOT a clean bill of health.
+    //
+    // targetGeo is `string | null` and the only code that derives it is
+    // lib/ingest/sitebulb/geo.ts, which is unwired — so on the first real crawl every
+    // page has targetGeo: null, locationPages is empty, incoherent is empty, and this
+    // returned `pass` with "No location pages found". That is §17 failure mode 1
+    // exactly: "we did not look" rendered as "it is fine", on a check that is one of
+    // §9's five documented Tornado P1s. The crawl station is non-empty, so the engine's
+    // empty-station rule cannot catch this — it has to be caught in the check body.
+    // Mirrors what the ONPAGE-012 detector already does for the same situation.
+    if (locationPages.length === 0) {
+      return {
+        checkId: 'LOCAL-016',
+        status: 'not_run',
+        evidence: {
+          detail: `No page carries a targetGeo, so none of the ${pages.length} crawled URLs could be tested against the profile's service area.`,
+        },
+        source: 'derived',
+        reason: 'no page carries a targetGeo to compare against the service area',
+      }
+    }
+
     if (incoherent.length > 0) {
       return {
         checkId: 'LOCAL-016',
@@ -265,10 +383,7 @@ const local016: CheckDefinition = {
       checkId: 'LOCAL-016',
       status: 'pass',
       evidence: {
-        detail:
-          locationPages.length > 0
-            ? `All ${locationPages.length} location pages target geography the profile serves.`
-            : 'No location pages found to test against the service area.',
+        detail: `All ${locationPages.length} location pages target geography the profile serves.`,
       },
       source: 'derived',
     }
@@ -342,6 +457,10 @@ export const CHECKS: CheckDefinition[] = [
   onpage006,
   local016,
   local003,
+  // ONPAGE-012 (content-to-template ratio). Registering it changes the findings
+  // set for every fixture, which deliberately invalidates the scoring snapshots —
+  // re-baselining them is a reviewed step, not an automatic one.
+  ...DERIVED_CHECKS,
 ]
 
 export const CHECK_IDS = new Set(CHECKS.map((c) => c.id))

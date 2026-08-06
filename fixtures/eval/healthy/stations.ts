@@ -32,7 +32,9 @@ function page(over: Partial<CrawlPageRecord> & { url: string; h1: string }): Cra
     tapTargetsOk: true,
     analytics: { ga4: true, gtm: false },
     internalLinksOut: 14,
+    internalLinksIn: 9,
     wordCount: 1100,
+    uniqueWordCount: 940, // ~85% unique: a real page, not a template fill
     templateGroup: null,
     targetGeo: null,
     ...rest,
@@ -75,12 +77,14 @@ function buildCrawl(): CrawlStationData {
         h1: `Plumbing guide ${i + 1}`,
         templateGroup: 'blog',
         wordCount: 950,
+        uniqueWordCount: 880,
       }),
     )
   }
   return {
     site: {
       robotsTxt: 'User-agent: *\nDisallow: /wp-admin/\nSitemap: https://example-plumbing.com/sitemap.xml',
+      robotsTxtStatus: 'ok',
       sitemapUrls: [`${SITE}/sitemap.xml`],
     },
     pages, // 25 total

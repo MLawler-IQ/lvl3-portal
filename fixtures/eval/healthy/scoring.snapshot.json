@@ -1,0 +1,16 @@
+{
+  "case": "healthy",
+  "configVersion": "scoring-2026-08-06.1",
+  "topK": 5,
+  "tolerancePct": 5,
+  "totals": {
+    "findings": 8,
+    "scored": 0,
+    "pass": 8,
+    "degraded": 0,
+    "notRun": 0
+  },
+  "criticalFails": [],
+  "topKItems": [],
+  "beyondTopK": []
+}

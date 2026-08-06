@@ -1,0 +1,154 @@
+{
+  "case": "tornado",
+  "configVersion": "scoring-2026-08-06.1",
+  "topK": 5,
+  "tolerancePct": 5,
+  "totals": {
+    "findings": 8,
+    "scored": 6,
+    "pass": 2,
+    "degraded": 0,
+    "notRun": 0
+  },
+  "criticalFails": [
+    "MEAS-001",
+    "TECH-011"
+  ],
+  "topKItems": [
+    {
+      "rank": 1,
+      "checkId": "ONPAGE-003",
+      "severity": "high",
+      "category": "onpage",
+      "effort": "low",
+      "effortWeight": 1,
+      "basis": "template_fix",
+      "rawImpact": 1719,
+      "impact": 85.95,
+      "priorityScore": 85.95,
+      "band": "P1",
+      "formula": "affected_url_count x severity_weight x earning_url_bonus",
+      "terms": {
+        "affectedUrlCount": 191,
+        "earningUrlBonus": 1.5,
+        "severityWeight": 6
+      },
+      "notes": [
+        "bonus applied: at least one affected URL earns impressions",
+        "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
+      ],
+      "detail": "191 of 206 pages do not have exactly one H1 with text."
+    },
+    {
+      "rank": 2,
+      "checkId": "MEAS-001",
+      "severity": "critical",
+      "category": "measurement",
+      "effort": "medium",
+      "effortWeight": 2.5,
+      "basis": "measurement_gap",
+      "rawImpact": 1000,
+      "impact": 100,
+      "priorityScore": 40,
+      "band": "P1",
+      "formula": "fixed measurement_gap_weight (gates all other measurement)",
+      "terms": {
+        "affectedUrlCount": 187,
+        "measurementGapWeight": 1000
+      },
+      "notes": [
+        "fixed weight by design: a measurement gap invalidates every other number, so it does not scale with page count"
+      ],
+      "detail": "187 of 206 measured pages carry no GA4 or GTM tag — measurement is effectively off."
+    },
+    {
+      "rank": 3,
+      "checkId": "ONPAGE-006",
+      "severity": "medium",
+      "category": "onpage",
+      "effort": "medium",
+      "effortWeight": 2.5,
+      "basis": "consolidation",
+      "rawImpact": 8550,
+      "impact": 85.5,
+      "priorityScore": 34.2,
+      "band": "P1",
+      "formula": "sum over clusters of (summed_impressions x competing_url_count)",
+      "terms": {
+        "cluster:dustless duct cleaning:impressions": 860,
+        "cluster:dustless duct cleaning:urls": 4,
+        "cluster:furnace installation:impressions": 320,
+        "cluster:furnace installation:urls": 2,
+        "cluster:heat pump installation:impressions": 400,
+        "cluster:heat pump installation:urls": 2,
+        "cluster:hvac inspection:impressions": 270,
+        "cluster:hvac inspection:urls": 2,
+        "cluster:mini split installation:impressions": 225,
+        "cluster:mini split installation:urls": 2,
+        "cluster:thermostat installation:impressions": 320,
+        "cluster:thermostat installation:urls": 2,
+        "cluster:water heater installation:impressions": 680,
+        "cluster:water heater installation:urls": 3,
+        "clusterCount": 7,
+        "clusterCountFromEvidence": 7,
+        "maxCompetingUrls": 4,
+        "totalImpressions": 3075
+      },
+      "notes": [],
+      "detail": "7 queries have 2+ pages competing for the same intent (worst: 4 URLs on one query)."
+    },
+    {
+      "rank": 4,
+      "checkId": "TECH-011",
+      "severity": "critical",
+      "category": "technical",
+      "effort": "medium",
+      "effortWeight": 2.5,
+      "basis": "template_fix",
+      "rawImpact": 920,
+      "impact": 46,
+      "priorityScore": 18.4,
+      "band": "P1",
+      "formula": "affected_url_count x severity_weight x earning_url_bonus",
+      "terms": {
+        "affectedUrlCount": 92,
+        "earningUrlBonus": 1,
+        "severityWeight": 10
+      },
+      "notes": [
+        "no bonus: no affected URL was observed earning impressions",
+        "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
+      ],
+      "detail": "92 of 206 measured pages fail mobile viewport or tap-target sizing."
+    },
+    {
+      "rank": 5,
+      "checkId": "LOCAL-016",
+      "severity": "high",
+      "category": "local",
+      "effort": "medium",
+      "effortWeight": 2.5,
+      "basis": "local_visibility",
+      "rawImpact": 11.2,
+      "impact": 33.6,
+      "priorityScore": 13.44,
+      "band": "P1",
+      "formula": "magnitude x category_weight",
+      "terms": {
+        "categoryWeight": 1.4,
+        "magnitude": 8
+      },
+      "notes": [
+        "category weight for 'local'"
+      ],
+      "detail": "8 of 18 location pages target geography outside the profile's service area."
+    }
+  ],
+  "beyondTopK": [
+    {
+      "checkId": "ONPAGE-012",
+      "rank": 6,
+      "priorityScore": 8.88
+    }
+  ]
+}
