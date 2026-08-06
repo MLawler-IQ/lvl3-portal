@@ -141,13 +141,24 @@ function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
           </span>
         )}
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* Hairline ledger rows, not tiles — the same treatment as the exec band.
+          This band hand-rolled its own tiles and did not use KpiCard, so it would
+          otherwise have been the one band still looking like cards. */}
+      <div>
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-lg border border-surface-700 bg-surface-950/40 px-3 py-2.5">
-            <p className="text-xs text-surface-400 truncate">{t.label}</p>
-            <p className="text-lg font-semibold text-surface-100 tabular-nums">{Math.round(t.value).toLocaleString()}</p>
+          <div
+            key={t.label}
+            className="flex items-baseline gap-4 border-t border-surface-800 py-3 last:border-b"
+          >
+            <p className="min-w-0 basis-[42%] truncate text-sm text-surface-400">{t.label}</p>
+            <p
+              className="flex-1 text-lg font-medium tabular-nums text-surface-100"
+              style={{ fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }}
+            >
+              {Math.round(t.value).toLocaleString()}
+            </p>
             {typeof t.delta === "number" && (
-              <p className={`text-xs ${DELTA_TONE_TEXT[deltaTone(t.delta)]}`}>
+              <p className={`shrink-0 text-right text-xs tabular-nums ${DELTA_TONE_TEXT[deltaTone(t.delta)]}`}>
                 {t.delta > 0 ? "+" : ""}
                 {t.delta.toFixed(0)}%
               </p>

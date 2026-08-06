@@ -53,12 +53,22 @@ export default function NewVsReturningRevenue({ data }: NewVsReturningRevenuePro
         <p className="text-sm font-semibold text-surface-100">New-customer revenue share</p>
         <div className="relative group">
           <button
-            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:text-surface-100 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+            type="button"
+            className="w-4 h-4 rounded-full border border-surface-700 text-surface-400 hover:border-surface-600 hover:text-surface-100 text-[10px] flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             aria-label="About new vs returning revenue"
           >
             ?
           </button>
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 bg-surface-100 border border-surface-700 rounded-lg px-3 py-2 text-xs text-surface-900 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal">
+          {/* Focus as well as hover — see the note in KpiCard. */}
+          <div
+            role="tooltip"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 w-64 rounded-sm px-3 py-2 text-xs opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none transition-opacity z-10 whitespace-normal"
+            style={{
+              background: 'var(--chart-tooltip-bg)',
+              color: 'var(--chart-tooltip-fg)',
+              border: '1px solid var(--chart-tooltip-border)',
+            }}
+          >
             {TOOLTIP}
           </div>
         </div>

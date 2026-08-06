@@ -1,4 +1,4 @@
-import KpiCard from '@/components/ui/KpiCard'
+import LedgerRow from '@/components/ui/LedgerRow'
 import type { TrendPoint } from '@/lib/dashboard/types'
 import HealthScorecard from './HealthScorecard'
 import ActivityFeed from './ActivityFeed'
@@ -46,7 +46,7 @@ export interface ExecutiveSummaryBandProps {
   updatedAt?: string | null
 }
 
-/** Build the KpiCard `delta` shape from a signed percent + optional label override. */
+/** Build the LedgerRow `delta` shape from a signed percent + optional label override. */
 function toKpiDelta(
   delta: number | undefined,
   deltaLabel: string | undefined
@@ -62,7 +62,7 @@ function toKpiDelta(
 /**
  * Presentational executive summary band for the dashboard. Lays out, top→bottom:
  *   (a) a prominent mono headline,
- *   (b) the north-star KPI row (KpiCards with sparklines),
+ *   (b) the north-star KPIs as hairline ledger rows (with sparklines),
  *   (c) a compact health scorecard (colored grade chips),
  *   (d) a "what we did → what happened" activity feed.
  * Every section degrades gracefully when its data is empty/omitted; renders
@@ -107,11 +107,13 @@ export default function ExecutiveSummaryBand({
         </div>
       )}
 
-      {/* (b) North-star KPI row */}
+      {/* (b) North-star KPIs, as a ledger.
+          Was a 4-column tile grid, which also meant the 5th KPI always wrapped
+          alone onto a second row. Rows make that moot and match the site. */}
       {kpis.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
           {kpis.map((kpi, i) => (
-            <KpiCard
+            <LedgerRow
               key={`${kpi.label}-${i}`}
               label={kpi.label}
               value={String(kpi.value)}
