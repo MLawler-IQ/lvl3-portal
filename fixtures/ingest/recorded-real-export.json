@@ -1,0 +1,63 @@
+{
+  "_comment": [
+    "What the ingester produced on the REAL tornadohvacca.com export. The export is client",
+    "data and is not committed (it lives at ~/Desktop/tornadohvacca_com_all_exports.zip), so",
+    "CI cannot reproduce these numbers. They are written down anyway because urls/zeroH1Pages/",
+    "untaggedPages were documented in AUTOMATION-CONTEXT.md §9 BEFORE any pipeline code",
+    "existed, which makes reproducing them the one non-circular validation this ingester has.",
+    "",
+    "TWO CONSUMERS, and they are the reason this is a data file rather than a literal inside a",
+    "test. tests/unit/recorded-export.test.ts asserts that this record still describes LIVE",
+    "code — every checkId is registered, every unmeasured key is a signal the ingester can",
+    "actually emit, and the arithmetic between the figures holds. scripts/audit-dry-run.ts",
+    "--compare diffs a real run against the same file and exits 2 on any mismatch, so Matt's",
+    "run against the real export is machine-checked instead of eyeballed.",
+    "",
+    "These figures deliberately DIFFER from fixtures/eval/tornado/manifest.json (191/92/187/",
+    "7/8/148). That manifest transcribes §9's documented magnitudes against the HAND-BUILT",
+    "eval fixture; this file records what the real export actually contains. Nothing is ever",
+    "gated against the manifest, and the eval fixtures are never converted to record-and-",
+    "replay — the manifest's figures were written before the pipeline existed, and a replay",
+    "would silently re-baseline that."
+  ],
+  "recordedAt": "2026-08-06",
+  "source": "tornadohvacca_com_all_exports.zip (client data, not committed)",
+
+  "urls": 206,
+  "zeroH1Pages": 191,
+  "untaggedPages": 202,
+  "pagesWithMeasuredWords": 202,
+
+  "unmeasured": {
+    "internalLinksOut": 206,
+    "hasViewportMeta": 4,
+    "tapTargetsOk": 4,
+    "canonical": 4
+  },
+
+  "uniqueShare": { "min": 0.008, "median": 0.27, "max": 0.435 },
+
+  "checks": {
+    "TECH-001": {
+      "status": "not_run",
+      "why": "a CSV export carries no robots.txt body, so robotsTxtStatus is 'not-fetched'"
+    },
+    "ONPAGE-003": {
+      "status": "fail",
+      "affected": 194,
+      "why": "191 pages with no H1 plus 3 with several"
+    },
+    "TECH-011": {
+      "status": "fail",
+      "affected": 101,
+      "measured": 202,
+      "why": "4 pages absent from mobile_friendly.csv are excluded, not counted as passing"
+    },
+    "MEAS-001": {
+      "status": "fail",
+      "affected": 202,
+      "measured": 206,
+      "why": "no GA4 or GTM tag on any of the 202 pages the hint files could measure"
+    }
+  }
+}

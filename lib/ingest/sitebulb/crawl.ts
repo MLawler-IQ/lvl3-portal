@@ -37,11 +37,10 @@
 // Those five are configuration gaps, not code gaps; the four settings to change on a
 // re-run are listed in docs/sitebulb-audit-setup.md §8.
 
-import { readdir } from 'node:fs/promises'
-import { join } from 'node:path'
 import type { CrawlPageRecord, CrawlStationData } from '@/lib/tools/crawl-record'
-import { indexBy, num, readCsvTable, text, yesNo, type CsvRow, type CsvTable } from './csv'
+import { indexBy, num, text, yesNo, type CsvRow, type CsvTable } from './csv'
 import { deriveTargetGeo, deriveTemplateGroup } from './geo'
+import { readCsv, type CrawlExportSource } from './source'
 
 /** Which signals this export actually backed, for the caller to report honestly. */
 export interface SitebulbCoverage {
@@ -60,8 +59,14 @@ export interface SitebulbCrawlIngest {
   coverage: SitebulbCoverage
 }
 
-/** The files this ingester reads, and the signals each one backs. */
-const SOURCES = {
+/**
+ * The files this ingester reads, and the signals each one backs.
+ *
+ * Exported because it is the complete vocabulary of `SitebulbCoverage.filesMissing`, and
+ * lib/stations/degradation.ts keys the whole degradation rule off that array. A test pins
+ * this set so adding a fourth file forces a look at the degradation notes.
+ */
+export const SOURCES = {
   internal: 'internal',
   indexability: 'indexability',
   mobile: 'mobile_friendly',
@@ -71,38 +76,20 @@ const HINT_NO_GA4 = 'url_contains_no_google_analytics_code'
 const HINT_NO_GTM = 'url_contains_no_google_tag_manager_code'
 
 /**
- * Every file in an export directory, relative to it, including the `hints/` subdirectory.
- *
- * Recursive because the top level holds the per-report exports while the triggered hints
- * live one level down, and the ingester needs both: the backbone from `internal.csv` and
- * the analytics signal from two hint files.
- */
-export async function listSitebulbExport(dir: string): Promise<string[]> {
-  const out: string[] = []
-  for (const entry of await readdir(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      for (const nested of await readdir(join(dir, entry.name))) {
-        out.push(`${entry.name}/${nested}`)
-      }
-    } else {
-      out.push(entry.name)
-    }
-  }
-  return out
-}
-
-/**
  * Sitebulb prefixes every export with the host, e.g. `tornadohvacca_com_internal.csv`,
  * so files are located by suffix rather than by exact name.
+ *
+ * `endsWith` tolerates the `hints/` prefix that a nested entry carries, which is why the
+ * same matcher serves both the top-level reports and the hint files.
  */
 async function readBySuffix(
-  dir: string,
+  source: CrawlExportSource,
   files: readonly string[],
   suffix: string,
 ): Promise<CsvTable | null> {
   const match = files.find((f) => f.endsWith(`_${suffix}.csv`))
   if (!match) return null
-  return readCsvTable(join(dir, match))
+  return readCsv(source, match)
 }
 
 /** A URL key that survives the trailing-slash and case differences between exports. */
@@ -139,31 +126,38 @@ function robotsMetaFor(row: CsvRow | undefined): string {
 }
 
 /**
- * Read a Sitebulb export directory into crawl-station shape.
+ * Read a Sitebulb export into crawl-station shape.
  *
- * `files` is the directory listing; taking it as an argument keeps this function testable
- * against a fixture directory without stubbing the filesystem.
+ * Takes a source rather than a directory so the same code reads a local fixture, an
+ * uploaded zip's buffers, or a map built by a test. The listing comes from
+ * `source.list()`, which is the ONLY authority on which files exist — an earlier version
+ * took the listing as a second argument, which let a caller pass one that disagreed with
+ * what the source actually held.
+ *
+ * Throws when the backbone is absent. The crawl station's `runGuarded` converts that into
+ * a ToolErr; it stays a throw here so the rule has one expression rather than a union
+ * every future caller has to re-handle.
  */
 export async function ingestSitebulbCrawl(
-  dir: string,
-  files: readonly string[],
+  source: CrawlExportSource,
 ): Promise<SitebulbCrawlIngest> {
+  const files = await source.list()
   const filesRead: string[] = []
   const filesMissing: string[] = []
 
-  const internal = await readBySuffix(dir, files, SOURCES.internal)
+  const internal = await readBySuffix(source, files, SOURCES.internal)
   if (internal === null) {
     throw new Error(
-      `Sitebulb export at ${dir} has no *_internal.csv. That file is the backbone: ` +
+      `Sitebulb export at ${source.label} has no *_internal.csv. That file is the backbone: ` +
         `without it the page list would come from triggered hints only, and a pass would ` +
         `be indistinguishable from a check that never ran.`,
     )
   }
   filesRead.push(SOURCES.internal)
 
-  const indexability = await readBySuffix(dir, files, SOURCES.indexability)
+  const indexability = await readBySuffix(source, files, SOURCES.indexability)
   ;(indexability ? filesRead : filesMissing).push(SOURCES.indexability)
-  const mobile = await readBySuffix(dir, files, SOURCES.mobile)
+  const mobile = await readBySuffix(source, files, SOURCES.mobile)
   ;(mobile ? filesRead : filesMissing).push(SOURCES.mobile)
 
   const idxByUrl = indexability ? indexBy(indexability, 'URL') : new Map<string, CsvRow>()
@@ -173,8 +167,8 @@ export async function ingestSitebulbCrawl(
   // is one that LACKS the tag. An absent hint file means the hint never triggered, so
   // every URL has the tag — which is only a safe reading because the backbone gives us
   // the full URL list to compare against.
-  const noGa4 = await readHintUrlSet(dir, files, HINT_NO_GA4)
-  const noGtm = await readHintUrlSet(dir, files, HINT_NO_GTM)
+  const noGa4 = await readHintUrlSet(source, files, HINT_NO_GA4)
+  const noGtm = await readHintUrlSet(source, files, HINT_NO_GTM)
   if (noGa4) filesRead.push(HINT_NO_GA4)
   if (noGtm) filesRead.push(HINT_NO_GTM)
 
@@ -257,13 +251,13 @@ function invert(value: boolean | null): boolean | null {
 
 /** The URL set from a hint file, or null when the hint file is absent entirely. */
 async function readHintUrlSet(
-  dir: string,
+  source: CrawlExportSource,
   files: readonly string[],
   suffix: string,
 ): Promise<Set<string> | null> {
   const match = files.find((f) => f.endsWith(`_${suffix}.csv`))
   if (!match) return null
-  const table = await readCsvTable(join(dir, match))
+  const table = await readCsv(source, match)
   const set = new Set<string>()
   for (const row of table.rows) {
     const url = text(row, 'URL')

@@ -14,18 +14,16 @@
 // which makes them the one uncircular check this ingester has.
 import { describe, it, expect } from 'vitest'
 import { join } from 'node:path'
-import { ingestSitebulbCrawl, listSitebulbExport } from '@/lib/ingest/sitebulb/crawl'
+import { ingestSitebulbCrawl } from '@/lib/ingest/sitebulb/crawl'
+import { BufferSource, LocalDirSource } from '@/lib/ingest/sitebulb/source'
 
 const DIR = join(__dirname, '..', '..', 'fixtures', 'ingest', 'sitebulb-mini')
 
-const load = async () => {
-  const files = await listSitebulbExport(DIR)
-  return ingestSitebulbCrawl(DIR, files)
-}
+const load = async () => ingestSitebulbCrawl(LocalDirSource(DIR))
 
-describe('listSitebulbExport', () => {
+describe('the export listing', () => {
   it('finds the hints subdirectory, not just the top level', async () => {
-    const files = await listSitebulbExport(DIR)
+    const files = await LocalDirSource(DIR).list()
     expect(files).toContain('mini_internal.csv')
     expect(files.some((f) => f.startsWith('hints/'))).toBe(true)
   })
@@ -41,8 +39,14 @@ describe('the backbone rule', () => {
   })
 
   it('refuses to run without the backbone rather than falling back to hints', async () => {
-    await expect(ingestSitebulbCrawl(DIR, ['hints/x_url_contains_no_google_analytics_code.csv']))
-      .rejects.toThrow(/backbone/)
+    // A source holding one hint file and no internal.csv. The ingester looks the
+    // backbone up by suffix and throws before reading anything, so the entry's
+    // contents are irrelevant — its absence from the listing is the whole test.
+    const hintsOnly = BufferSource(
+      new Map([['hints/x_url_contains_no_google_analytics_code.csv', new Uint8Array()]]),
+      'hints-only export',
+    )
+    await expect(ingestSitebulbCrawl(hintsOnly)).rejects.toThrow(/backbone/)
   })
 
   it('survives the BOM and CRLF the real export ships with', async () => {
@@ -194,27 +198,8 @@ describe('derived fields', () => {
   })
 })
 
-// Recorded from the real tornadohvacca.com export on 2026-08-06. Not runnable in CI —
-// the export is client data and is not committed — but written down because these three
-// numbers were documented in AUTOMATION-CONTEXT.md §9 BEFORE any pipeline code existed,
-// which makes reproducing them the one non-circular validation this ingester has.
-describe('recorded real-export results (documentation, not a live assertion)', () => {
-  it('records what the ingester produced on the real 206-URL crawl', () => {
-    const recorded = {
-      urls: 206,
-      zeroH1Pages: 191, // §9's figure, and it only reproduces from the backbone
-      untaggedPages: 202, // §9: "no GA or GTM code detected on any of 187 HTML pages"
-      pagesWithMeasuredWords: 202,
-      unmeasured: { internalLinksOut: 206, hasViewportMeta: 4, tapTargetsOk: 4, canonical: 4 },
-      uniqueShare: { min: 0.008, median: 0.27, max: 0.435 },
-      statuses: {
-        'TECH-001': 'not_run', // no robots.txt in a CSV export
-        'ONPAGE-003': 'fail', // 194 = 191 with none + 3 with several
-        'TECH-011': 'fail', // 101 of 202 measured, 4 excluded
-        'MEAS-001': 'fail', // 202 of 206 measured
-      },
-    }
-    expect(recorded.zeroH1Pages).toBe(191)
-    expect(recorded.urls).toBe(206)
-  })
-})
+// The recorded real-export figures used to live here as a literal that asserted two of
+// its own fields — a comment wearing a test's clothes, which touched no production code
+// and so could never fail. They now live in fixtures/ingest/recorded-real-export.json,
+// where tests/unit/recorded-export.test.ts checks them against live code and
+// scripts/audit-dry-run.ts --compare diffs a real run against the same file.
