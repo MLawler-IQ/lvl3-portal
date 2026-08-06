@@ -82,7 +82,7 @@ export default function AdminTriageStrip({ rows }: { rows: TriageRow[] }) {
               </span>
             )
           ) : (
-            <span className="hidden shrink-0 text-[11px] text-surface-600 sm:inline">
+            <span className="hidden shrink-0 text-[11px] text-surface-400 sm:inline">
               no goals set
             </span>
           )}
