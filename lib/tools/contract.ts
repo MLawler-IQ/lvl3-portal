@@ -39,15 +39,25 @@ export type ServiceClient = Awaited<ReturnType<typeof createServiceClient>>
  * The injection model is the one an orchestrator can actually use.
  */
 export interface ToolContext {
-  /** Resolved client row fields. Null for URL- and keyword-scoped tools. */
+  /**
+   * Resolved client row fields. Null for URL- and keyword-scoped tools.
+   *
+   * One shape for every tool, so a tool never re-reads the client itself. The
+   * server actions each did their own `select`, with a different column list per
+   * action — which is how `brand_match_mode` ended up read by one tool and not
+   * the dashboard module it was meant to mirror.
+   */
   client: {
     id: string
     name: string
+    slug: string
     gsc_site_url: string | null
     ga4_property_id: string | null
     gbp_account_id: string | null
     website_url: string | null
     brand_terms: string[] | null
+    /** 'exact' compares the whole query; anything else is a substring match. */
+    brand_match_mode: string | null
     competitors: string[] | null
   } | null
   /** GA4 + GSC identity (analytics@). */

@@ -2,6 +2,14 @@
 
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
+import { buildToolContext } from '@/lib/tools/context'
+import { keywordQuickWinsTool, type QuickWin } from '@/lib/tools/callable/keyword-quick-wins'
+import { aiVisibilityTool, type AIVisibilityResult } from '@/lib/tools/callable/ai-visibility'
+
+// Re-exported so existing importers of this module keep working; the canonical
+// definitions moved to lib/tools/callable/*.
+export type { QuickWin } from '@/lib/tools/callable/keyword-quick-wins'
+export type { AIVisibilityResult } from '@/lib/tools/callable/ai-visibility'
 import { fetchGSCRows } from '@/lib/tools-gsc'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -24,56 +32,22 @@ async function getClientGSCUrl(clientId: string): Promise<string> {
 
 // ── Keyword Quick Wins ────────────────────────────────────────────────────────
 
-export type QuickWin = {
-  query: string
-  page: string
-  position: number
-  impressions: number
-  clicks: number
-  ctr: number
-  estimatedClicksAt5: number
-  estimatedClicksAt3: number
-  opportunityScore: number
-}
-
 export async function fetchQuickWins(clientId: string): Promise<{
   wins?: QuickWin[]
   error?: string
 }> {
+  // Thin wrapper now: authenticate, build a context, run the callable tool, adapt its
+  // envelope to the shape this page already consumes. The scoring lives in
+  // lib/tools/callable/keyword-quick-wins.ts so an orchestrator can call it without a
+  // session — which requireAdmin() made impossible.
   try {
-    await requireAdmin()
-    const siteUrl = await getClientGSCUrl(clientId)
-    const rows = await fetchGSCRows(siteUrl, 90)
-
-    const wins: QuickWin[] = rows
-      .filter(
-        (r) =>
-          r.position >= 4 &&
-          r.position <= 20 &&
-          r.impressions >= 100
-      )
-      .map((r) => {
-        const estimatedClicksAt5 = Math.round(r.impressions * 0.065)
-        const estimatedClicksAt3 = Math.round(r.impressions * 0.103)
-        const opportunityScore = Math.round(
-          (estimatedClicksAt3 - r.clicks) * (1 / r.position) * 100
-        )
-        return {
-          query: r.query,
-          page: r.page,
-          position: Math.round(r.position),
-          impressions: r.impressions,
-          clicks: r.clicks,
-          ctr: Math.round(r.ctr * 10) / 10,
-          estimatedClicksAt5,
-          estimatedClicksAt3,
-          opportunityScore,
-        }
-      })
-      .sort((a, b) => b.opportunityScore - a.opportunityScore)
-      .slice(0, 50)
-
-    return { wins }
+    const { user } = await requireAdmin()
+    const ctx = await buildToolContext({
+      clientId,
+      invoker: { kind: 'user', userId: user.id },
+    })
+    const result = await keywordQuickWinsTool.run({}, ctx)
+    return result.ok ? { wins: result.data } : { error: result.error }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to fetch quick wins' }
   }
@@ -81,134 +55,18 @@ export async function fetchQuickWins(clientId: string): Promise<{
 
 // ── AI Visibility Checker ─────────────────────────────────────────────────────
 
-export type AIVisibilityResult = {
-  domain: string
-  brandedClicks: number
-  brandedImpressions: number
-  totalClicks: number
-  totalImpressions: number
-  brandedClickShare: number
-  brandedImpressionShare: number
-  topBrandedQueries: { query: string; clicks: number; impressions: number; position: number }[]
-  topNonBrandedQueries: { query: string; clicks: number; impressions: number; position: number }[]
-  periodDays: number
-  /** Terms actually used to classify queries as branded. */
-  brandTerms: string[]
-  /** 'configured' = the client's saved brand_terms (same source as the dashboard's Branded Search module); 'heuristic' = name/slug/domain fallback. */
-  termsSource: 'configured' | 'heuristic'
-}
-
 export async function checkAIVisibility(clientId: string): Promise<{
   result?: AIVisibilityResult
   error?: string
 }> {
   try {
-    await requireAdmin()
-    const service = await createServiceClient()
-    const { data: client } = await service
-      .from('clients')
-      .select('gsc_site_url, name, slug, brand_terms, brand_match_mode')
-      .eq('id', clientId)
-      .single()
-
-    if (!client?.gsc_site_url) {
-      throw new Error('No Search Console site configured. Set it in client settings.')
-    }
-
-    const rows = await fetchGSCRows(client.gsc_site_url, 90)
-
-    // Prefer the client's configured brand_terms — the same source (and matching
-    // semantics) the dashboard's Branded Search module uses via
-    // fetchGSCBrandedSplit: substring match, or whole-query equality in 'exact' mode.
-    const configuredTerms = ((client.brand_terms as string[] | null) ?? [])
-      .map((t) => t.trim().toLowerCase())
-      .filter(Boolean)
-
-    // Heuristic fallback: registrable brand label — subdomain-safe. normalizeDomain
-    // strips sc-domain:/protocol/www/path; then pick the label before the public
-    // suffix so shop.brand.com → "brand" and brand.co.uk → "brand".
-    const brandToken = (() => {
-      const labels = normalizeDomain(client.gsc_site_url).split('.').filter(Boolean)
-      if (labels.length <= 2) return labels[0] ?? ''
-      const MULTI_PART_TLD = new Set(['co', 'com', 'org', 'net', 'gov', 'ac', 'edu'])
-      const secondToLast = labels[labels.length - 2]
-      return MULTI_PART_TLD.has(secondToLast) ? labels[labels.length - 3] : secondToLast
-    })()
-
-    const termsSource: 'configured' | 'heuristic' =
-      configuredTerms.length > 0 ? 'configured' : 'heuristic'
-
-    const brandTerms =
-      termsSource === 'configured'
-        ? configuredTerms
-        : [client.slug.toLowerCase(), brandToken.toLowerCase(), client.name.toLowerCase()].filter(
-            Boolean,
-          )
-
-    const exactMatch = client.brand_match_mode === 'exact'
-
-    // Configured terms mirror the module's matching; the heuristic keeps a
-    // word-boundary match so a brand term like "shoe" doesn't match "shoelace".
-    const isBranded = (query: string) => {
-      const q = query.toLowerCase()
-      if (termsSource === 'configured') {
-        return exactMatch ? brandTerms.includes(q) : brandTerms.some((t) => q.includes(t))
-      }
-      return brandTerms.some((term) => {
-        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(q)
-      })
-    }
-
-    const branded = rows.filter((r) => isBranded(r.query))
-    const nonBranded = rows.filter((r) => !isBranded(r.query))
-
-    const sum = (arr: typeof rows, key: keyof (typeof rows)[0]) =>
-      arr.reduce((acc, r) => acc + (r[key] as number), 0)
-
-    const brandedClicks = sum(branded, 'clicks')
-    const brandedImpressions = sum(branded, 'impressions')
-    const totalClicks = sum(rows, 'clicks')
-    const totalImpressions = sum(rows, 'impressions')
-
-    const aggregateByQuery = (arr: typeof rows) => {
-      const map = new Map<string, { clicks: number; impressions: number; position: number; count: number }>()
-      for (const r of arr) {
-        const prev = map.get(r.query) ?? { clicks: 0, impressions: 0, position: 0, count: 0 }
-        map.set(r.query, {
-          clicks: prev.clicks + r.clicks,
-          impressions: prev.impressions + r.impressions,
-          position: prev.position + r.position,
-          count: prev.count + 1,
-        })
-      }
-      return Array.from(map.entries())
-        .map(([query, v]) => ({
-          query,
-          clicks: v.clicks,
-          impressions: v.impressions,
-          position: Math.round((v.position / v.count) * 10) / 10,
-        }))
-        .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, 10)
-    }
-
-    return {
-      result: {
-        domain: client.gsc_site_url,
-        brandedClicks,
-        brandedImpressions,
-        totalClicks,
-        totalImpressions,
-        brandedClickShare: totalClicks > 0 ? Math.round((brandedClicks / totalClicks) * 100) : 0,
-        brandedImpressionShare: totalImpressions > 0 ? Math.round((brandedImpressions / totalImpressions) * 100) : 0,
-        topBrandedQueries: aggregateByQuery(branded),
-        topNonBrandedQueries: aggregateByQuery(nonBranded),
-        periodDays: 90,
-        brandTerms,
-        termsSource,
-      },
-    }
+    const { user } = await requireAdmin()
+    const ctx = await buildToolContext({
+      clientId,
+      invoker: { kind: 'user', userId: user.id },
+    })
+    const res = await aiVisibilityTool.run({}, ctx)
+    return res.ok ? { result: res.data } : { error: res.error }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to check AI visibility' }
   }
