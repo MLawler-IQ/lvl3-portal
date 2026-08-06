@@ -7,11 +7,14 @@
 import { describe, it, expect } from 'vitest'
 import {
   GOOGLEBOT,
+  MAX_ROBOTS_BYTES,
   blockedUrls,
   blocksSiteRoot,
   disallowPatterns,
   groupFor,
   isUrlAllowed,
+  normalizeAgentToken,
+  normalizeRobotsPath,
   parseRobotsTxt,
   robotsPatternMatches,
   robotsTarget,
@@ -252,5 +255,185 @@ describe('robots: blockedUrls reports a magnitude', () => {
         'https://x.com/wp-admin/admin-ajax.php',
       ])
     ).toEqual(['https://x.com/wp-admin/options.php'])
+  })
+})
+
+// ─── APPEND to tests/unit/robots.test.ts ───
+// Second round. Found by an adversarial spec-conformance pass over the first version,
+// then each claim checked against Google's robots.txt documentation directly — one of
+// the five claims was WRONG and is asserted here as correct-as-was, so a future reader
+// does not "fix" it back.
+//
+
+// Google: "the lines must be separated by CR, CR/LF, or LF". Splitting on /\r?\n/
+// collapsed a CR-only file into one line and dropped every rule — a real block read
+// as pass, which is the §17 failure mode.
+describe('robots: line terminators — CR, CRLF and LF are all valid', () => {
+  it('parses a CR-only file', () => {
+    const txt = 'User-agent: *\rDisallow: /services/\r'
+    expect(disallowPatterns(txt)).toEqual(['/services/'])
+    expect(allowed(txt, 'https://x.com/services/plumbing')).toBe(false)
+  })
+
+  it('parses a CRLF file', () => {
+    const txt = 'User-agent: *\r\nDisallow: /services/\r\n'
+    expect(disallowPatterns(txt)).toEqual(['/services/'])
+  })
+
+  it('parses a file mixing all three', () => {
+    const txt = 'User-agent: *\rDisallow: /a/\r\nDisallow: /b/\nDisallow: /c/'
+    expect(disallowPatterns(txt)).toEqual(['/a/', '/b/', '/c/'])
+  })
+})
+
+// Google: "All non-matching text is ignored (for example, both googlebot/1.2 and
+// googlebot* are equivalent to googlebot)."
+describe('robots: user-agent tokens are normalised', () => {
+  it('strips a version suffix', () => {
+    expect(normalizeAgentToken('Googlebot/2.1')).toBe('googlebot')
+    expect(allowed('User-agent: Googlebot/2.1\nDisallow: /a/\n', 'https://x.com/a/b')).toBe(false)
+  })
+
+  it('strips a trailing wildcard', () => {
+    expect(normalizeAgentToken('googlebot*')).toBe('googlebot')
+  })
+
+  it('reduces a decorated wildcard to *', () => {
+    expect(normalizeAgentToken('* (all bots)')).toBe('*')
+    expect(allowed('User-agent: * (all bots)\nDisallow: /a/\n', 'https://x.com/a/b')).toBe(false)
+  })
+
+  it('keeps a hyphenated sub-crawler token intact', () => {
+    expect(normalizeAgentToken('Googlebot-Image')).toBe('googlebot-image')
+  })
+})
+
+// Google: "Non-7-bit ASCII characters in a path may be included as UTF-8 characters or
+// as percent-escaped UTF-8 encoded characters per RFC 3986." Both sides must normalise
+// to one representation or a literal-UTF-8 rule can never match an encoded URL.
+describe('robots: percent-encoding is normalised on both sides', () => {
+  it('matches a literal UTF-8 rule against a percent-encoded URL', () => {
+    const txt = 'User-agent: *\nDisallow: /città/\n'
+    expect(allowed(txt, 'https://x.com/citt%C3%A0/pizza')).toBe(false)
+  })
+
+  it('matches a percent-encoded rule against a literal UTF-8 URL', () => {
+    const txt = 'User-agent: *\nDisallow: /citt%C3%A0/\n'
+    expect(allowed(txt, 'https://x.com/città/pizza')).toBe(false)
+  })
+
+  it('does NOT decode reserved ASCII escapes — %2F is not /', () => {
+    // Decoding %2F would change the path's structure, so it stays escaped.
+    expect(normalizeRobotsPath('/a%2Fb')).toBe('/a%2Fb')
+    expect(normalizeRobotsPath('/a%2fb')).toBe('/a%2Fb') // canonical upper case
+  })
+
+  it('leaves a malformed escape alone rather than throwing', () => {
+    expect(() => normalizeRobotsPath('/a%ZZ%C3')).not.toThrow()
+  })
+})
+
+// Google: "Google enforces a robots.txt file size limit of 500 kibibytes (KiB). Content
+// which is after the maximum file size is ignored." Honouring rules past the cut is a
+// false positive — reporting a block Google never saw.
+describe('robots: the 500 KiB limit is enforced', () => {
+  it('ignores a rule past the size limit', () => {
+    const padding = '# ' + 'x'.repeat(200) + '\n'
+    const head = 'User-agent: *\nDisallow: /early/\n'
+    const filler = padding.repeat(Math.ceil(MAX_ROBOTS_BYTES / padding.length) + 1)
+    const txt = head + filler + 'Disallow: /late/\n'
+    const patterns = disallowPatterns(txt)
+    expect(patterns).toContain('/early/')
+    expect(patterns).not.toContain('/late/')
+  })
+
+  it('does not honour a rule the size cut truncated mid-line', () => {
+    // Whatever survives must be a whole line; a half-read pattern must not apply.
+    const filler = ('# ' + 'y'.repeat(120) + '\n').repeat(4400)
+    const txt = 'User-agent: *\nDisallow: /keep/\n' + filler + 'Disallow: /cut-here-somewhere/\n'
+    expect(disallowPatterns(txt).every((p) => !p.startsWith('/cut'))).toBe(true)
+  })
+})
+
+// The bare trailing `?` is exactly what a `Disallow: /*?` rule exists to catch, and
+// URL.search reports '' for it — so the query had to come from the raw URL.
+describe('robots: query-string edge cases', () => {
+  it('keeps a bare trailing ?', () => {
+    expect(robotsTarget('https://x.com/p?')).toBe('/p?')
+    expect(allowed('User-agent: *\nDisallow: /*?\n', 'https://x.com/p?')).toBe(false)
+  })
+
+  it('drops the fragment, which is never sent to a server', () => {
+    expect(robotsTarget('https://x.com/p?a=1#frag')).toBe('/p?a=1')
+  })
+
+  it('treats a missing path as /', () => {
+    expect(robotsTarget('https://x.com')).toBe('/')
+    expect(robotsTarget('https://x.com?a=1')).toBe('/?a=1')
+  })
+})
+
+// Returning the raw string for an unparseable URL made every scheme-less URL compare
+// against a pattern anchored at '/', so nothing matched and it silently read as allowed.
+describe('robots: unreadable URLs are reported, not silently allowed', () => {
+  it('returns null when no path can be located', () => {
+    expect(robotsTarget('example.com/path')).toBeNull()
+    expect(robotsTarget('mailto:a@b.c')).toBeNull()
+  })
+
+  it('accepts an already-relative path', () => {
+    expect(robotsTarget('/a/b?c=1')).toBe('/a/b?c=1')
+  })
+
+  it('does not count an unreadable URL as blocked', () => {
+    // No rule can be shown to apply, so this is not evidence of a block.
+    expect(blockedUrls('User-agent: *\nDisallow: /\n', ['example.com/path'])).toEqual([])
+  })
+})
+
+// A reviewer claimed Googlebot-Image should fall back to the `googlebot` group. Google's
+// docs say otherwise — "Storebot-Google follows group 2, because there is no specific
+// Storebot-Google group", group 2 being the `*` group. Implementing the claim would have
+// made an image-only block close the whole site to the web crawler again, so this is
+// pinned deliberately.
+describe('robots: sub-crawlers fall back to * and NOT to their parent group', () => {
+  it('sends Googlebot-Image to the * group, not the googlebot group', () => {
+    const txt =
+      'User-agent: googlebot\nDisallow: /web-only/\n\nUser-agent: *\nDisallow: /everyone/\n'
+    expect(allowed(txt, 'https://x.com/web-only/x', 'googlebot-image')).toBe(true)
+    expect(allowed(txt, 'https://x.com/everyone/x', 'googlebot-image')).toBe(false)
+    // And the web crawler still obeys its own group.
+    expect(allowed(txt, 'https://x.com/web-only/x')).toBe(false)
+  })
+
+  it('leaves a sub-crawler unconstrained when there is no * group either', () => {
+    expect(allowed('User-agent: googlebot\nDisallow: /\n', 'https://x.com/a', 'googlebot-image'))
+      .toBe(true)
+  })
+})
+
+
+// The first pass asserted a bound on ONE robotsPatternMatches call. The detector calls
+// blockedUrls, which is rules x urls — verification measured 2.9s on 13,355 rules x
+// 10,000 URLs, so the aggregate path needs its own bound.
+describe('robots: the aggregate blockedUrls path is bounded too', () => {
+  it('handles a large rule set against a realistic crawl quickly', () => {
+    const rules = Array.from({ length: 1000 }, (_, i) => `Disallow: /never-matches-${i}/`)
+    const txt = ['User-agent: *', ...rules].join('\n')
+    const urls = Array.from({ length: 206 }, (_, i) => `https://x.com/page-${i}`)
+    const t0 = Date.now()
+    expect(blockedUrls(txt, urls)).toEqual([])
+    expect(Date.now() - t0).toBeLessThan(400)
+  })
+
+  it('resolves the governing group once, not once per URL', () => {
+    // A regression guard for the hoist: with the group resolved per URL this same shape
+    // spent ~30% of its runtime re-running groups.filter and chosen.flatMap.
+    const rules = Array.from({ length: 2000 }, (_, i) => `Disallow: /x-${i}/`)
+    const txt = ['User-agent: *', ...rules].join('\n')
+    const urls = Array.from({ length: 1000 }, (_, i) => `https://x.com/p-${i}`)
+    const t0 = Date.now()
+    blockedUrls(txt, urls)
+    expect(Date.now() - t0).toBeLessThan(1500)
   })
 })
