@@ -147,7 +147,8 @@ describe('manifest loader', () => {
     return dir
   }
 
-  const base = { case: 't', description: 'd', must_find: [], must_not_find: [], must_pass: [] }
+  const mag = { metric: 'affectedUrls', expected: 1, tolerancePct: 0 }
+  const base = { case: 't', description: 'd', must_find: [], must_not_find: ['LOCAL-003'], must_pass: [] }
 
   it('rejects a check id that does not exist in the rubric', () => {
     const dir = writeManifest({ ...base, must_pass: ['NOPE-001'] })
@@ -163,8 +164,34 @@ describe('manifest loader', () => {
     ) as { id: string }[]
     const undetected = rubric.find((c) => !CHECK_IDS.has(c.id))
     expect(undetected).toBeDefined()
-    const dir = writeManifest({ ...base, must_find: [{ id: undetected!.id }] })
+    const dir = writeManifest({ ...base, must_find: [{ id: undetected!.id, magnitude: mag }] })
     expect(() => loadManifest(dir, ROOT)).toThrow(/no registered detector/)
+  })
+
+  it('rejects an unknown key instead of stripping it — a misspelled magnitude must not vanish', () => {
+    const dir = writeManifest({
+      ...base,
+      must_find: [{ id: 'ONPAGE-003', magnitud: mag }],
+    })
+    expect(() => loadManifest(dir, ROOT)).toThrow(/invalid manifest/)
+  })
+
+  it('rejects a must_find entry without a magnitude', () => {
+    const dir = writeManifest({ ...base, must_find: [{ id: 'ONPAGE-003' }] })
+    expect(() => loadManifest(dir, ROOT)).toThrow(/invalid manifest/)
+  })
+
+  it('rejects an unsatisfiable manifest: same id in must_find and must_not_find', () => {
+    const dir = writeManifest({
+      ...base,
+      must_find: [{ id: 'LOCAL-003', magnitude: { metric: 'value', expected: 1, tolerancePct: 0 } }],
+    })
+    expect(() => loadManifest(dir, ROOT)).toThrow(/unsatisfiable/)
+  })
+
+  it('rejects a fixture with no false-positive assertion at all', () => {
+    const dir = writeManifest({ ...base, must_not_find: [] })
+    expect(() => loadManifest(dir, ROOT)).toThrow(/invalid manifest/)
   })
 
   it('accepts the real fixture manifests', () => {

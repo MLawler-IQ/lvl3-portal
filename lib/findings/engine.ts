@@ -3,9 +3,12 @@
 //
 // Rules, in order:
 //   1. A required station that is absent or failed → not_run, naming the station.
-//   2. A required station that is ok but EMPTY → not_run for absence-type checks
-//      ("no cannibalisation found" on zero rows is not a pass; it's "we couldn't
-//      look"), and degraded-eligible for presence-type ones.
+//   2. A required station that is ok but EMPTY → not_run for EVERY check. Zero
+//      rows can no more prove "no missing H1s" than "no cannibalisation" — an
+//      empty input never supports any verdict, only "we couldn't look". (An
+//      earlier design distinguished absence-type checks here; the verifiers
+//      rightly pointed out the uniform rule is both stricter and simpler, and a
+//      comment promising a laxer rule invites someone to implement it.)
 //   3. A required station that is ok but degraded → the check runs, and its
 //      finding is capped at degraded — partial data can support "we found X"
 //      but never a clean bill of health.

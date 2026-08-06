@@ -21,7 +21,6 @@ const cap = <T>(arr: T[], n = 5): T[] => arr.slice(0, n)
 const tech001: CheckDefinition = {
   id: 'TECH-001',
   requires: ['crawl'],
-  absenceType: false,
   evaluate: (s: StationBundle): Finding => {
     const site = s.crawl!.ok ? s.crawl!.data.site : { robotsTxt: null, sitemapUrls: [] }
     const txt = site.robotsTxt
@@ -35,14 +34,20 @@ const tech001: CheckDefinition = {
       }
     }
     // A root disallow under *, or one aimed at Googlebot, blocks the whole site.
+    // Parsed as directives (split on the first colon), not exact strings — the
+    // verification pass showed 'Disallow:/' (no space) and 'Disallow: /*' are
+    // valid, root-blocking, and slipped past an exact-match comparison.
     const lines = txt.split('\n').map((l) => l.trim().toLowerCase())
     let agentAppliesToGoogle = false
     const blockedRoots: string[] = []
     for (const line of lines) {
-      if (line.startsWith('user-agent:')) {
-        const agent = line.slice('user-agent:'.length).trim()
-        agentAppliesToGoogle = agent === '*' || agent.includes('googlebot')
-      } else if (agentAppliesToGoogle && line === 'disallow: /') {
+      const colon = line.indexOf(':')
+      if (colon === -1) continue
+      const directive = line.slice(0, colon).trim()
+      const value = line.slice(colon + 1).trim()
+      if (directive === 'user-agent') {
+        agentAppliesToGoogle = value === '*' || value.includes('googlebot')
+      } else if (agentAppliesToGoogle && directive === 'disallow' && (value === '/' || value === '/*')) {
         blockedRoots.push(line)
       }
     }
@@ -71,7 +76,6 @@ const tech001: CheckDefinition = {
 const onpage003: CheckDefinition = {
   id: 'ONPAGE-003',
   requires: ['crawl'],
-  absenceType: false,
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
     const affected = pages.filter((p) => p.h1s.length !== 1)
@@ -102,7 +106,6 @@ const onpage003: CheckDefinition = {
 const tech011: CheckDefinition = {
   id: 'TECH-011',
   requires: ['crawl'],
-  absenceType: false,
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
     const affected = pages.filter((p) => !p.hasViewportMeta || !p.tapTargetsOk)
@@ -132,7 +135,6 @@ const tech011: CheckDefinition = {
 const meas001: CheckDefinition = {
   id: 'MEAS-001',
   requires: ['crawl'],
-  absenceType: false,
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
     const untagged = pages.filter((p) => !p.analytics.ga4 && !p.analytics.gtm)
@@ -181,29 +183,37 @@ const CANNIBAL_MIN_IMPRESSIONS = 50
 const onpage006: CheckDefinition = {
   id: 'ONPAGE-006',
   requires: ['gsc'],
-  // The defining absence-type check: zero rows must read as "couldn't look",
-  // never as "no cannibalisation". The engine enforces it; the flag documents it.
-  absenceType: true,
+  // Zero rows must read as "couldn't look", never as "no cannibalisation" — the
+  // engine's empty-station rule enforces that for every check.
   evaluate: (s): Finding => {
     const rows = s.gsc!.ok ? s.gsc!.data : []
-    const byQuery = new Map<string, Set<string>>()
+    // Group ALL rows first, then apply the noise floor to the CLUSTER's strongest
+    // row — not per row. Google suppresses the losing page in a cannibalised
+    // pair, so the loser often sits below any per-row floor; dropping it row-by-
+    // row hid exactly the page that proves the conflict.
+    const byQuery = new Map<string, { pages: Set<string>; maxImpressions: number }>()
     for (const r of rows as GSCRow[]) {
-      if (r.impressions < CANNIBAL_MIN_IMPRESSIONS) continue
       const q = r.query.trim().toLowerCase()
-      if (!byQuery.has(q)) byQuery.set(q, new Set())
-      byQuery.get(q)!.add(r.page)
+      const entry = byQuery.get(q) ?? { pages: new Set<string>(), maxImpressions: 0 }
+      entry.pages.add(r.page)
+      entry.maxImpressions = Math.max(entry.maxImpressions, r.impressions)
+      byQuery.set(q, entry)
     }
-    const clusters = Array.from(byQuery.entries()).filter(([, pages]) => pages.size >= 2)
-    // One multi-URL query can be a legitimate variant; a pattern of them is two
-    // page generations fighting (the Tornado root cause).
-    if (clusters.length >= 2) {
+    const clusters = Array.from(byQuery.entries()).filter(
+      ([, e]) => e.pages.size >= 2 && e.maxImpressions >= CANNIBAL_MIN_IMPRESSIONS,
+    )
+    const worst = clusters.reduce((m, [, e]) => Math.max(m, e.pages.size), 0)
+    // One 2-URL query can be a legitimate variant; a PATTERN of them — or a single
+    // query with 3+ competing URLs (Tornado had one at four) — is two page
+    // generations fighting.
+    if (clusters.length >= 2 || worst >= 3) {
       return {
         checkId: 'ONPAGE-006',
         status: 'fail',
         evidence: {
           value: clusters.length,
-          detail: `${clusters.length} queries have 2+ pages competing for the same intent.`,
-          examples: cap(clusters.map(([q, pages]) => `"${q}" → ${pages.size} URLs`)),
+          detail: `${clusters.length} queries have 2+ pages competing for the same intent (worst: ${worst} URLs on one query).`,
+          examples: cap(clusters.map(([q, e]) => `"${q}" → ${e.pages.size} URLs`)),
         },
         source: 'gsc',
       }
@@ -212,7 +222,7 @@ const onpage006: CheckDefinition = {
       checkId: 'ONPAGE-006',
       status: 'pass',
       evidence: {
-        detail: `No query above ${CANNIBAL_MIN_IMPRESSIONS} impressions ranks more than one URL.`,
+        detail: `No pattern of queries above ${CANNIBAL_MIN_IMPRESSIONS} impressions ranks multiple URLs.`,
       },
       source: 'gsc',
     }
@@ -224,7 +234,6 @@ const onpage006: CheckDefinition = {
 const local016: CheckDefinition = {
   id: 'LOCAL-016',
   requires: ['crawl', 'gbp'],
-  absenceType: false,
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
     const gbp = s.gbp!.ok ? s.gbp!.data : null
@@ -271,7 +280,6 @@ const local016: CheckDefinition = {
 const local003: CheckDefinition = {
   id: 'LOCAL-003',
   requires: ['gbp'],
-  absenceType: false,
   evaluate: (s): Finding => {
     const gbp = s.gbp!.ok ? s.gbp!.data : null
     if (!gbp) {
@@ -283,11 +291,15 @@ const local003: CheckDefinition = {
         reason: 'GBP profile unavailable',
       }
     }
+    // trim(): an ingester that defaults absent API fields to '' or '  ' must not
+    // read as complete. Real placeholder validation ('N/A') belongs to the
+    // phase-3 ingest boundary; whitespace is the cheap floor we hold here.
+    const blank = (v: string | null) => !v || v.trim().length === 0
     const missing: string[] = []
     if (!gbp.hoursComplete) missing.push('hours')
-    if (!gbp.phone) missing.push('phone')
-    if (!gbp.websiteUri) missing.push('website')
-    if (!gbp.description) missing.push('description')
+    if (blank(gbp.phone)) missing.push('phone')
+    if (blank(gbp.websiteUri)) missing.push('website')
+    if (blank(gbp.description)) missing.push('description')
     if (gbp.photoCount < 3) missing.push('photos')
     // THE §9 FALSE POSITIVE, FIXED AT THE DETECTOR: a service-area business with a
     // hidden storefront address is configured CORRECTLY — Google tells SABs to
@@ -333,3 +345,9 @@ export const CHECKS: CheckDefinition[] = [
 ]
 
 export const CHECK_IDS = new Set(CHECKS.map((c) => c.id))
+
+// A duplicated check id would let scoring's byId map silently keep only the last
+// finding — a benign duplicate could mask a real fail. Refuse to load instead.
+if (CHECK_IDS.size !== CHECKS.length) {
+  throw new Error('Duplicate check id registered in lib/findings/checks.ts')
+}

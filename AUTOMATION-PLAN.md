@@ -3,7 +3,7 @@
 Execution plan against `AUTOMATION-CONTEXT.md` §14. That document is the source of
 truth for *why*; this one tracks *where we are* and *what's left*.
 
-Last updated: 2026-08-05.
+Last updated: 2026-08-06.
 
 ---
 
@@ -11,14 +11,16 @@ Last updated: 2026-08-05.
 
 | | |
 |---|---|
-| **Production** (`main` = `b6524be`) | Rebrand stages 1–3 · phase 1 onboarding · auto-fill · paper login |
-| **Branch** `feature/tool-registry-and-findings` (2 commits, unmerged) | Phase 2 foundation · GSC primitive · dev/build `distDir` fix |
-| **Phase progress** | 1 of 9 complete · phase 2 roughly 20% |
+| **Production** (`main` = `b0a77b5`) | Rebrand stages 1–6 complete · phase 1 onboarding · callable-tool foundation |
+| **Branch** `phase2/callable-tools` (3 commits, unmerged) | Phase 2 complete: 8 callable tools · the 80-check rubric archived as data |
+| **Branch** `phase6/eval-harness` (off phase2, unmerged) | Eval harness slice 1: findings engine, 7 detectors, 2 fixtures, loader, scorer, hard gate |
+| **Phase progress** | 1, 2 complete · 3 started (the 7 detectors ARE the first derived analyses) · 6 slice 1 built |
 
-**Phase 1 has still never been exercised by a human.** No interview has been run,
-no draft approved, and discovery's live Google call has never fired. Every layer
-below the API response has tests; the call itself is untried. This is the single
-oldest open item and it needs one login from Matt.
+**The golden set is no longer requested.** The eval harness was redesigned around
+substitutes (seeded fixtures, the documented Tornado audit, the future review-gate
+flywheel, a deferred outcome loop), adversarially critiqued by three independent
+reviewers, and slice 1 is built and verified. What §14 called the long pole is off
+Matt's plate.
 
 ---
 

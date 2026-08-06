@@ -24,6 +24,7 @@ export type FailureKind =
   | 'must-not-find-not-run' // the FP guard was never exercised
   | 'must-pass-failed'
   | 'finding-absent' // no finding at all for a referenced check
+  | 'duplicate-finding' // two findings share a checkId; byId would keep the last
 
 export interface CaseFailure {
   kind: FailureKind
@@ -50,8 +51,11 @@ function magnitudeFailure(entry: MustFindEntry, finding: Finding): CaseFailure |
       detail: `expected evidence.${metric} ≈ ${expected}, but the finding carries no ${metric}`,
     }
   }
-  const band = (expected * tolerancePct) / 100
-  if (actual < expected - band || actual > expected + band) {
+  // Positive assertion, so NaN/Infinity fail closed — `NaN < x` is false in both
+  // directions, and the negative form scored a NaN magnitude as satisfied.
+  const band = Math.abs((expected * tolerancePct) / 100)
+  const within = Number.isFinite(actual) && actual >= expected - band && actual <= expected + band
+  if (!within) {
     return {
       kind: 'magnitude',
       checkId: entry.id,
@@ -65,6 +69,21 @@ export function scoreCase(manifest: EvalManifest, findings: Finding[]): CaseResu
   const byId = new Map(findings.map((f) => [f.checkId, f]))
   const failures: CaseFailure[] = []
   let satisfied = 0
+
+  // byId keeps the LAST finding per id, so a duplicated id could let a benign
+  // duplicate shadow a real fail. Duplicates are a scored failure, not a silent
+  // last-wins.
+  const seen = new Set<string>()
+  for (const f of findings) {
+    if (seen.has(f.checkId)) {
+      failures.push({
+        kind: 'duplicate-finding',
+        checkId: f.checkId,
+        detail: 'two findings share this checkId; the run is ambiguous',
+      })
+    }
+    seen.add(f.checkId)
+  }
 
   for (const entry of manifest.must_find) {
     const finding = byId.get(entry.id)

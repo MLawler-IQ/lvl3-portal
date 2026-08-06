@@ -57,13 +57,6 @@ export interface CheckDefinition {
   /** Stations this check reads. All must be ok (and non-empty) to evaluate. */
   requires: StationName[]
   /**
-   * True when the check infers health from ABSENCE (cannibalisation: "no query
-   * has two ranking URLs"). Absence-type checks are the ones an empty station
-   * would silently green-light, so the engine forces them to not_run on empty
-   * data instead of letting them pass.
-   */
-  absenceType: boolean
-  /**
    * Runs only after the engine has verified every required station is present,
    * ok, and non-empty — so the body can read `stations.crawl!.data` without
    * re-checking. The engine, not the check, owns the not_run rules.

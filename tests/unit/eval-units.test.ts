@@ -40,7 +40,6 @@ describe('engine station gating', () => {
   const dummy: CheckDefinition = {
     id: 'DUMMY-001',
     requires: ['gsc'],
-    absenceType: true,
     evaluate: () => ({
       checkId: 'DUMMY-001',
       status: 'pass',
@@ -89,6 +88,45 @@ describe('engine station gating', () => {
   })
 })
 
+describe('TECH-001: robots blocking — fail path', () => {
+  // The fail path had zero coverage: both fixtures carry benign robots.txt, so
+  // the detector could rot to a stub with the suite green.
+  const run = (robotsTxt: string) =>
+    runChecks([check('TECH-001')], {
+      crawl: toolOk(
+        {
+          site: { robotsTxt, sitemapUrls: [] },
+          pages: [
+            {
+              url: 'https://t.example/', status: 200, title: 't', metaDescription: 'd',
+              h1s: ['h'], canonical: null, robotsMeta: '', hasViewportMeta: true,
+              tapTargetsOk: true, analytics: { ga4: true, gtm: false },
+              internalLinksOut: 1, wordCount: 500, templateGroup: null, targetGeo: null,
+            },
+          ],
+        },
+        { sources: ['crawl'] },
+      ),
+    })[0]
+
+  it('fails on a root disallow under *', () => {
+    expect(run('User-agent: *\nDisallow: /').status).toBe('fail')
+  })
+
+  it('fails on a Googlebot-targeted root disallow', () => {
+    expect(run('User-agent: Googlebot\nDisallow: /').status).toBe('fail')
+  })
+
+  it('catches the no-space and wildcard spellings', () => {
+    expect(run('User-agent: *\nDisallow:/').status).toBe('fail')
+    expect(run('User-agent: *\nDisallow: /*').status).toBe('fail')
+  })
+
+  it('passes a scoped disallow', () => {
+    expect(run('User-agent: *\nDisallow: /wp-admin/').status).toBe('pass')
+  })
+})
+
 describe('LOCAL-003: the SAB false-positive guard', () => {
   const run = (profile: GbpProfileRecord) =>
     runChecks([check('LOCAL-003')], { gbp: toolOk(profile, { sources: ['gbp'] }) })[0]
@@ -111,15 +149,44 @@ describe('LOCAL-003: the SAB false-positive guard', () => {
     expect(f.evidence.detail).toContain('phone')
     expect(f.evidence.detail).not.toContain('storefront address')
   })
+
+  it('whitespace placeholders count as missing, not complete', () => {
+    const f = run(gbpProfile({ phone: '  ', description: '' }))
+    expect(f.status).toBe('fail')
+    expect(f.evidence.detail).toContain('phone')
+    expect(f.evidence.detail).toContain('description')
+  })
 })
 
 describe('ONPAGE-006: cannibalisation thresholds', () => {
   const run = (rows: GSCRow[]) =>
     runChecks([check('ONPAGE-006')], { gsc: toolOk(rows, { sources: ['gsc'] }) })[0]
 
-  it('ignores rows under the impression floor', () => {
+  it('ignores clusters whose strongest row is under the impression floor', () => {
     const f = run([gscRow('same query', '/a', 40), gscRow('same query', '/b', 30)])
     expect(f.status).toBe('pass')
+  })
+
+  it('keeps the suppressed loser: the floor applies to the cluster, not the row', () => {
+    // Google suppresses the losing page in a cannibalised pair, so the loser
+    // often sits below any per-row floor. Two such clusters must still fail.
+    const f = run([
+      gscRow('q1', '/winner-1', 5000),
+      gscRow('q1', '/loser-1', 12),
+      gscRow('q2', '/winner-2', 900),
+      gscRow('q2', '/loser-2', 8),
+    ])
+    expect(f.status).toBe('fail')
+    expect(f.evidence.value).toBe(2)
+  })
+
+  it('fails a SINGLE cluster once three or more URLs compete', () => {
+    const f = run([
+      gscRow('money query', '/a', 400),
+      gscRow('money query', '/b', 100),
+      gscRow('money query', '/c', 60),
+    ])
+    expect(f.status).toBe('fail')
   })
 
   it('tolerates a single multi-URL query as a possible variant', () => {
@@ -181,7 +248,7 @@ describe('citationValidity', () => {
   const manifest: EvalManifest = {
     case: 't',
     description: 'd',
-    must_find: [{ id: 'ONPAGE-003' }],
+    must_find: [{ id: 'ONPAGE-003', magnitude: { metric: 'affectedUrls' as const, expected: 191, tolerancePct: 0 } }],
     must_not_find: ['LOCAL-003'],
     must_pass: [],
   }
