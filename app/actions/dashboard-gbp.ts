@@ -7,6 +7,7 @@ import type { GBPInsightsGranularity } from '@/lib/connectors/gbp'
 import {
   fetchGBPClientInsights,
   auditGBPAccount,
+  decideGBPScope,
   type GBPClientInsights,
   type GBPAccountAudit,
 } from '@/lib/connectors/gbp'
@@ -63,7 +64,7 @@ export async function fetchDashboardGBP(
     const service = await createServiceClient()
     const { data: client } = await service
       .from('clients')
-      .select('gbp_account_id')
+      .select('gbp_account_id, gbp_location_group')
       .eq('id', clientId)
       .single()
 
@@ -73,11 +74,29 @@ export async function fetchDashboardGBP(
       return { configured: false }
     }
 
+    // FAIL CLOSED on an unscoped account.
+    //
+    // This used to read gbp_account_id alone and list every location under it. On a
+    // shared container that rendered another brand's locations inside this brand's
+    // leaderboard — and `showGbp` is gated by client_type, not by role, so a client login
+    // would have seen it. gbp_location_group was collected by onboarding and the settings
+    // form and read by no query anywhere; this is the first read.
+    const scope = decideGBPScope(accountName, client?.gbp_location_group as string | null)
+    if (!scope.ok) {
+      return {
+        configured: false,
+        error:
+          'GBP location scope not configured. Set the client\'s Location Group to a ' +
+          '"accounts/..." location group, or to "*" to confirm the whole account belongs ' +
+          'to this client.',
+      }
+    }
+
     const range = buildDateRange(opts?.period, opts?.compare)
 
     const [insightsResult, auditResult] = await Promise.allSettled([
-      fetchGBPClientInsights(accountName, range, { granularity: opts?.granularity }),
-      auditGBPAccount(accountName),
+      fetchGBPClientInsights(scope.parent, range, { granularity: opts?.granularity }),
+      auditGBPAccount(scope.parent),
     ])
 
     const insights =

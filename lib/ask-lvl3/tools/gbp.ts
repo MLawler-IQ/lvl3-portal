@@ -67,6 +67,16 @@ Workflow: call list_gbp_accounts first to get an accountName, then pass it here.
       const titleFilter = ((input.titleFilter as string) ?? '').trim().toLowerCase()
       const limit = Math.min(Math.max((input.limit as number) ?? 50, 1), 500)
 
+      // DELIBERATELY ACCOUNT-WIDE, and safe only because Ask LVL3 is admin-only.
+      //
+      // This is the call AUTOMATION-CONTEXT.md section 16 recorded returning 50
+      // locations aggregated across every client with no identifiers in the output.
+      // It stays account-wide because an admin exploring a container is the tool's
+      // purpose — but `accountName` comes from the MODEL's input, not from the
+      // selected client, so this must not feed automated or client-facing reporting.
+      // The client-facing path (app/actions/dashboard-gbp.ts) goes through
+      // decideGBPScope and fails closed. This one does not, and must not be reused
+      // as if it did.
       const all = await listGBPLocations(accountName, ctx.gbpAuth)
       if (all.length === 0) return 'No locations found in this account.'
 

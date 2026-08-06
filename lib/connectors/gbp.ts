@@ -104,6 +104,61 @@ const LOCATION_READ_MASK = [
   'metadata',
 ].join(',')
 
+/** Whether a location list was narrowed to one client, or is a whole account. */
+export type GBPLocationScope = 'group' | 'account-wide'
+
+export type GBPScopeDecision =
+  | { ok: true; parent: string; scope: GBPLocationScope }
+  | { ok: false; reason: 'gbp_scope_unconfigured'; configured: string | null }
+
+/**
+ * Decide whether this client's GBP reads may run, and against what parent. FAIL-CLOSED.
+ *
+ * The hole this closes: dashboard-gbp read only `gbp_account_id` and listed every
+ * location under it. On a shared container that means one brand's dashboard ranked
+ * another brand's locations, cached 18h under a key with no scope in it, on a surface
+ * gated by `client_type` rather than by role — so a client login would have seen it.
+ *
+ * `clients.gbp_location_group` could not be used as a filter to fix it. Its meaning was
+ * never pinned down: the column comment calls it a "location-group / label filter", while
+ * the onboarding test expects the stored value `'Ungrouped'` — Business Profile Manager's
+ * name for locations in NO group. Matching locations against a label called 'Ungrouped'
+ * returns nothing, which would trade an over-permissive bug for a silently empty
+ * dashboard. Filtering on each location's own `labels` is not available either: that
+ * field is absent from LOCATION_READ_MASK, and adding it is unverified against the live
+ * API, where an invalid readMask field is a 400 on every GBP call.
+ *
+ * So this refuses to read an account it cannot prove belongs to this client, and makes
+ * the admin state which case applies:
+ *
+ *   "accounts/..."  a location-group sub-account, used as the list parent so the API
+ *                   itself returns only that group. The correct long-term form.
+ *   "*"             an explicit assertion that the WHOLE account is this client's.
+ *                   Needed for a single-client account and for a multi_location brand
+ *                   that owns every location in its own account — faulting correct
+ *                   configuration is its own failure mode, so saying "this is fine" has
+ *                   to be possible, and has to be deliberate.
+ *   anything else   not a usable scope. Refuse.
+ *   null            not a usable scope. Refuse.
+ */
+export function decideGBPScope(
+  accountName: string,
+  locationGroup: string | null | undefined,
+): GBPScopeDecision {
+  const group = locationGroup?.trim() || null
+  if (group === '*') return { ok: true, parent: accountName, scope: 'account-wide' }
+  if (group && group.startsWith('accounts/')) return { ok: true, parent: group, scope: 'group' }
+  return { ok: false, reason: 'gbp_scope_unconfigured', configured: group }
+}
+
+/**
+ * Every location under `accountName`, UNSCOPED.
+ *
+ * Account-wide by design, and correct for the admin-only callers that genuinely want the
+ * whole container: onboarding discovery and the GBP Audit tool. Any path that renders
+ * data attributed to ONE client must go through decideGBPScope first — see
+ * fetchGBPClientInsights and auditGBPAccount, which do.
+ */
 export async function listGBPLocations(
   accountName: string,
   auth: OAuth2Client,
@@ -475,7 +530,9 @@ export async function fetchGBPClientInsights(
 ): Promise<GBPClientInsights> {
   const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h — within the 12–24h band
   const cacheKey = [
-    'gbp:client-insights:v2', // v2: rows carry locality/administrativeArea
+    // v3: callers now pass a SCOPED parent (see decideGBPScope). Bumped so the 18h
+    // unscoped entries written before that change are never served.
+    'gbp:client-insights:v3',
     accountName,
     range.startDate,
     range.endDate,
@@ -588,7 +645,8 @@ export async function auditGBPAccount(
   opts: { ttlSeconds?: number } = {},
 ): Promise<GBPAccountAudit> {
   const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h
-  const cacheKey = `gbp:account-audit:${accountName}`
+  // v2: same reason as client-insights above — accountName is now a scoped parent.
+  const cacheKey = `gbp:account-audit:v2:${accountName}`
 
   return cachedFetch(cacheKey, ttlSeconds, async () => {
     const auth = await getAdminGBPOAuthClient()
