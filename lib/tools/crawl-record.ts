@@ -42,8 +42,15 @@ export interface CrawlPageRecord {
     ga4: boolean | null
     gtm: boolean | null
   }
-  /** Outbound internal links from this page. */
-  internalLinksOut: number
+  /**
+   * Outbound internal links from this page. `null` means not measured.
+   *
+   * A Sitebulb URL-list export carries `No. Internal Linking URLs` (INBOUND) but no
+   * outbound count, so an ingester working from one cannot supply this. Nullable rather
+   * than defaulted to 0, because a 0 here is a real signal — an orphaned dead end — and
+   * must not be manufactured out of a missing column.
+   */
+  internalLinksOut: number | null
   /**
    * INBOUND internal links to this page.
    *

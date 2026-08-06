@@ -37,7 +37,8 @@ export interface CohortMetric {
   key: string
   /** Client-readable name, used verbatim in the detail string. */
   label: string
-  of: (page: CrawlPageRecord) => number
+  /** `null` when the crawl did not measure this signal for this page. */
+  of: (page: CrawlPageRecord) => number | null
 }
 
 export interface CohortStat {
@@ -173,8 +174,14 @@ export function visibilityCohorts(
   const comparable = earning.length > 0 && invisible.length > 0 && metrics.length > 0
   const comparisons: CohortComparison[] = comparable
     ? metrics.map((metric) => {
-        const earningStat = statOf(earning.map(metric.of))
-        const invisibleStat = statOf(invisible.map(metric.of))
+        // Pages the crawl did not measure this signal for are dropped from the
+        // comparison rather than counted as 0 — a 0 would move the median and invent a
+        // difference between the cohorts. `n` on each stat already reports how many
+        // pages actually backed the number.
+        const measuredOf = (list: readonly CrawlPageRecord[]): number[] =>
+          list.map(metric.of).filter((v): v is number => v !== null)
+        const earningStat = statOf(measuredOf(earning))
+        const invisibleStat = statOf(measuredOf(invisible))
         const gap = relativeGap(earningStat.median, invisibleStat.median)
         return {
           metric: metric.key,

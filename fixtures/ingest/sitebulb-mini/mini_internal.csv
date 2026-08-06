@@ -1,0 +1,7 @@
+﻿"URL","HTTP Status Code","Title","Meta Description","H1","No. H1s","No. Content Words","No. Template Words","No. Words","No. Internal Linking URLs",
+"https://m.test/","200","Home","Welcome, friend","Home","1","900","600","1500","12",
+"https://m.test/service/ac-repair-in-pasadena/","200","AC Repair in Pasadena | M","Fast, local AC repair","AC Repair in Pasadena","1","400","3551","3951","186",
+"https://m.test/service/ac-repair-in-glendale/","200","AC Repair in Glendale, CA | M","Fast, local AC repair","","0","380","3551","3931","186",
+"https://m.test/two-h1s/","200","Two","Two headings","First H1","2","500","500","1000","4",
+"https://m.test/unmeasured/","200","Unmeasured","No words counted","Unmeasured","1","--","--","--","2",
+"https://m.test/gone/","404","","","","0","--","--","--","0",

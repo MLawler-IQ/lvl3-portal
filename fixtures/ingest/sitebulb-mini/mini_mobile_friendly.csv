@@ -1,0 +1,5 @@
+"URL","Missing Viewport","Small Tap Targets",
+"https://m.test/","No","No",
+"https://m.test/service/ac-repair-in-pasadena/","No","Yes",
+"https://m.test/service/ac-repair-in-glendale/","Yes","No",
+"https://m.test/two-h1s/","No","No",
