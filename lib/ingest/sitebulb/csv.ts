@@ -14,8 +14,12 @@
 // A note on `-1`: it is NOT a missing value. `max-snippet: -1` is a real robots
 // directive, and Sitebulb writes the absent case as `--`. The two are different
 // and `num()` keeps them different.
-
-import { readFile } from 'fs/promises'
+//
+// THIS MODULE DOES NO IO. It parses text handed to it. Reading is
+// ./source.ts's job, so an export can be a directory, a zip's buffers or a map
+// built by a test — see the header there. A readCsvTable(path) used to live here;
+// it is gone, because leaving a filesystem reader in this file is how the next
+// caller bypasses the seam and gets code that works locally and fails on Vercel.
 
 /** Sitebulb's missing-value sentinel. */
 export const SITEBULB_MISSING = '--'
@@ -118,11 +122,6 @@ export function toTable(grid: string[][]): CsvTable {
     rows.push(out)
   }
   return { header: header.filter((h) => h.length > 0), rows, emptyReason: null }
-}
-
-/** Read and parse one CSV. Throws only on unreadable files; callers catch. */
-export async function readCsvTable(file: string): Promise<CsvTable> {
-  return toTable(parseCsv(await readFile(file, 'utf8')))
 }
 
 /**
