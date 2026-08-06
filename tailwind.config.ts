@@ -53,10 +53,12 @@ const config: Config = {
           800: 'rgb(var(--brand-800) / <alpha-value>)',
           900: 'rgb(var(--brand-900) / <alpha-value>)',
         },
-        // Status colors — semantic tokens
-        error:   'var(--color-error)',
-        warning: 'var(--color-warning)',
-        success: 'var(--color-success)',
+        // Status colors — semantic tokens.
+        // Triplet form so alpha modifiers work: `bg-error/15`, `border-error/20`.
+        // A bare var() here drops the slash silently and renders opaque.
+        error:   'rgb(var(--status-error) / <alpha-value>)',
+        warning: 'rgb(var(--status-warning) / <alpha-value>)',
+        success: 'rgb(var(--status-success) / <alpha-value>)',
       },
       // The editorial system is 2px everywhere; nothing rounder. Overriding the
       // whole scale re-shapes all 127 files of rounded-* utilities without a

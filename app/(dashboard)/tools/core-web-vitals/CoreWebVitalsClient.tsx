@@ -148,11 +148,9 @@ export default function CoreWebVitalsClient() {
               </span>
             </div>
             <div
-              className="text-xs font-medium px-2 py-1 rounded-full inline-block"
-              style={{
-                color: statusColor(result.cwv_pass ? 'success' : 'error'),
-                backgroundColor: result.cwv_pass ? 'var(--color-success-bg, rgba(34,197,94,0.12))' : 'var(--color-error-bg, rgba(239,68,68,0.12))',
-              }}
+              className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${
+                result.cwv_pass ? 'bg-success/10 text-success' : 'bg-error/10 text-error'
+              }`}
             >
               CWV Assessment: {result.cwv_pass ? 'PASS' : 'FAIL'}
             </div>

@@ -63,16 +63,30 @@
   --color-card:      rgb(var(--surface-900));         /* was hardcoded white */
 
   /* ── Status colors (ink-tuned; never reused as chart series;
-     always shipped with an icon AND a label) ─────────── */
-  --color-error:   #F2555A;   /* 5.1:1 on surface-900 */
-  --color-warning: #E3B341;   /* 8.9:1 on surface-900 */
-  --color-success: #7FB069;   /* 6.9:1 on surface-900 */
+     always shipped with an icon AND a label) ───────────
+     RGB TRIPLETS are the source of truth, so tailwind.config.ts can consume
+     them as `rgb(var(--status-error) / <alpha-value>)` and `bg-error/15` works.
+     Before this they were hex-only and bound to a bare `var()`, which made the
+     alpha modifier compile with the slash silently dropped — every tinted
+     status chip would have shipped as a solid block of colour. Two earlier
+     workarounds existed for exactly that (a color-mix var block here, and
+     inline color-mix in StatusBadge); both are now deleted rather than a third
+     being added. */
+  --status-error:   242 85 90;    /* #F2555A  5.1:1 on surface-900 */
+  --status-warning: 227 179 65;   /* #E3B341  8.9:1 on surface-900 */
+  --status-success: 127 176 105;  /* #7FB069  6.9:1 on surface-900 */
 
-  /* Status tints. These were referenced by CoreWebVitalsClient before they
-     existed, so its inline rgba() fallbacks fired and rendered off-palette. */
-  --color-error-bg:   color-mix(in srgb, var(--color-error) 12%, transparent);
-  --color-warning-bg: color-mix(in srgb, var(--color-warning) 12%, transparent);
-  --color-success-bg: color-mix(in srgb, var(--color-success) 12%, transparent);
+  /* Resolved forms, for the non-Tailwind consumers that read them directly
+     (lib/status-color.ts, inline styles, chart config). Derived, so there is
+     one place to edit. */
+  --color-error:   rgb(var(--status-error));
+  --color-warning: rgb(var(--status-warning));
+  --color-success: rgb(var(--status-success));
+
+  /* The --color-*-bg color-mix tints that used to live here are gone: their one
+     consumer (CoreWebVitalsClient) now uses bg-success/10 and bg-error/10,
+     which the triplets above finally make possible. Note /10 not /12 — 12 is
+     not a step on Tailwind's default opacity scale and compiles to nothing. */
 
   /* ── Nav tokens (ink) ───────────────────────────────── */
   --nav-bg:          rgb(var(--surface-950));  /* unified with the sidebar + canvas; the hairline separates */

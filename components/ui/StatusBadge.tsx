@@ -48,12 +48,7 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   if (variant === "complete") {
     return (
       <span
-        className={`${BASE} border ${className}`}
-        style={{
-          backgroundColor: "color-mix(in srgb, var(--color-success) 10%, transparent)",
-          color: "var(--color-success)",
-          borderColor: "color-mix(in srgb, var(--color-success) 20%, transparent)",
-        }}
+        className={`${BASE} border bg-success/10 text-success border-success/20 ${className}`}
       >
         Complete
       </span>
@@ -63,12 +58,7 @@ export function RunStatusBadge({ variant, className = "" }: RunStatusBadgeProps)
   if (variant === "failed") {
     return (
       <span
-        className={`${BASE} border ${className}`}
-        style={{
-          backgroundColor: "color-mix(in srgb, var(--color-error) 10%, transparent)",
-          color: "var(--color-error)",
-          borderColor: "color-mix(in srgb, var(--color-error) 20%, transparent)",
-        }}
+        className={`${BASE} border bg-error/10 text-error border-error/20 ${className}`}
       >
         Failed
       </span>
