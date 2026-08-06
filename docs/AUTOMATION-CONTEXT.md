@@ -410,6 +410,13 @@ Output becomes structured client context (extending `brand_context`) that ground
 
 ## 14. Recommended build order
 
+> **Superseded by [AUTOMATION-PLAN.md](AUTOMATION-PLAN.md).** That file is the working
+> plan — its seven slices are what actually gets built, and where the two disagree the
+> plan wins. This section is retained as the historical rationale: it records why the
+> ordering was risk-first rather than the order the owner listed, and the plan's
+> "Deliberately not building" section argues against several of the phases below by
+> number. Do not treat the table as a queue.
+
 Not the order the owner listed. Ordered by risk and by what unblocks what.
 
 | # | Phase | Rationale |

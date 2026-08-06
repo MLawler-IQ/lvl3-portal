@@ -154,6 +154,8 @@ Specs in `design-system/DESIGN.md`.
 - `.claude/CLAUDE-google-api.md` — Google API auth (OAuth2 vs service account)
 - `.claude/CLAUDE-seo-tools.md` — SEO tools, Ask LVL3, dashboard date range
 - `.claude/CLAUDE-infra.md` — Hosting, DNS (Cloudflare), Vercel, Supabase, OAuth, domain-cutover state
+- `docs/AUTOMATION-CONTEXT.md` — SEO audit automation: goal, rubric, target architecture, failure modes
+- `docs/AUTOMATION-PLAN.md` — the slice-by-slice build plan for that pipeline. Supersedes AUTOMATION-CONTEXT §14's ordering; one slice per session
 
 ---
 
