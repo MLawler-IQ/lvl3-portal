@@ -141,7 +141,18 @@ Cited research, current as of August 2026. Full detail and sources in the compan
 
 ## 7. The audit rubric
 
-A 78-check rubric was produced covering technical SEO, on-page, local search, generative engine optimization, CRO, authority/off-site, and measurement readiness. Every check carries: id, check description, **the client outcome it protects**, how to test it, automation tier (auto/assisted/manual), pass/fail criteria, revenue-weighted severity, and effort to fix.
+An **80**-check rubric was produced covering technical SEO, on-page, local search, generative engine optimization, CRO, authority/off-site, and measurement readiness. Every check carries: id, category, check description, **the client outcome it protects**, how to test it, automation tier (auto/assisted/manual), revenue-weighted severity, effort to fix, and two applicability flags.
+
+> **Correction (2026-08-06).** This paragraph previously said 78 checks and listed
+> **pass/fail criteria** among the fields. `docs/rubric/rubric.json` has **80** rows and
+> **no row carries a pass/fail-criteria field** — verified across all 80. That matters
+> beyond bookkeeping: it is the sentence that would let a future author believe a
+> numeric threshold was licensed by the rubric when it is not. Where a check needs a
+> cutoff, the rubric constrains it at most from one side (ONPAGE-012's note "Tornado
+> median was 29% unique / 71% template" is an OBSERVATION that must be caught, not a
+> line to sit on), and the chosen number must be marked as ours at its definition — the
+> pattern `lib/scoring/config.ts` and
+> `lib/findings/analyses/content-template-ratio.ts` both follow.
 
 Design rules baked in:
 - **If a check cannot name the outcome it protects, it gets deleted.** This is the rule that keeps the rubric from becoming audit theater.

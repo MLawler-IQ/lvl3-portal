@@ -221,11 +221,10 @@ describe('impact bases — the arithmetic, hand-checked', () => {
 })
 
 describe('basis resolution', () => {
-  it('carries a rule for ONPAGE-012 ahead of its registration in checks.ts', () => {
-    // The detector exists in lib/findings/detectors/ and is destined for the
-    // registry. Landing the rule early means registration cannot fall through to
-    // the category-derived fallback — but it WILL require re-baselining both
-    // scoring snapshots, deliberately.
+  it('carries an explicit rule for ONPAGE-012 rather than the category fallback', () => {
+    // Landed ahead of the detector's registration so registration could not silently
+    // fall through to the category-derived fallback. Both the registration and the
+    // snapshot re-baselining have since happened.
     expect(basisRuleFor('ONPAGE-012')).toEqual({ basis: 'template_fix', magnitude: 'affectedUrls' })
   })
 

@@ -109,11 +109,14 @@ export function deriveTargetGeo(url: string, title: string): string | null {
  * a pile of one-offs.
  *
  * Deliberately NOT the same algorithm as
- * lib/findings/analyses/template-groups.ts, which derives its own grouping from
- * URL strings alone and does its own numeric-segment collapsing. That file's
- * comment explains why the two are independent: the ingester's value is only as
- * good as the crawl's configuration, so an independent derivation is a
- * cross-check rather than a duplicate. Divergence between them is a signal.
+ * lib/findings/analyses/template-groups.ts, which does its own numeric-segment
+ * collapsing. Divergence between them is a signal — but not for the reason this comment
+ * used to give. Both derive from URL strings, so this is not an independent DATA SOURCE;
+ * the crawl's configuration has nothing to do with it. The genuine difference is
+ * algorithmic: on /blog/2024/03/post/ this yields 'blog' while that collapses the two
+ * numeric segments into wildcards, giving a deeper pattern key.
+ * ONPAGE-012 uses the analysis, not this field, so a disagreement is reportable rather
+ * than load-bearing.
  */
 export function deriveTemplateGroup(url: string): string | null {
   const segments = pathOf(url).split('/').filter((s) => s.length > 0)

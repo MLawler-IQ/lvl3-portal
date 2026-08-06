@@ -40,21 +40,50 @@ export interface CrawlPageRecord {
    * everything — i.e. internal linking signalling no priority at all.
    */
   internalLinksIn: number
+  /**
+   * TOTAL words on the page: content PLUS template.
+   *
+   * INGESTER CONTRACT, and getting it wrong silently disables ONPAGE-012 forever:
+   *
+   *     wordCount       = Sitebulb `No. Content Words` + `No. Template Words`
+   *     uniqueWordCount = Sitebulb `No. Content Words`
+   *
+   * Map wordCount to a content-only column and uniqueShare becomes 1.0 on every page,
+   * the ratio never crosses any threshold, and the check reports a clean pass on every
+   * site with no error anywhere. There is no assertion that can catch that downstream —
+   * the numbers are individually plausible. It has to be right here.
+   *
+   * Zero means UNMEASURED, and the analysis treats it as such rather than as 0% unique;
+   * see uniqueShare in lib/findings/analyses/content-template-ratio.ts. An ingester that
+   * defaults Sitebulb's `--` to 0 fabricates a defect, which is why
+   * lib/ingest/sitebulb/csv.ts returns null for it.
+   */
   wordCount: number
   /**
-   * Words on this page that are NOT shared boilerplate with its template
-   * siblings (Sitebulb's near-duplicate / "Check Similar" data supplies this).
+   * The page's OWN words — content words, not shared with its template siblings.
    *
-   * ONPAGE-012 exists because a pure near-duplicate check PASSED Tornado while
-   * its pages were 71% boilerplate: similarity detection cannot catch content
-   * that is unique-but-worthless. uniqueWordCount / wordCount is the ratio that
-   * can.
+   * NOT from Sitebulb's near-duplicate / "Check Similar" report. An earlier version of
+   * this comment said it was; docs/sitebulb-audit-setup.md §8 revised that against the
+   * real export: ONPAGE-012 reads the content/template word split, which ships on every
+   * row with no extra configuration, and "does not depend on" Check Similar. On the
+   * pilot site `URLs with Similar Content` was 0 everywhere and it barely mattered.
+   *
+   * ONPAGE-012 exists because a pure near-duplicate check PASSED Tornado while its pages
+   * were 71% boilerplate: similarity detection cannot catch content that is
+   * unique-but-worthless. uniqueWordCount / wordCount is the ratio that can.
    */
   uniqueWordCount: number
   /**
-   * Template family this URL belongs to (path-pattern clustering), e.g.
-   * 'service-la' for /Service/x-in-los-angeles-ca/. Null for one-off pages.
-   * Feeds the template-grouping analysis and ONPAGE-012.
+   * Template family this URL belongs to, or null for a one-off page.
+   *
+   * The only implementation is deriveTemplateGroup in lib/ingest/sitebulb/geo.ts, which
+   * returns the lowercased FIRST path segment — so /Service/x-in-los-angeles-ca/ yields
+   * 'service', not 'service-la' as this comment used to claim. Only the eval fixtures
+   * ever produced the hyphenated form.
+   *
+   * Reported as a cross-check, never load-bearing: ONPAGE-012 derives its own grouping
+   * from URL paths and does NOT gate on this field. It used to, and since nothing
+   * constructs a CrawlPageRecord yet, that made the check return 0 on any real crawl.
    */
   templateGroup: string | null
   /**

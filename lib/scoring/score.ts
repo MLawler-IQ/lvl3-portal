@@ -87,12 +87,9 @@ interface BasisRule {
  * off the count of matching robots.txt lines (which is what the evidence carries)
  * would rank the site's most catastrophic possible defect near zero.
  *
- * ONPAGE-012 is here AHEAD of its registration: the detector exists in
- * lib/findings/detectors/, and its own header says checks.ts will import it. The
- * rule is landed now so that registration cannot silently fall through to the
- * category-derived fallback. Registering it WILL require re-baselining both
- * scoring snapshots — a template-dominated site gains a recommendation, which is
- * exactly the kind of change the snapshot diff exists to put in front of a human.
+ * ONPAGE-012 carries an explicit rule so it cannot fall through to the
+ * category-derived fallback. It was landed ahead of the detector's registration; both
+ * the registration and the snapshot re-baselining have since happened.
  */
 const BASIS_RULES: Readonly<Record<string, BasisRule>> = Object.freeze({
   'TECH-001': { basis: 'template_fix', magnitude: 'sitePageCount' },

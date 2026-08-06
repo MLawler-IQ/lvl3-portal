@@ -1,6 +1,16 @@
 # TECH-001 robots.txt handling — six confirmed defects
 
-**Status: OPEN. Nothing here is fixed yet.**
+**Status: ALL RESOLVED.** Six defects fixed in `df0c79e`, three defects *introduced by
+that fix* found by an adversarial spec pass and fixed in `fc2bbf1`, and the ONPAGE-012
+divergence resolved in `4053c0c`. A fresh verification pass independently re-derived all
+six original defects and confirmed each is genuinely fixed. Kept as the decision record —
+the reasoning is what stops any of this being reintroduced.
+
+Note the line references below point at code that no longer exists:
+`parseGooglebotDisallows` and `pathMatchesRule` were deleted from
+`lib/findings/checks.ts`, and the second implementation in
+`lib/eval/injectors/predicates.ts` is gone. There is now one implementation,
+`lib/robots/index.ts`, with a spec-derived suite in `tests/unit/robots.test.ts`.
 
 Recovered from a verification subagent that was killed mid-run (`stoppedByUser`) on
 2026-08-06 at 07:42 before it could report. It had confirmed 11 failing probes and was
@@ -96,7 +106,7 @@ Line 110 skips lines that *start* with `#`, but nothing strips a trailing commen
 `Disallow: /services/ # money pages` parses to the rule
 `"/services/ # money pages"`, which matches no path — a real block reported as `pass`.
 
-## Two implementations disagree with each other
+## Two implementations disagreed with each other — RESOLVED in df0c79e
 
 `lib/findings/checks.ts` and `lib/eval/injectors/predicates.ts` both implement robots
 logic, and they return **opposite** answers on the same input:
@@ -109,24 +119,64 @@ logic, and they return **opposite** answers on the same input:
 
 This is exactly the circularity the eval plan warned about: the injector predicate and
 the detector are independent implementations, so the eval gate can go green while the
-detector is wrong — or red while the detector is right. Whichever gets fixed, **both
-must end up calling one shared implementation**, which was the point of writing the
-predicates from rubric text rather than from detector code.
+detector is wrong — or red while the detector is right. Both now call one shared implementation, `lib/robots/index.ts`.
 
-## ONPAGE-012 detector and predicate also diverge
+The honest lesson, recorded because it generalises: duplicating an implementation only
+buys independence when the two authors reason differently. Both of these were written by
+the same author from the same misunderstanding, so the duplication bought a disagreement
+rather than a cross-check — and a gate whose two halves disagree carries no signal at
+all. Independence moved to a suite written from RFC 9309 and Google's published matching
+rules instead. The same call was then made for ONPAGE-012, for a stronger reason: robots
+at least had an external normative spec a second author could read, whereas the
+ONPAGE-012 rubric row states no threshold, so a second reading could only diverge.
 
-Detector reports 6 dominated pages where the predicate reports 0, across three separate
-scenarios (zero-word template family, a 0.42 median unique share sitting between the two
-thresholds, and `templateGroup: null` with URLs that group by path). The tornado
-fixture's `must_find` magnitude for ONPAGE-012 is 148 — worth re-deriving once the two
-agree, since right now they are not measuring the same thing.
+## ONPAGE-012 detector and predicate also diverged — RESOLVED in 4053c0c
 
-## Suggested order
+Reproduced exactly as documented: detector 6, predicate 0, on all three scenarios. The
+resolution went further than picking a side, because on two of the three axes *neither*
+side was right:
 
-1. ReDoS (2) — it is a hang, and the fix is self-contained.
-2. Collapse `checks.ts` and `predicates.ts` onto one robots implementation.
-3. In that shared implementation: group precedence, `Allow:` with longest-match, the
-   `Googlebot-*` distinction, multi-agent groups, inline comments, query-string rules.
-4. Re-derive the ONPAGE-012 magnitude, then re-run the eval gate.
-5. Re-run a fresh verification panel on the result — the one that found all of this never
-   finished, so **4cf0d77 has never been fully verified**.
+| axis | detector was | predicate was | resolved to |
+|---|---|---|---|
+| zero-word page | `0` (dominated) | `1` (pristine) | **excluded, counted, surfaced** — both invented a number |
+| threshold | `< 0.5` | `<= 0.35` | `< 0.5`, marked NOT IN THE RUBRIC / OURS |
+| grouping | derived from URL | required `templateGroup` | derived from URL, never gated |
+
+The root cause was not any of those. `REGISTERED_CHECK_IDS` listed 7 ids while
+`CHECK_IDS` had 8, and every generated manifest's `must_pass` is built from that list —
+so **ONPAGE-012 was asserted by no generated fixture in either variant.** The harness
+that exists to catch a disagreement could not see this one. A drift guard now asserts
+set equality.
+
+Tornado's `must_find` of 148 survives unchanged. It will become **190** when that fixture
+becomes a record-and-replay snapshot of the real export, because `wordCount` then becomes
+content+template with 3,551 template words on every row and the blog family joins.
+Re-derive at that moment as a reviewed manifest edit.
+
+## What was done, in order
+
+1. ✅ ReDoS — matching is now a regex-free segment walk. 24 wildcards against a 200-char
+   path finishes under 250 ms, versus 19.1 s at ten wildcards before.
+2. ✅ Collapsed `checks.ts` and `predicates.ts` onto `lib/robots/index.ts`.
+3. ✅ Group precedence, `Allow:` longest-match, the `Googlebot-*` distinction,
+   multi-agent groups, inline comments, query-string rules — plus case-sensitive paths.
+4. ✅ A second round from an adversarial spec pass (`fc2bbf1`): bare-`CR` line
+   terminators, percent-encoding normalised on both sides, product-token normalisation,
+   the 500 KiB parse cap, and `robotsTarget` no longer silently allowing unreadable URLs.
+5. ✅ ONPAGE-012 reconciled (`4053c0c`).
+6. ✅ Fresh verification pass completed. Gates green; it found three further defects
+   outside this document's scope — `LOCAL-016` reporting `pass` on unmeasured data and a
+   raw NUL byte in `opportunity-sizing.ts`, both fixed in `a233554`, plus a design-level
+   note that "unmeasured" is still not representable for `TECH-001` and `TECH-011`.
+
+## Still open
+
+One design gap, recorded rather than fixed: `CrawlSiteRecord.robotsTxt` is
+`string | null` with null documented as "the fetch 404'd", so a station that never
+attempted the fetch is indistinguishable from a site serving no robots.txt — and
+`TECH-001` returns `pass` for both. `TECH-011`'s `hasViewportMeta` / `tapTargetsOk` are
+non-nullable booleans with the same problem. The direction is also inconsistent across
+checks: `MEAS-001` and `LOCAL-003` default to *fail* in the same situation while these
+default to *pass*. Nothing constructs a `CrawlPageRecord` yet, so this is forward-looking
+— but it needs settling before the ingester is wired, or an ingester gap becomes a clean
+bill of health.

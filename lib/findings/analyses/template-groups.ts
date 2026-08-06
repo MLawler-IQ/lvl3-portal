@@ -8,13 +8,23 @@
 // what `templateFixLeverage` turns into the sentence a client reads.
 //
 // WHY IT DERIVES THE GROUPING ITSELF when CrawlPageRecord already carries a
-// `templateGroup` the ingester fills in: the two are deliberately independent.
-// The ingester's value comes out of Sitebulb and is therefore only as good as
-// that crawl's configuration (§9's audit shipped with Check Similar off, which is
-// how a whole class of finding went missing). This function needs nothing but a
-// list of URL strings, so it works on a partial crawl, on a GSC-only page list,
-// and — most usefully — as a cross-check on the ingester. Both eval fixtures
-// agree with it exactly today; a future divergence is a signal, not noise.
+// `templateGroup`.
+//
+// The reason is NOT that the ingester's value comes from Sitebulb and is only as good as
+// the crawl's configuration — this comment used to say that, and it is false.
+// `templateGroup` is not a Sitebulb column and never was: deriveTemplateGroup in
+// lib/ingest/sitebulb/geo.ts derives it from the URL string, exactly like this file. Both
+// consume the same input, so requiring the field would not cross-check a different data
+// source.
+//
+// The real reasons are narrower and both hold. First, this function needs nothing but a
+// list of URL strings, so it works on a partial crawl and on a GSC-only page list — and
+// nothing constructs a CrawlPageRecord yet, so a consumer that gated on the field would
+// see nothing at all. Second, the two algorithms genuinely differ: the ingester takes the
+// first path segment only, while this collapses numeric segments, so /blog/2024/03/post/
+// yields 'blog' there and '/blog/*/*' here. tests/unit/derived-analyses.test.ts pins
+// their agreement on every Tornado family; divergence should be SURFACED, never allowed
+// to zero a check.
 //
 // This states structure with magnitudes. It never decides whether a group matters.
 
