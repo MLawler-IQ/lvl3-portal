@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { Search } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { GSCBrandedSplit, GSCIntentSplit } from '@/lib/google-search-console'
+import { seriesColorForEntity, CHART_PRIMARY, CHART_OTHER } from '@/lib/charts/palette'
 
 export interface BrandedSplitProps {
   branded: GSCBrandedSplit | null
@@ -14,8 +15,10 @@ export interface BrandedSplitProps {
   isAdmin?: boolean
 }
 
-const BRANDED_COLOR = 'var(--chart-line)'
-const NONBRANDED_COLOR = 'var(--chart-bar-secondary)'
+// Assigned by entity, so branded is sienna and non-branded teal on every screen.
+// Non-branded previously resolved to a hairline colour (~1.55:1) and was invisible.
+const BRANDED_COLOR = seriesColorForEntity('branded') ?? CHART_PRIMARY
+const NONBRANDED_COLOR = seriesColorForEntity('non-branded') ?? CHART_OTHER
 // Distinct from BRANDED_COLOR so the (separate) local-intent breakdown isn't
 // confused with the branded donut slice within the same card.
 const LOCAL_INTENT_COLOR = 'rgb(var(--brand-400))'
@@ -54,6 +57,12 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
   const nonBrandedClicks = branded?.nonBranded.clicks ?? 0
   const totalClicks = brandedClicks + nonBrandedClicks
   const hasBranded = totalClicks > 0
+
+  const brandedShare = totalClicks > 0 ? Math.round((brandedClicks / totalClicks) * 100) : 0
+  // Text alternative — the donut is SVG arcs to a screen reader.
+  const donutSummary = totalClicks > 0
+    ? `Branded vs non-branded clicks: branded ${brandedShare}% (${fmtNum(brandedClicks)}), non-branded ${100 - brandedShare}% (${fmtNum(nonBrandedClicks)}).`
+    : 'Branded vs non-branded clicks: no data available.'
 
   const donutData = [
     {
@@ -104,7 +113,7 @@ export default function BrandedSplit({ branded, intent, isAdmin = false }: Brand
           <div className="flex items-center gap-4">
             <div className="relative shrink-0" style={{ width: 132, height: 132 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
+                <PieChart role="img" aria-label={donutSummary}>
                   <Pie
                     data={donutData}
                     cx="50%"

@@ -31,17 +31,22 @@ export default function RankedBarChart({ title, rows, valueLabel = 'Value', max 
   const data = [...rows].filter((r) => r.value > 0).sort((a, b) => b.value - a.value).slice(0, max)
   if (data.length === 0) return null
   const h = height ?? Math.max(160, data.length * 34)
+  // Text alternative: a bar chart is a set of SVG rects to a screen reader.
+  const summary = `${title}. Top ${data.length} by ${valueLabel.toLowerCase()}: ${data
+    .map((r) => `${r.label} ${fmtNum(r.value)}`)
+    .join(', ')}.`
 
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <p className="text-sm font-semibold text-surface-100 mb-4">{title}</p>
+      <p className="sr-only">{summary}</p>
       <ResponsiveContainer width="100%" height={h}>
-        <BarChart layout="vertical" data={data} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
+        <BarChart role="img" aria-label={summary} layout="vertical" data={data} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" horizontal={false} />
           <XAxis
             type="number"
             tickFormatter={fmtNum}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
@@ -49,7 +54,7 @@ export default function RankedBarChart({ title, rows, valueLabel = 'Value', max 
             type="category"
             dataKey="label"
             width={140}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />

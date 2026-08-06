@@ -19,16 +19,19 @@ export default function ChannelBarChart({ channels }: Props) {
   // tracking-parameter problem, not a real marketing channel. Footnote it when shown.
   const hasUnassigned = data.some((c) => c.channel?.toLowerCase() === 'unassigned')
 
+  // Text alternative — SVG paths are invisible to a screen reader.
+  const summary = `Sessions by channel: ${data.map((d) => `${d.channel} ${fmtNum(d.sessions)}`).join(', ')}.`
+
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <p className="text-sm font-semibold text-surface-100 mb-4">Sessions by Channel</p>
       <ResponsiveContainer width="100%" height={240}>
-        <BarChart layout="vertical" data={data} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
+        <BarChart role="img" aria-label={summary} layout="vertical" data={data} margin={{ top: 0, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" horizontal={false} />
           <XAxis
             type="number"
             tickFormatter={fmtNum}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
@@ -36,7 +39,7 @@ export default function ChannelBarChart({ channels }: Props) {
             type="category"
             dataKey="channel"
             width={120}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             interval={0}

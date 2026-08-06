@@ -50,6 +50,9 @@ export default function SerpDistributionChart({ distribution }: Props) {
     range: b.range,
   }))
 
+  // Text alternative — SVG paths are invisible to a screen reader.
+  const summary = `Ranking distribution by position band: ${data.map((d) => `${d.label} ${d.count}`).join(', ')}.`
+
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4">
@@ -57,16 +60,16 @@ export default function SerpDistributionChart({ distribution }: Props) {
         <p className="text-xs text-surface-400 mt-0.5">{total} keywords tracked</p>
       </div>
       <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
+        <BarChart role="img" aria-label={summary} data={data} margin={{ top: 4, right: 8, left: -20, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
           <XAxis
             dataKey="label"
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}

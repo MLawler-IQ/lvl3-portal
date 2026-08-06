@@ -121,9 +121,15 @@
   --chart-tooltip-bg:     #F5F2EA;                    /* paper tooltip on ink, per chart-palette.json */
   --chart-tooltip-fg:     #181510;                    /* ink text on the paper tooltip */
   --chart-tooltip-border: #D8D1C0;
+  /* Legacy aliases, kept so existing consumers keep working. New chart code should
+     import from lib/charts/palette.ts and assign by entity instead. */
   --chart-line:           var(--chart-1);
   --chart-line-secondary: var(--chart-other);
-  --chart-bar-secondary:  rgb(var(--surface-800));
+  /* Was rgb(var(--surface-800)) — a HAIRLINE colour used as a bar FILL, which
+     computes to about 1.55:1 on this surface against a palette rule requiring every
+     series to clear 3:1. In BrandedSplit that was one of only two series, so half
+     the chart was invisible. Now the validated second series colour. */
+  --chart-bar-secondary:  var(--chart-2);
 
   /* ── Active-state backgrounds (with alpha) ──────────── */
   --active-bg:       rgb(var(--brand-400) / 0.10);

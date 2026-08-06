@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { TrendPoint, Granularity } from '@/lib/dashboard/types'
+import { describeTrend } from '@/lib/charts/palette'
 
 export interface TrendChartProps {
   /** Series to plot. If ANY point has `compareValue`, a dashed ghost series is overlaid. */
@@ -85,21 +86,31 @@ export default function TrendChart({
   const axisFormatter = makeAxisFormatter(granularity)
   const compareSeriesName = compareLabel ?? `${label} (prior)`
 
+  // Text alternative. describeTrend reads the first and last points, which is the
+  // shape of the sentence the site's own chart caption uses.
+  const values = data.map((p) => p.value).filter((v): v is number => typeof v === 'number')
+  const summary = describeTrend(
+    label,
+    values[0],
+    values[values.length - 1],
+    `${data.length} ${granularity === 'monthly' ? 'months' : granularity === 'weekly' ? 'weeks' : 'days'}`,
+  )
+
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+      <LineChart role="img" aria-label={summary} data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
         <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="date"
           tickFormatter={axisFormatter}
-          tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+          tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
           axisLine={false}
           tickLine={false}
           minTickGap={24}
         />
         <YAxis
           tickFormatter={valueFormatter}
-          tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+          tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
           axisLine={false}
           tickLine={false}
           width={44}
@@ -131,7 +142,7 @@ export default function TrendChart({
             dataKey="compareValue"
             name={compareSeriesName}
             stroke="var(--chart-line-secondary)"
-            strokeWidth={1.5}
+            strokeWidth={2}
             strokeDasharray="4 3"
             dot={false}
             activeDot={{ r: 4 }}

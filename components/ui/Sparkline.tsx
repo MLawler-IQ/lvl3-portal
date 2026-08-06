@@ -26,6 +26,8 @@ function toSeries(data: number[] | TrendPoint[]): { value: number }[] {
  * Tiny inline trend sparkline — no axes, grid, tooltip, or dots.
  * Responsive width, ~40px tall by default. Renders nothing for <2 points.
  */
+// Decorative by design: every Sparkline sits beside a stated value and delta, so
+// narrating it would just repeat them. Hidden from the a11y tree instead.
 export default function Sparkline({
   data,
   className,
@@ -38,7 +40,7 @@ export default function Sparkline({
   return (
     <div className={className} style={{ width: '100%', height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={series} margin={{ top: 2, right: 1, bottom: 2, left: 1 }}>
+        <LineChart aria-hidden="true" data={series} margin={{ top: 2, right: 1, bottom: 2, left: 1 }}>
           {/* Padded domain so the line never clips at the box edges. */}
           <YAxis hide domain={['dataMin', 'dataMax']} />
           <Line

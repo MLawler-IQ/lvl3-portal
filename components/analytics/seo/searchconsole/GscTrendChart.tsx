@@ -13,6 +13,7 @@ import {
 import { makeAxisFormatter } from '@/components/analytics/shared/TrendChart'
 import type { GSCTrendBucket } from '@/lib/google-search-console'
 import type { Granularity } from '@/lib/dashboard/types'
+import { describeTrend } from '@/lib/charts/palette'
 
 function fmtNum(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
@@ -30,6 +31,9 @@ interface Props {
 
 export default function GscTrendChart({ data, granularity, periodLabel }: Props) {
   const axisFormatter = makeAxisFormatter(granularity)
+  // Text alternative — SVG paths are invisible to a screen reader.
+  const summary = describeTrend('Clicks', data[0]?.clicks, data[data.length - 1]?.clicks, `${data.length} days`)
+
   return (
     <div className="bg-surface-900 border border-surface-700 rounded-xl p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -37,12 +41,12 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
         {periodLabel && <p className="text-xs text-surface-400">{periodLabel}</p>}
       </div>
       <ResponsiveContainer width="100%" height={240}>
-        <ComposedChart data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
+        <ComposedChart role="img" aria-label={summary} data={data} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="date"
             tickFormatter={axisFormatter}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             minTickGap={24}
@@ -50,7 +54,7 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
           <YAxis
             yAxisId="left"
             tickFormatter={fmtNum}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             width={40}
@@ -59,7 +63,7 @@ export default function GscTrendChart({ data, granularity, periodLabel }: Props)
             yAxisId="right"
             orientation="right"
             tickFormatter={fmtNum}
-            tick={{ fill: 'var(--chart-tick)', fontSize: 11 }}
+            tick={{ fill: 'var(--chart-tick)', fontSize: 12 }}
             axisLine={false}
             tickLine={false}
             width={40}
