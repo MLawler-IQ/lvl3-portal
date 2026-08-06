@@ -11,18 +11,25 @@
 // enumerates EVERY hint Sitebulb knows about, triggered or not, with a URL count
 // and a status ("Pass" when 0). With it, absence of a hint against a URL that IS
 // in the crawl is a real pass. Without it, this ingester must say so out loud —
-// which is why a missing summary.xlsx degrades the result rather than being
-// shrugged off.
+// which is what `problems` is for.
+//
+// A MISSING summary.xlsx IS A NOTE, NOT A DEGRADATION. This comment used to say
+// it "degrades the result", and that is wrong for a mechanical reason worth
+// keeping written down: ToolOk.degraded feeds lib/findings/engine.ts, which caps
+// every crawl-backed check at `degraded`, and lib/eval/score.ts requires a strict
+// `pass` for the healthy fixture's must_pass list. The committed mini fixture has
+// no summary workbook, so degrading on its absence would make that fixture
+// permanently degraded and turn the eval gate red. Degradation keys off
+// SitebulbCoverage.filesMissing and nothing else — see lib/stations/degradation.ts.
 //
 // It also catches export gaps the CSVs cannot report on their own. On the pilot
 // crawl the summary claims 7 URLs for "Images with missing alt text" while the
 // per-URL export is the string "No images available" — a real disagreement that
 // would otherwise pass as "no images have alt-text problems".
 
-import { readdir, readFile, stat } from 'fs/promises'
-import path from 'path'
 import * as XLSX from 'xlsx'
-import { parseCsv, toTable, type CsvTable } from './csv'
+import { type CsvTable } from './csv'
+import { readCsv, type CrawlExportSource } from './source'
 
 /** One row of the summary workbook: a hint Sitebulb evaluated. */
 export interface SitebulbHint {
@@ -38,17 +45,22 @@ export interface SitebulbHint {
   status: string
   /** URLs the hint fired on. 0 means evaluated and clean. */
   urls: number
-  /** Absolute path to the per-URL export, null when the hint did not trigger. */
+  /**
+   * Source-relative entry name for the per-URL export, e.g. `hints/x_no_h1.csv`, or
+   * null when the hint did not trigger. NOT an absolute path — feed it to
+   * `readCsv(manifest.source, …)`, never to readFile.
+   */
   file: string | null
 }
 
 export interface SitebulbManifest {
-  dir: string
+  /** Where the bytes come from. Held so readHint/readReport keep their arity. */
+  source: CrawlExportSource
   /** Shared filename prefix, e.g. 'tornadohvacca_com'. Derived, never assumed. */
   prefix: string
-  /** Report stem ('internal', 'on_page', …) → absolute path. */
+  /** Report stem ('internal', 'on_page', …) → source-relative entry name. */
   reports: Map<string, string>
-  /** Hint slug → absolute path, for everything in hints/. */
+  /** Hint slug → source-relative entry name, for everything under hints/. */
   hintFiles: Map<string, string>
   /** Every hint the summary enumerates. Empty when summary.xlsx is absent. */
   hints: SitebulbHint[]
@@ -80,22 +92,28 @@ export function hintSlug(name: string): string {
     .replace(/\s+/g, '_')
 }
 
-async function isDirectory(p: string): Promise<boolean> {
-  try {
-    return (await stat(p)).isDirectory()
-  } catch {
-    return false
-  }
+/** A CSV entry's stem with the export-wide prefix removed. */
+function stemOf(basename: string, prefix: string): string {
+  return prefix && basename.startsWith(`${prefix}_`)
+    ? basename.slice(prefix.length + 1, -4)
+    : basename.slice(0, -4)
 }
 
 /**
- * Read the export directory's shape. Throws only when `dir` is not a readable
- * directory — every other problem lands in `problems` so the caller can degrade
- * instead of failing.
+ * Read the export's shape. Throws only when the source cannot be listed — every
+ * other problem lands in `problems` so the caller can note it instead of failing.
  */
-export async function readSitebulbManifest(dir: string): Promise<SitebulbManifest> {
-  const entries = await readdir(dir)
+export async function readSitebulbManifest(
+  source: CrawlExportSource,
+): Promise<SitebulbManifest> {
+  const all = await source.list()
   const problems: string[] = []
+
+  // The listing is flat and forward-slashed, so the two levels the export actually
+  // has are a name test rather than a stat. That is also the only form a zip can
+  // report, which is why isDirectory is gone: one condition serves both source kinds.
+  const entries = all.filter((f) => !f.includes('/'))
+  const hintEntries = all.filter((f) => f.startsWith('hints/'))
 
   const summaryName = entries.find((f) => f.endsWith('_summary.xlsx'))
   // The prefix comes from whichever file announces it, so the ingester works on
@@ -109,18 +127,14 @@ export async function readSitebulbManifest(dir: string): Promise<SitebulbManifes
   const reports = new Map<string, string>()
   for (const file of entries) {
     if (!file.endsWith('.csv')) continue
-    const stem = prefix && file.startsWith(`${prefix}_`) ? file.slice(prefix.length + 1, -4) : file.slice(0, -4)
-    reports.set(stem, path.join(dir, file))
+    reports.set(stemOf(file, prefix), file)
   }
 
   const hintFiles = new Map<string, string>()
-  const hintsDir = path.join(dir, 'hints')
-  if (await isDirectory(hintsDir)) {
-    for (const file of await readdir(hintsDir)) {
+  if (hintEntries.length > 0) {
+    for (const file of hintEntries) {
       if (!file.endsWith('.csv')) continue
-      const stem =
-        prefix && file.startsWith(`${prefix}_`) ? file.slice(prefix.length + 1, -4) : file.slice(0, -4)
-      hintFiles.set(stem, path.join(hintsDir, file))
+      hintFiles.set(stemOf(file.slice('hints/'.length), prefix), file)
     }
   } else {
     problems.push(
@@ -128,7 +142,7 @@ export async function readSitebulbManifest(dir: string): Promise<SitebulbManifes
     )
   }
 
-  const summaryFile = summaryName ? path.join(dir, summaryName) : null
+  const summaryFile = summaryName ?? null
   const hints: SitebulbHint[] = []
   if (summaryFile === null) {
     problems.push(
@@ -136,7 +150,7 @@ export async function readSitebulbManifest(dir: string): Promise<SitebulbManifes
     )
   } else {
     try {
-      hints.push(...(await readSummaryHints(summaryFile, hintFiles)))
+      hints.push(...(await readSummaryHints(source, summaryFile, hintFiles)))
       if (hints.length === 0) {
         problems.push('summary.xlsx contains no hint rows: the crawl-wide hint enumeration is unusable.')
       }
@@ -149,15 +163,18 @@ export async function readSitebulbManifest(dir: string): Promise<SitebulbManifes
 
   problems.push(...crossCheck(hints, hintFiles))
 
-  return { dir, prefix, reports, hintFiles, hints, summaryFile, problems }
+  return { source, prefix, reports, hintFiles, hints, summaryFile, problems }
 }
 
 /** Every sheet of the summary workbook, flattened into hint rows. */
 async function readSummaryHints(
+  source: CrawlExportSource,
   file: string,
   hintFiles: Map<string, string>,
 ): Promise<SitebulbHint[]> {
-  const workbook = XLSX.read(await readFile(file), { type: 'buffer' })
+  // `type: 'array'` for a Uint8Array; `'buffer'` is only correct for a Node Buffer,
+  // which an in-memory source cannot promise. Verified against xlsx 0.18.5.
+  const workbook = XLSX.read(await source.read(file), { type: 'array' })
   const out: SitebulbHint[] = []
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName]
@@ -220,7 +237,7 @@ export async function readHint(
 ): Promise<CsvTable | null> {
   const file = manifest.hintFiles.get(slug)
   if (!file) return null
-  return toTable(parseCsv(await readFile(file, 'utf8')))
+  return readCsv(manifest.source, file)
 }
 
 /** Load one top-level report by stem ('internal', 'on_page', …). */
@@ -230,7 +247,7 @@ export async function readReport(
 ): Promise<CsvTable | null> {
   const file = manifest.reports.get(stem)
   if (!file) return null
-  return toTable(parseCsv(await readFile(file, 'utf8')))
+  return readCsv(manifest.source, file)
 }
 
 /** The summary's row for one hint, by slug. */
