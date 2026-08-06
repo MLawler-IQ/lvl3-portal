@@ -152,6 +152,9 @@ function buildCrawl(): CrawlStationData {
     site: {
       robotsTxt: 'User-agent: *\nAllow: /\nSitemap: https://tornadohvacca.com/sitemap.xml',
       robotsTxtStatus: 'ok',
+      // Not measured on the pilot crawl, and no check reads it yet.
+      llmsTxt: null,
+      llmsTxtStatus: 'not-fetched',
       sitemapUrls: [`${SITE}/sitemap.xml`],
     },
     pages,

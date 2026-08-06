@@ -85,6 +85,10 @@ function buildCrawl(): CrawlStationData {
     site: {
       robotsTxt: 'User-agent: *\nDisallow: /wp-admin/\nSitemap: https://example-plumbing.com/sitemap.xml',
       robotsTxtStatus: 'ok',
+      // No check reads llms.txt yet, and this fixture's must_pass list must not shift
+      // when one does — 'not-fetched' is the honest state for a fixture that never asked.
+      llmsTxt: null,
+      llmsTxtStatus: 'not-fetched',
       sitemapUrls: [`${SITE}/sitemap.xml`],
     },
     pages, // 25 total

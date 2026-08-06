@@ -234,8 +234,12 @@ export async function ingestSitebulbCrawl(
       site: {
         robotsTxt: null,
         // NOT 'not-found'. A CSV export carries no robots.txt body, so we did not look —
-        // and TECH-001 must say not_run rather than "nothing is blocked".
+        // and TECH-001 must say not_run rather than "nothing is blocked". The robots
+        // station fetches these over the network and merges them in; an export alone
+        // cannot supply either file.
         robotsTxtStatus: 'not-fetched',
+        llmsTxt: null,
+        llmsTxtStatus: 'not-fetched',
         sitemapUrls: [],
       },
       pages,

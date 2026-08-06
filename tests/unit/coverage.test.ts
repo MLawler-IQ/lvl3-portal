@@ -70,6 +70,8 @@ const site = (over: Partial<CrawlSiteRecord> = {}): CrawlSiteRecord => ({
   robotsTxt: null,
   sitemapUrls: [],
   robotsTxtStatus: 'not-found',
+  llmsTxt: null,
+  llmsTxtStatus: 'not-fetched',
   ...over,
 })
 

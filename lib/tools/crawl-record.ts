@@ -134,6 +134,22 @@ export interface CrawlSiteRecord {
    *   'not-fetched' never attempted, or the attempt failed. TECH-001 reports not_run.
    */
   robotsTxtStatus: 'ok' | 'not-found' | 'not-fetched'
+  /**
+   * Raw /llms.txt body. Null when there is no body to hold — same three-state reasoning
+   * as robotsTxt above.
+   */
+  llmsTxt: string | null
+  /**
+   * Why llmsTxt is null, when it is. Same vocabulary as robotsTxtStatus, and required
+   * for the same reason: an ingester that forgets it will not compile, rather than
+   * leaving "not measured" to convention.
+   *
+   * NO CONSUMER YET. The GEO checks that read this are a later slice; the field lands
+   * with the fetcher that populates it so the type widening is one reviewable commit
+   * instead of noise inside the slice that re-baselines the scoring snapshots. Precedent:
+   * lib/eval/citation.ts, whose header says "No consumer yet — synthesis is phase 5."
+   */
+  llmsTxtStatus: 'ok' | 'not-found' | 'not-fetched'
   sitemapUrls: string[]
 }
 

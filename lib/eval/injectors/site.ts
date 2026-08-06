@@ -179,6 +179,8 @@ export function healthySite(vocab: SiteVocab): CrawlSiteRecord {
   return {
     robotsTxt: `User-agent: *\nDisallow: /wp-admin/\nSitemap: ${vocab.origin}/sitemap.xml\n`,
     robotsTxtStatus: 'ok',
+    llmsTxt: null,
+    llmsTxtStatus: 'not-fetched',
     sitemapUrls: [`${vocab.origin}/sitemap.xml`],
   }
 }
