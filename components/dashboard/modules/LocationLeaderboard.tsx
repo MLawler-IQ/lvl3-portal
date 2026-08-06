@@ -186,7 +186,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
         </div>
         <div className="flex items-center gap-2">
           {insights.errorCount > 0 && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-widest text-amber-400">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-widest text-warning">
               <AlertTriangle className="h-3 w-3" aria-hidden="true" />
               {insights.errorCount} location{insights.errorCount === 1 ? '' : 's'}: data unavailable
             </span>
@@ -236,7 +236,7 @@ export default function LocationLeaderboard({ data, cap = DEFAULT_CAP }: Locatio
                     </span>
                     {row.error && (
                       <AlertTriangle
-                        className="h-3 w-3 shrink-0 text-amber-400"
+                        className="h-3 w-3 shrink-0 text-warning"
                         aria-label="Insights fetch failed for this location"
                       />
                     )}

@@ -21,10 +21,10 @@ const sources: {
 
 function StatusDot({ status }: { status: DataSourceStatus['status'] }) {
   const colors: Record<DataSourceStatus['status'], string> = {
-    success: 'bg-emerald-400',
-    failed: 'bg-red-400',
+    success: 'bg-success/10',
+    failed: 'bg-error/10',
     skipped: 'bg-surface-500',
-    pending: 'bg-yellow-400',
+    pending: 'bg-warning/10',
   }
   return (
     <span
@@ -118,7 +118,7 @@ export default function DataAvailabilityPanel({
             )}
 
             {source && status === 'failed' && source.error && (
-              <p className="text-xs text-red-400 leading-tight line-clamp-2">
+              <p className="text-xs text-error leading-tight line-clamp-2">
                 {source.error}
               </p>
             )}

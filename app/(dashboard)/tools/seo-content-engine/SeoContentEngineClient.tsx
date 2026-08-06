@@ -22,6 +22,7 @@ import BriefPreview from './components/BriefPreview'
 import DraftPreview from './components/DraftPreview'
 import ReviewSummary from './components/ReviewSummary'
 import RunHistory from './components/RunHistory'
+import { STATUS_TONE } from '@/lib/status-tone'
 
 // ── Tabs ────────────────────────────────────────────────────
 
@@ -336,8 +337,8 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                         key={r.source}
                         className={`rounded-lg border px-3 py-2 text-xs ${
                           r.ok
-                            ? 'border-emerald-500/30 bg-emerald-900/10 text-emerald-300'
-                            : 'border-red-500/30 bg-red-900/10 text-red-300'
+                            ? STATUS_TONE.success.chip
+                            : STATUS_TONE.error.chip
                         }`}
                       >
                         <div className="font-medium">{r.ok ? '\u2713' : '\u2717'} {r.source}</div>
@@ -400,11 +401,11 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
             <>
               {/* Download error banner */}
               {downloadError && (
-                <div className="flex items-start justify-between gap-3 rounded-lg border border-red-500/30 bg-red-900/20 px-4 py-3">
-                  <p className="text-sm text-red-300">{downloadError}</p>
+                <div className={`flex items-start justify-between gap-3 rounded-lg border px-4 py-3 ${STATUS_TONE.error.row}`}>
+                  <p className="text-sm text-surface-100">{downloadError}</p>
                   <button
                     onClick={() => setDownloadError(null)}
-                    className="text-red-400 hover:text-red-300 text-xs font-medium shrink-0"
+                    className={`text-xs font-medium shrink-0 ${STATUS_TONE.error.text} hover:text-error/80`}
                   >
                     Dismiss
                   </button>
@@ -428,7 +429,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                           }
                         }}
                         disabled={regenerating.size > 0}
-                        className="inline-flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-900/20 px-4 py-2 text-sm font-semibold text-amber-300 transition-colors hover:bg-amber-900/30 disabled:opacity-50"
+                        className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors hover:bg-warning/20 disabled:opacity-50 ${STATUS_TONE.warning.chip}`}
                       >
                         <RefreshCw className={`h-4 w-4 ${regenerating.size > 0 ? 'animate-spin' : ''}`} />
                         {regenerating.size > 0 ? 'Generating...' : `Generate Missing DOCX (${missingDocx.length})`}
@@ -541,7 +542,7 @@ export default function SeoContentEngineClient({ clientId, clientName, clientBra
                           <button
                             onClick={() => handleRegenerateDocx(idx)}
                             disabled={regenerating.has(idx)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-900/20 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-900/30 disabled:opacity-50"
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-warning/20 disabled:opacity-50 ${STATUS_TONE.warning.chip}`}
                           >
                             <RefreshCw className={`h-3.5 w-3.5 ${regenerating.has(idx) ? 'animate-spin' : ''}`} />
                             {regenerating.has(idx) ? 'Generating...' : 'Generate DOCX'}

@@ -135,8 +135,8 @@ export default function NotificationsPanel({
                       onClick={onClose}
                       className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                     >
-                      <div className="mt-0.5 w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                        <PackageOpen size={14} className="text-emerald-400" />
+                      <div className="mt-0.5 w-7 h-7 rounded-lg bg-success/20 flex items-center justify-center shrink-0">
+                        <PackageOpen size={14} className="text-success" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-surface-200 font-medium truncate">
@@ -166,8 +166,8 @@ export default function NotificationsPanel({
                       onClick={onClose}
                       className="flex items-start gap-3 px-5 py-3 hover:bg-surface-850 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
                     >
-                      <div className="mt-0.5 w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-                        <MessageSquare size={14} className="text-amber-400" />
+                      <div className="mt-0.5 w-7 h-7 rounded-lg bg-warning/20 flex items-center justify-center shrink-0">
+                        <MessageSquare size={14} className="text-warning" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-surface-200 font-medium truncate">

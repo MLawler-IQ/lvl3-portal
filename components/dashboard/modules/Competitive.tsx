@@ -78,7 +78,7 @@ export default function Competitive({ data }: { data: CompetitiveResult }) {
       </div>
 
       {data.error && (
-        <div className="flex items-center gap-2 border-b border-surface-700 px-5 py-2.5 text-xs text-amber-400">
+        <div className="flex items-center gap-2 border-b border-surface-700 px-5 py-2.5 text-xs text-warning">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>{data.error}</span>
         </div>
@@ -125,7 +125,7 @@ export default function Competitive({ data }: { data: CompetitiveResult }) {
                     )}
                   </div>
                   {row.error && (
-                    <span className="mt-0.5 block text-[10px] text-amber-400/80" title={row.error}>
+                    <span className="mt-0.5 block text-[10px] text-warning" title={row.error}>
                       Lookup failed
                     </span>
                   )}

@@ -177,7 +177,7 @@ export default function GBPAuditClient({
       {tab === 'run' && (
         <div className="space-y-6">
           {accountsError && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400">
+            <div className="bg-error/10 border border-error/20 rounded-xl p-4 text-sm text-error">
               <strong>Could not load GBP accounts:</strong> {accountsError}
               {accountsError.includes('OAuth') && (
                 <span> — Go to <a href="/admin" className="underline">Admin</a> and reconnect your Google account to grant GBP access.</span>
@@ -253,7 +253,7 @@ export default function GBPAuditClient({
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-sm text-red-400">
+            <div className="bg-error/10 border border-error/20 rounded-xl p-4 text-sm text-error">
               {error}
             </div>
           )}

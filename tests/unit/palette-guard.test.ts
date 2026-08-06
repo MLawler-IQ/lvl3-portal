@@ -81,18 +81,14 @@ function scan(re: RegExp): { file: string; hits: string[] }[] {
 }
 
 /**
- * Occurrences of raw palette classes still to be swept, across 47 files.
+ * Zero. The sweep is complete: 348 occurrences at the start, 302 after session 1,
+ * 191 after the status-chip pass, 0 now.
  *
- * Set to the exact current count, so ANY new one fails immediately — slack here
- * would let a handful creep back in unnoticed. LOWER IT as sweep slices land; never
- * raise it. If a change pushes the count up, the fix is a token, not a bigger number.
- *
- * 348 at the start; 302 after session 1; 191 after the status-chip sweep. Of what is
- * left, 135 sits in app/(dashboard)/tools/ (internal) and 56 everywhere else. The worst
- * files (TfkGeneratorClient 36, PipelineProgress 24, SeoContentEngineClient 19) are 79
- * between them and are all internal tool screens.
+ * This is no longer a ratchet — it is a hard gate. Any raw Tailwind palette class in
+ * app/, components/ or lib/ fails the build. Use a token: success / error / warning /
+ * surface-* / brand-*, or lib/status-tone.ts for a full chip.
  */
-const BUDGET = 191
+const BUDGET = 0
 
 describe('palette regression guard', () => {
   it('does not add raw Tailwind palette classes', () => {

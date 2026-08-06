@@ -55,7 +55,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
 
         {success ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <CheckCircle size={32} className="text-green-400" />
+            <CheckCircle size={32} className="text-success" />
             <p className="text-surface-100 font-medium">Invite sent to {email}</p>
             <p className="text-surface-400 text-sm">
               They&apos;ll receive a magic link to join as a{' '}
@@ -118,7 +118,7 @@ export default function InviteUserModal({ clientId, clientName, onClose }: Invit
               </p>
             </div>
 
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-error text-sm">{error}</p>}
 
             <div className="flex gap-3 pt-1">
               <button

@@ -48,7 +48,7 @@ export default function RefreshAnalyticsButton({ clientId, period, compare }: Re
         {refreshing ? 'Generating…' : 'Generate insights'}
       </button>
       {notice && <p className="text-xs text-surface-400 max-w-xs text-right">{notice}</p>}
-      {error && <p className="text-xs text-red-400 max-w-xs text-right">{error}</p>}
+      {error && <p className="text-xs text-error max-w-xs text-right">{error}</p>}
     </div>
   )
 }

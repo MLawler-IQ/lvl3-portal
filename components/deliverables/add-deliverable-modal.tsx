@@ -171,7 +171,7 @@ export default function AddDeliverableModal({ clients, onClose }: Props) {
             </div>
           )}
 
-          {error && <p className="text-rose-400 text-sm">{error}</p>}
+          {error && <p className="text-error text-sm">{error}</p>}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2">

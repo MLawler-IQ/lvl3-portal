@@ -192,7 +192,7 @@ export default function LocationCompleteness({
               <li key={issue} className="flex items-center justify-between gap-3">
                 <span className="flex min-w-0 items-center gap-2 text-sm text-surface-200">
                   <AlertTriangle
-                    className="h-3.5 w-3.5 shrink-0 text-amber-400"
+                    className="h-3.5 w-3.5 shrink-0 text-warning"
                     aria-hidden="true"
                   />
                   <span className="truncate" title={issue}>

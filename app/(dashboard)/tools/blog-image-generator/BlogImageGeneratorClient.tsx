@@ -391,9 +391,9 @@ export default function BlogImageGeneratorClient() {
 
       {/* Error */}
       {error && (
-        <div className="bg-surface-900 border border-red-800 rounded-xl px-4 py-3 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-surface-900 border border-error/40 rounded-xl px-4 py-3 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-error shrink-0" />
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 
@@ -426,7 +426,7 @@ export default function BlogImageGeneratorClient() {
                   <Circle className="w-4 h-4 mt-0.5 shrink-0 text-surface-600" />
                 )}
                 {img.status === 'error' && (
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-red-400" />
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-error" />
                 )}
                 <span
                   className={
@@ -435,7 +435,7 @@ export default function BlogImageGeneratorClient() {
                       : img.status === 'generating'
                       ? 'text-surface-300'
                       : img.status === 'error'
-                      ? 'text-red-400'
+                      ? 'text-error'
                       : 'text-surface-400'
                   }
                 >
@@ -444,7 +444,7 @@ export default function BlogImageGeneratorClient() {
                     <span className="ml-2 text-xs text-surface-400">— cached</span>
                   )}
                   {img.status === 'error' && img.error && (
-                    <span className="ml-2 text-xs text-red-400">— {img.error}</span>
+                    <span className="ml-2 text-xs text-error">— {img.error}</span>
                   )}
                 </span>
               </li>

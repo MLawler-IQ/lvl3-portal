@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader2, CheckCircle2, XCircle, Clock, AlertTriangle } from 'lucide-react'
 import type { TopicState } from '@/hooks/usePipelineStream'
+import { STATUS_TONE } from '@/lib/status-tone'
 
 interface PipelineProgressProps {
   topicTitles: string[]
@@ -14,27 +15,29 @@ function StatusIcon({ status }: { status: TopicState['status'] }) {
     case 'running':
       return <Loader2 className="h-4 w-4 text-brand-500 animate-spin shrink-0" />
     case 'complete':
-      return <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+      return <CheckCircle2 className={`h-4 w-4 shrink-0 ${STATUS_TONE.success.text}`} />
     case 'failed':
-      return <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+      return <XCircle className={`h-4 w-4 shrink-0 ${STATUS_TONE.error.text}`} />
     case 'pending':
     default:
       return <Clock className="h-4 w-4 text-surface-400 shrink-0" />
   }
 }
 
-function stagePillColor(step: string): string {
-  if (!step) return 'bg-surface-800 text-surface-400'
-  const s = step.toLowerCase()
-  if (s.includes('keyword') || s.includes('metric') || s.includes('cluster') || s.includes('finaliz'))
-    return 'bg-red-100 text-red-700'
-  if (s.includes('analyz')) return 'bg-sky-100 text-sky-700'
-  if (s.includes('brief')) return 'bg-amber-100 text-amber-700'
-  if (s.includes('writing draft')) return 'bg-emerald-100 text-emerald-700'
-  if (s.includes('reviewing')) return 'bg-orange-100 text-orange-700'
-  if (s.includes('revis')) return 'bg-rose-100 text-rose-700'
-  if (s.includes('validat')) return 'bg-teal-100 text-teal-700'
-  return 'bg-surface-800 text-surface-400'
+/**
+ * Stage pill styling.
+ *
+ * This used to map seven stage names to seven hues by substring match, as
+ * `bg-{c}-100 text-{c}-700` — a LIGHT-theme pairing that rendered as near-white
+ * pills once the app went to ink. It was also categorical colour, which the palette
+ * only validates four of, and the spec's "no new colours" rules out inventing three
+ * more.
+ *
+ * The stage name is already the label, so the hue carried no information the text
+ * didn't. One neutral pill.
+ */
+function stagePillColor(): string {
+  return STATUS_TONE.neutral.chip
 }
 
 function formatElapsed(ms: number): string {
@@ -92,7 +95,7 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
         <div className="flex items-center gap-1.5 shrink-0">
           {stagePill && state.status === 'running' && (
             <span
-              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${stagePillColor(stagePill)}`}
+              className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${stagePillColor()}`}
             >
               {stagePill}
             </span>
@@ -107,9 +110,9 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
 
       {/* Stuck warning */}
       {noActivity && (
-        <div className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-900/20 px-2.5 py-1.5">
-          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-          <span className="text-[11px] text-amber-300">
+        <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 ${STATUS_TONE.warning.row}`}>
+          <AlertTriangle className={`h-3.5 w-3.5 shrink-0 ${STATUS_TONE.warning.text}`} />
+          <span className="text-[11px] text-surface-100">
             No activity for {Math.floor((now - state.lastEventAt!) / 1000)}s
           </span>
         </div>
@@ -117,9 +120,9 @@ function TopicCard({ title, state }: { title: string; state: TopicState }) {
 
       {/* Phase error */}
       {(state.status === 'complete' || state.status === 'failed') && state.result?.error && (
-        <div className="flex items-start gap-1.5 rounded-lg border border-red-500/30 bg-red-900/20 px-2.5 py-1.5">
-          <XCircle className="h-3.5 w-3.5 text-red-400 shrink-0 mt-px" />
-          <span className="text-[11px] text-red-300 leading-snug">{state.result.error}</span>
+        <div className={`flex items-start gap-1.5 rounded-lg border px-2.5 py-1.5 ${STATUS_TONE.error.row}`}>
+          <XCircle className={`h-3.5 w-3.5 shrink-0 mt-px ${STATUS_TONE.error.text}`} />
+          <span className="text-[11px] text-surface-100 leading-snug">{state.result.error}</span>
         </div>
       )}
 

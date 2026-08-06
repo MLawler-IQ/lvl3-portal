@@ -294,7 +294,7 @@ export default function AskLvl3Chat({
             <button
               onClick={() => handleDeleteThread(conversationId)}
               title="Delete this conversation"
-              className="text-surface-400 hover:text-red-400 transition-colors"
+              className="text-surface-400 hover:text-error transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -408,7 +408,7 @@ export default function AskLvl3Chat({
 
         {error && (
           <div className="flex justify-center">
-            <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+            <p className="text-xs text-error bg-error/10 border border-error/20 rounded-lg px-3 py-2">
               {error}
             </p>
           </div>

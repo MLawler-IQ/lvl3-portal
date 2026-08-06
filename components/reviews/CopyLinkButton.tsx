@@ -41,8 +41,8 @@ export default function CopyLinkButton({
     >
       {copied ? (
         <>
-          <Check size={12} className="text-emerald-400" />
-          <span className="text-emerald-400">Copied</span>
+          <Check size={12} className="text-success" />
+          <span className="text-success">Copied</span>
         </>
       ) : (
         <>

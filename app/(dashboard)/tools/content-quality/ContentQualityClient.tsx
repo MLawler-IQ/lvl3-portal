@@ -70,7 +70,7 @@ export default function ContentQualityClient() {
 
       {error && (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 
@@ -108,8 +108,8 @@ export default function ContentQualityClient() {
             {result.issues.length > 0 && (
               <ul className="space-y-1">
                 {result.issues.map((issue, i) => (
-                  <li key={i} className="text-sm text-red-400 flex items-start gap-2">
-                    <span className="text-red-500 mt-0.5">&#x2022;</span>
+                  <li key={i} className="text-sm text-error flex items-start gap-2">
+                    <span className="text-error mt-0.5">&#x2022;</span>
                     {issue}
                   </li>
                 ))}

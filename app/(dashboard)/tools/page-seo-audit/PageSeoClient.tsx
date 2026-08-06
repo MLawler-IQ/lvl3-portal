@@ -65,7 +65,7 @@ export default function PageSeoClient() {
 
       {error && (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 
@@ -105,8 +105,8 @@ export default function PageSeoClient() {
               <h2 className="text-sm font-medium text-surface-100 uppercase tracking-wide">Issues ({result.issues.length})</h2>
               <ul className="space-y-1">
                 {result.issues.map((issue, i) => (
-                  <li key={i} className="text-sm text-red-400 flex items-start gap-2">
-                    <span className="text-red-500 mt-0.5">&#x2022;</span>
+                  <li key={i} className="text-sm text-error flex items-start gap-2">
+                    <span className="text-error mt-0.5">&#x2022;</span>
                     {issue}
                   </li>
                 ))}
@@ -186,7 +186,7 @@ export default function PageSeoClient() {
                       .filter((i) => !i.hasAlt)
                       .slice(0, 10)
                       .map((img, i) => (
-                        <li key={i} className="text-xs text-red-400 truncate">
+                        <li key={i} className="text-xs text-error truncate">
                           Missing alt: {img.src}
                         </li>
                       ))}

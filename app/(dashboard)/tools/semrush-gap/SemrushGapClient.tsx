@@ -572,7 +572,7 @@ export default function SemrushGapClient({
                 <button
                   type="button"
                   onClick={() => handleDeleteReport(r.id)}
-                  className="text-surface-400 hover:text-red-400 transition-colors"
+                  className="text-surface-400 hover:text-error transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -585,7 +585,7 @@ export default function SemrushGapClient({
       {/* Error */}
       {error && (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 
@@ -738,7 +738,7 @@ export default function SemrushGapClient({
                                 {pos.url && <UrlLink url={pos.url} />}
                               </div>
                             ) : (
-                              <span className={isClient ? 'text-amber-400' : 'text-surface-600'}>–</span>
+                              <span className={isClient ? 'text-warning' : 'text-surface-600'}>–</span>
                             )}
                           </td>
                         )
@@ -784,7 +784,7 @@ export default function SemrushGapClient({
                       </td>
                       <td className="py-2 px-3 text-right">
                         {g.clientPosition === null ? (
-                          <span className="text-amber-400">–</span>
+                          <span className="text-warning">–</span>
                         ) : (
                           <div className="flex flex-col items-end">
                             <span className="text-surface-400 tabular-nums">{g.clientPosition}</span>

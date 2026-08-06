@@ -110,7 +110,7 @@ export default function DraftPreview({ draft, wordCount, onDownload }: DraftPrev
             onClick={handleCopy}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-800 border border-surface-700 text-surface-300 hover:bg-surface-700 hover:text-surface-100 transition-colors"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied' : 'Copy'}
           </button>
           {onDownload && (

@@ -161,7 +161,7 @@ export default function DeliverableSlideOver({
           )}
           <div className="flex-1" />
           {unresolvedCount > 0 && (
-            <span className="flex items-center gap-1.5 text-xs text-amber-400">
+            <span className="flex items-center gap-1.5 text-xs text-warning">
               <MessageSquare size={12} />
               {unresolvedCount} open{" "}
               {unresolvedCount === 1 ? "thread" : "threads"}

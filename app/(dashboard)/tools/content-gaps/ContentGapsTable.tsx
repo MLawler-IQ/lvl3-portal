@@ -8,11 +8,11 @@ import RunHistory, { type ToolRun } from '@/components/tools/RunHistory'
 const GAP_TYPE_LABELS: Record<ContentGap['gapType'], { label: string; className: string }> = {
   'high-impression-no-clicks': {
     label: 'No clicks',
-    className: 'bg-red-500/15 text-red-400 border-red-500/20',
+    className: 'bg-error/20 text-error border-error/20',
   },
   'near-page-one': {
     label: 'Near page 1',
-    className: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+    className: 'bg-warning/20 text-warning border-warning/20',
   },
   'ranking-but-weak': {
     label: 'Weak CTR',

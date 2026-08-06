@@ -159,7 +159,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
                       </span>
                       {row.dataQuality === 'suspect' && (
                         <span
-                          className="inline-flex items-center text-amber-500"
+                          className="inline-flex items-center text-warning"
                           title="Possible tracking gap — sessions or clicks were far below this client's typical month, which usually means data wasn't fully collected, not a real drop."
                           aria-label="Possible tracking gap"
                         >
@@ -187,7 +187,7 @@ export default function MetricTable13({ rows }: MetricTable13Props) {
 
       {hasSuspect && (
         <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-surface-400">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" aria-hidden="true" />
+          <AlertTriangle className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
           Flagged months had sessions or clicks far below this client&apos;s typical month — likely a tracking gap, not a real drop.
         </p>
       )}

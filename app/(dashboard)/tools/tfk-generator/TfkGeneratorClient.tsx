@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { buildPreviewHtml } from '@/lib/tfk/preview'
 import type { TfkLocation } from '@/lib/tfk/types'
+import { STATUS_TONE } from '@/lib/status-tone'
 
 type Step = 'enriching' | 'generating' | 'done' | 'error'
 
@@ -33,8 +34,8 @@ const TABS = ['Generate', 'Preview', 'Validation'] as const
 type Tab = (typeof TABS)[number]
 
 function StepIcon({ step }: { step: Step }) {
-  if (step === 'done') return <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-  if (step === 'error') return <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+  if (step === 'done') return <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${STATUS_TONE.success.text}`} />
+  if (step === 'error') return <AlertCircle className={`w-4 h-4 flex-shrink-0 ${STATUS_TONE.error.text}`} />
   if (step === 'enriching' || step === 'generating')
     return <Loader2 className="w-4 h-4 text-brand-400 animate-spin flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
   return <Circle className="w-4 h-4 text-surface-600 flex-shrink-0" />
@@ -325,15 +326,15 @@ export default function TfkGeneratorClient() {
               }}
             />
             {loadError && (
-              <div className="mt-3 flex items-start gap-2 bg-red-950/30 border border-red-900/40 rounded-lg p-3">
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-red-300">{loadError}</p>
+              <div className={`mt-3 flex items-start gap-2 border rounded-lg p-3 ${STATUS_TONE.error.row}`}>
+                <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${STATUS_TONE.error.text}`} />
+                <p className="text-xs text-surface-100">{loadError}</p>
               </div>
             )}
             {loadedFromFile && !loadError && (
-              <div className="mt-3 flex items-start gap-2 bg-emerald-950/30 border border-emerald-900/40 rounded-lg p-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-emerald-300">
+              <div className={`mt-3 flex items-start gap-2 border rounded-lg p-3 ${STATUS_TONE.success.row}`}>
+                <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${STATUS_TONE.success.text}`} />
+                <p className="text-xs text-surface-100">
                   Loaded {outputRows.length} location{outputRows.length === 1 ? '' : 's'}. Switch to the Preview or Validation tab.
                 </p>
               </div>
@@ -359,17 +360,17 @@ export default function TfkGeneratorClient() {
 
         {/* Error */}
         {error && (
-          <div className="flex items-start gap-3 bg-red-950/30 border border-red-900/40 rounded-xl p-4">
-            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-300">{error}</p>
+          <div className={`flex items-start gap-3 border rounded-xl p-4 ${STATUS_TONE.error.row}`}>
+            <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${STATUS_TONE.error.text}`} />
+            <p className="text-sm text-surface-100">{error}</p>
           </div>
         )}
 
         {/* Download */}
         {outputBase64 && (
-          <div className="flex items-center justify-between bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4">
+          <div className={`flex items-center justify-between border rounded-xl p-4 ${STATUS_TONE.success.row}`}>
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <CheckCircle2 className={`w-5 h-5 ${STATUS_TONE.success.text}`} />
               <div>
                 <p className="text-sm font-medium text-surface-100">Output ready</p>
                 <p className="text-xs text-surface-400">{outputRows.length} locations · {(outputBase64.length * 0.75 / 1024).toFixed(0)} KB xlsx</p>
@@ -400,7 +401,7 @@ export default function TfkGeneratorClient() {
               ].map(({ label, value, ok }) => (
                 <div key={label} className="bg-surface-800 rounded-lg p-3">
                   <p className="text-xs text-surface-400 mb-1">{label}</p>
-                  <p className={`text-xl font-bold font-serif tabular-nums ${ok ? 'text-emerald-400' : 'text-amber-400'}`}>{value}</p>
+                  <p className={`text-xl font-bold font-serif tabular-nums ${ok ? STATUS_TONE.success.text : STATUS_TONE.warning.text}`}>{value}</p>
                 </div>
               ))}
             </div>
@@ -424,10 +425,10 @@ export default function TfkGeneratorClient() {
                   {loc.step === 'done' && (
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {loc.validation !== '✓' && loc.validation && (
-                        <span className="text-xs text-amber-400">{loc.validation}</span>
+                        <span className={`text-xs ${STATUS_TONE.warning.text}`}>{loc.validation}</span>
                       )}
                       {loc.hours_match === '⚠ Mismatch' && (
-                        <span className="text-xs text-amber-400">⚠ hours</span>
+                        <span className={`text-xs ${STATUS_TONE.warning.text}`}>⚠ hours</span>
                       )}
                     </div>
                   )}
@@ -521,9 +522,9 @@ export default function TfkGeneratorClient() {
         <div className="grid grid-cols-4 gap-3">
           {[
             { label: 'Total', value: outputRows.length, color: 'text-surface-200' },
-            { label: 'Issues', value: issues, color: issues > 0 ? 'text-amber-400' : 'text-emerald-400' },
-            { label: 'Hours ⚠', value: hoursMismatch, color: hoursMismatch > 0 ? 'text-amber-400' : 'text-emerald-400' },
-            { label: 'No Coords', value: noCoords, color: noCoords > 0 ? 'text-red-400' : 'text-emerald-400' },
+            { label: 'Issues', value: issues, color: issues > 0 ? STATUS_TONE.warning.text : STATUS_TONE.success.text },
+            { label: 'Hours ⚠', value: hoursMismatch, color: hoursMismatch > 0 ? STATUS_TONE.warning.text : STATUS_TONE.success.text },
+            { label: 'No Coords', value: noCoords, color: noCoords > 0 ? STATUS_TONE.error.text : STATUS_TONE.success.text },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-surface-900 border border-surface-700 rounded-xl p-4 text-center">
               <p className={`text-2xl font-bold font-serif tabular-nums ${color}`}>{value}</p>
@@ -551,21 +552,21 @@ export default function TfkGeneratorClient() {
                   const titleOk  = titleLen >= 50 && titleLen <= 65
                   const metaOk   = metaLen  >= 130 && metaLen  <= 165
                   return (
-                    <tr key={i} className={hasIssue ? 'bg-amber-950/10' : ''}>
+                    <tr key={i} className={hasIssue ? 'bg-warning/10' : ''}>
                       <td className="px-4 py-3 text-surface-200 whitespace-nowrap">{row.store_name}</td>
                       <td className="px-4 py-3 text-surface-400 whitespace-nowrap">{row.city}, {row.state}</td>
                       <td className="px-4 py-3 max-w-xs">
-                        <span className={hasIssue ? 'text-amber-400' : 'text-emerald-400'}>
+                        <span className={hasIssue ? STATUS_TONE.warning.text : STATUS_TONE.success.text}>
                           {row.validation_notes ?? '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={row.hours_match === '✓ Match' ? 'text-emerald-400' : row.hours_match === '⚠ Mismatch' ? 'text-amber-400' : 'text-surface-400'}>
+                        <span className={row.hours_match === '✓ Match' ? STATUS_TONE.success.text : row.hours_match === '⚠ Mismatch' ? STATUS_TONE.warning.text : STATUS_TONE.neutral.text}>
                           {row.hours_match ?? '—'}
                         </span>
                       </td>
-                      <td className={`px-4 py-3 font-serif tabular-nums ${titleOk ? 'text-emerald-400' : 'text-amber-400'}`}>{titleLen}</td>
-                      <td className={`px-4 py-3 font-serif tabular-nums ${metaOk  ? 'text-emerald-400' : 'text-amber-400'}`}>{metaLen}</td>
+                      <td className={`px-4 py-3 font-serif tabular-nums ${titleOk ? STATUS_TONE.success.text : STATUS_TONE.warning.text}`}>{titleLen}</td>
+                      <td className={`px-4 py-3 font-serif tabular-nums ${metaOk  ? STATUS_TONE.success.text : STATUS_TONE.warning.text}`}>{metaLen}</td>
                     </tr>
                   )
                 })}

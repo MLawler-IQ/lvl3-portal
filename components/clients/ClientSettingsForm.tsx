@@ -559,7 +559,7 @@ export default function ClientSettingsForm({ client }: Props) {
               Load Headers
             </button>
           </div>
-          {headersError && <p className="text-red-400 text-xs mt-1.5">{headersError}</p>}
+          {headersError && <p className="text-error text-xs mt-1.5">{headersError}</p>}
         </div>
 
         {headers.length > 0 && (
@@ -666,7 +666,7 @@ export default function ClientSettingsForm({ client }: Props) {
               {ga4Loading ? 'Loading…' : 'Load'}
             </button>
           </div>
-          {ga4LoadError && <p className="text-red-400 text-xs mt-1.5">{ga4LoadError}</p>}
+          {ga4LoadError && <p className="text-error text-xs mt-1.5">{ga4LoadError}</p>}
         </div>
 
         <div>
@@ -713,7 +713,7 @@ export default function ClientSettingsForm({ client }: Props) {
             <p className="text-surface-400 text-xs mt-2 max-w-md">{analyticsNotice}</p>
           )}
           {analyticsError && (
-            <p className="text-red-400 text-xs mt-2 max-w-md">{analyticsError}</p>
+            <p className="text-error text-xs mt-2 max-w-md">{analyticsError}</p>
           )}
         </div>
       </div>
@@ -753,7 +753,7 @@ export default function ClientSettingsForm({ client }: Props) {
               {gbpAccountsLoading ? 'Loading…' : 'Load'}
             </button>
           </div>
-          {gbpAccountsError && <p className="text-red-400 text-xs mt-1.5">{gbpAccountsError}</p>}
+          {gbpAccountsError && <p className="text-error text-xs mt-1.5">{gbpAccountsError}</p>}
           <p className="text-surface-400 text-xs mt-1.5">
             Click Load to pick from connected accounts, or paste a resource name (e.g. accounts/123456) below.
           </p>
@@ -891,7 +891,7 @@ export default function ClientSettingsForm({ client }: Props) {
         </div>
       </div>
 
-      {saveError && <p className="text-red-400 text-sm">{saveError}</p>}
+      {saveError && <p className="text-error text-sm">{saveError}</p>}
 
       <div className="flex items-center gap-3">
         <button

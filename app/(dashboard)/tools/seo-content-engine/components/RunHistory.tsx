@@ -43,8 +43,8 @@ const STATUS_LEVEL: Record<string, StatusLevel> = {
 function StatusBadge({ status }: { status: string }) {
   if (status === 'running') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-500/10 text-blue-400">
-        <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+      <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-surface-800 text-surface-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-surface-800" />
         Running
       </span>
     )
@@ -119,7 +119,7 @@ export default function RunHistory({ clientId, onLoadRun }: RunHistoryProps) {
       </div>
 
       {error && (
-        <p className="mb-4 text-sm text-red-400">{error}</p>
+        <p className="mb-4 text-sm text-error">{error}</p>
       )}
 
       <div className="overflow-x-auto">

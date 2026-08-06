@@ -315,7 +315,7 @@ export default function DeliverablesClient({
                           New
                         </span>
                       ) : d.unresolvedCount > 0 ? (
-                        <span className="text-xs bg-amber-500/15 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                        <span className="text-xs bg-warning/20 text-warning border border-warning/20 px-2 py-0.5 rounded-full">
                           Open threads
                         </span>
                       ) : (
@@ -324,7 +324,7 @@ export default function DeliverablesClient({
                     </td>
                     <td className="px-4 py-3 text-xs">
                       {d.unresolvedCount > 0 ? (
-                        <span className="text-amber-400">
+                        <span className="text-warning">
                           {d.unresolvedCount} open
                         </span>
                       ) : d.totalCommentCount > 0 ? (

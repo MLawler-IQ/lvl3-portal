@@ -60,9 +60,9 @@ export default function BatchesTable({ batches }: { batches: BatchWithProgress[]
                   {batch.responded_count}/{batch.item_count}
                 </span>
                 <span className="ml-2 text-xs text-surface-400 tabular-nums">
-                  <span className="text-emerald-400">{batch.approved_count} ✓</span>
+                  <span className="text-success">{batch.approved_count} ✓</span>
                   {' · '}
-                  <span className="text-rose-400">{batch.denied_count} ✗</span>
+                  <span className="text-error">{batch.denied_count} ✗</span>
                 </span>
               </td>
               <td className="px-4 py-3 text-surface-400 whitespace-nowrap">

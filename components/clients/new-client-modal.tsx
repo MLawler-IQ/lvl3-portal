@@ -214,7 +214,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
             </div>
           </div>
 
-          {error && <p id="new-client-error" role="alert" className="text-red-400 text-sm">{error}</p>}
+          {error && <p id="new-client-error" role="alert" className="text-error text-sm">{error}</p>}
 
           <div className="flex gap-3 pt-1">
             <button

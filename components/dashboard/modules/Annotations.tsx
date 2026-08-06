@@ -90,7 +90,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
             rows={2}
             className="w-full bg-surface-800 border border-surface-600 text-surface-200 text-sm rounded px-2 py-1.5 placeholder:text-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           />
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-xs text-error">{error}</p>}
           <div className="flex items-center gap-2">
             <button
               onClick={submit}
@@ -134,7 +134,7 @@ export default function Annotations({ annotations, isAdmin, clientId }: Annotati
                   <button
                     onClick={() => remove(a.id)}
                     disabled={pending}
-                    className="text-surface-600 hover:text-rose-400 transition-colors shrink-0"
+                    className="text-surface-600 hover:text-error transition-colors shrink-0"
                     aria-label="Delete note"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

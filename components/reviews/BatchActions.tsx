@@ -60,7 +60,7 @@ export default function BatchActions({
         Regenerate link
       </button>
       {isPending && <Loader2 size={13} className="animate-spin text-surface-400" />}
-      {error && <p className="text-xs text-rose-400">{error}</p>}
+      {error && <p className="text-xs text-error">{error}</p>}
     </div>
   )
 }

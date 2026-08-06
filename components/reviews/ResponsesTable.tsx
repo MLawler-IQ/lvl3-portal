@@ -12,7 +12,7 @@ function DecisionPill({ decision }: { decision: ReviewResponse['decision'] | und
   }
   if (decision === 'deny') {
     return (
-      <span className={`${base} bg-rose-500/10 text-rose-400 border-rose-500/20`}>Denied</span>
+      <span className={`${base} bg-error/10 text-error border-error/20`}>Denied</span>
     )
   }
   return (

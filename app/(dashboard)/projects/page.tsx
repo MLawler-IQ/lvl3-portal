@@ -101,7 +101,7 @@ export default async function ProjectsPage() {
       <div className="p-6 max-w-xl">
         <p className="text-surface-400 mb-2">Failed to load sheet data.</p>
         {sheetError && (
-          <pre className="text-xs text-red-400 bg-surface-900 border border-surface-700 rounded-lg px-4 py-3 text-left whitespace-pre-wrap break-all w-full">
+          <pre className="text-xs text-error bg-surface-900 border border-surface-700 rounded-lg px-4 py-3 text-left whitespace-pre-wrap break-all w-full">
             {sheetError}
           </pre>
         )}

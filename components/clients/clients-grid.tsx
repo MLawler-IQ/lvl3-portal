@@ -77,7 +77,7 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
                   <span>{client.deliverable_count}</span>
                 </div>
                 {client.unread_count > 0 && (
-                  <div className="flex items-center gap-1.5 text-amber-400 text-xs">
+                  <div className="flex items-center gap-1.5 text-warning text-xs">
                     <Eye size={12} />
                     <span>{client.unread_count} unread</span>
                   </div>

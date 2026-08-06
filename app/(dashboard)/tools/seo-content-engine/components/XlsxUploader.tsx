@@ -137,7 +137,7 @@ export default function XlsxUploader({ onTopicsParsed, disabled }: XlsxUploaderP
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
+        <div className="bg-error/10 border border-error/20 rounded-lg px-4 py-3 text-sm text-error">
           {error}
         </div>
       )}

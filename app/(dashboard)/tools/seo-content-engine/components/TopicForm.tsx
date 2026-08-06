@@ -52,7 +52,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-surface-400 mb-1">
-            Title <span className="text-red-400">*</span>
+            Title <span className="text-error">*</span>
           </label>
           <input
             type="text"
@@ -148,7 +148,7 @@ export default function TopicForm({ topics, onTopicsChange, disabled }: TopicFor
                 type="button"
                 onClick={() => handleRemove(i)}
                 disabled={disabled}
-                className="shrink-0 text-surface-400 hover:text-red-400 transition-colors disabled:opacity-50"
+                className="shrink-0 text-surface-400 hover:text-error transition-colors disabled:opacity-50"
                 aria-label={`Remove ${topic.title}`}
               >
                 <svg

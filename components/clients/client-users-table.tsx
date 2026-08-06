@@ -86,7 +86,7 @@ export default function ClientUsersTable({ users, clientId, clientName }: Client
                     <button
                       onClick={() => handleRevoke(u.id)}
                       disabled={revoking === u.id}
-                      className="text-xs text-surface-400 hover:text-red-400 transition-colors disabled:opacity-50"
+                      className="text-xs text-surface-400 hover:text-error transition-colors disabled:opacity-50"
                     >
                       {revoking === u.id ? 'Removing…' : 'Revoke'}
                     </button>

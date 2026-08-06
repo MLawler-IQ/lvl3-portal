@@ -180,7 +180,7 @@ function GbpOverview({ gbp }: { gbp: DashboardGBPData }) {
         </p>
       )}
       {(gbp.insightsError || gbp.auditError) && (
-        <p className="mt-3 text-xs text-amber-400/80">Some GBP data could not be loaded this period.</p>
+        <p className="mt-3 text-xs text-warning">Some GBP data could not be loaded this period.</p>
       )}
     </div>
   );

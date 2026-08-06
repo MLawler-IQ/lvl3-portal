@@ -7,7 +7,7 @@ import { STATUS_TONE } from "@/lib/status-tone";
 
 const FILE_TYPE_CONFIG = {
   pdf: { icon: FileText, color: "text-surface-400", bg: "bg-surface-800" },
-  slides: { icon: Monitor, color: "text-orange-400", bg: "bg-orange-400/10" },
+  slides: { icon: Monitor, color: "text-warning", bg: "bg-warning/10" },
   sheets: { icon: Table2, color: "text-surface-400", bg: "bg-surface-800" },
   link: { icon: ExternalLink, color: "text-brand-400", bg: "bg-brand-400/10" },
 } as const;

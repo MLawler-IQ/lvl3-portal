@@ -34,7 +34,7 @@ export default async function ReviewBatchPage({
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-surface-900 border border-surface-700 rounded-xl p-6">
-          <p className="text-sm text-rose-400">{error ?? 'Failed to load batch'}</p>
+          <p className="text-sm text-error">{error ?? 'Failed to load batch'}</p>
         </div>
       </div>
     )
@@ -90,9 +90,9 @@ export default async function ReviewBatchPage({
           </span>{' '}
           reviewed
           <span className="mx-2 text-surface-600">·</span>
-          <span className="text-emerald-400 tabular-nums">{progress.approved} approved</span>
+          <span className="text-success tabular-nums">{progress.approved} approved</span>
           <span className="mx-2 text-surface-600">·</span>
-          <span className="text-rose-400 tabular-nums">{progress.denied} denied</span>
+          <span className="text-error tabular-nums">{progress.denied} denied</span>
           <span className="mx-2 text-surface-600">·</span>
           <span className="tabular-nums">{progress.pending} pending</span>
         </p>

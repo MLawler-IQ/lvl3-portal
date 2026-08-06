@@ -218,7 +218,7 @@ export default function NewBatchForm() {
             />
           </div>
         </div>
-        {createError && <p className="text-sm text-rose-400">{createError}</p>}
+        {createError && <p className="text-sm text-error">{createError}</p>}
         {!batch ? (
           <button
             type="button"
@@ -269,7 +269,7 @@ export default function NewBatchForm() {
         {uploadErrors.length > 0 && (
           <ul className="space-y-1">
             {uploadErrors.map((msg) => (
-              <li key={msg} className="text-xs text-rose-400">
+              <li key={msg} className="text-xs text-error">
                 {msg}
               </li>
             ))}
@@ -355,7 +355,7 @@ export default function NewBatchForm() {
                         onClick={() => removeRow(row.key)}
                         title="Remove item"
                         aria-label={`Remove ${row.title}`}
-                        className="p-1.5 rounded text-surface-400 hover:text-rose-400 transition-colors"
+                        className="p-1.5 rounded text-surface-400 hover:text-error transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -413,10 +413,10 @@ export default function NewBatchForm() {
         <p className="text-xs font-medium uppercase tracking-widest text-surface-400">
           Step 3 · Save
         </p>
-        {saveError && <p className="text-sm text-rose-400">{saveError}</p>}
+        {saveError && <p className="text-sm text-error">{saveError}</p>}
         {saved && batch ? (
           <div className="space-y-3">
-            <p className="text-sm text-emerald-400">
+            <p className="text-sm text-success">
               Saved {rows.length} item{rows.length === 1 ? '' : 's'}.
             </p>
             <div className="flex flex-wrap items-center gap-3">

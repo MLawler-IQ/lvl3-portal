@@ -88,7 +88,7 @@ export default function KeywordResearchClient() {
 
       {error && (
         <div className="bg-surface-900 border border-surface-700 rounded-xl px-5 py-4">
-          <p className="text-sm text-red-400">{error}</p>
+          <p className="text-sm text-error">{error}</p>
         </div>
       )}
 

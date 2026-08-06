@@ -236,7 +236,7 @@ function Thread({
               </button>
               <button
                 onClick={() => setShowRequestChanges(true)}
-                className="text-xs text-surface-400 hover:text-amber-400 transition-colors"
+                className="text-xs text-surface-400 hover:text-warning transition-colors"
               >
                 Request changes
               </button>

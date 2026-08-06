@@ -34,7 +34,7 @@ export default async function ReviewsPage() {
 
       {error ? (
         <div className="bg-surface-900 border border-surface-700 rounded-xl p-6">
-          <p className="text-sm text-rose-400">{error}</p>
+          <p className="text-sm text-error">{error}</p>
         </div>
       ) : (
         <BatchesTable batches={batches ?? []} />
