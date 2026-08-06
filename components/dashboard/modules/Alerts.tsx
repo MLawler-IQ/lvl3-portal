@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { AlertTriangle, AlertCircle, Info } from 'lucide-react'
 import type { AlertSeverity, DashboardAlert } from '@/lib/dashboard/types'
+import { STATUS_TONE } from '@/lib/status-tone'
 
 export interface AlertsProps {
   /** Ranked alerts (critical → warning → info), already deduped/capped by the engine. */
@@ -15,21 +16,24 @@ const SEVERITY_STYLES: Record<
   { row: string; icon: React.ElementType; iconColor: string; title: string }
 > = {
   critical: {
-    row: 'bg-rose-500/10 border-rose-500/30',
+    row: STATUS_TONE.error.row,
     icon: AlertTriangle,
-    iconColor: 'text-rose-400',
-    title: 'text-rose-300',
+    iconColor: STATUS_TONE.error.text,
+    // Titles were a lighter -300 shade of the same hue, the only place that idiom
+    // appeared. surface-100 is higher contrast and keeps the colour on the icon,
+    // where §4 wants it.
+    title: 'text-surface-100',
   },
   warning: {
-    row: 'bg-amber-500/10 border-amber-500/30',
+    row: STATUS_TONE.warning.row,
     icon: AlertCircle,
-    iconColor: 'text-amber-400',
-    title: 'text-amber-300',
+    iconColor: STATUS_TONE.warning.text,
+    title: 'text-surface-100',
   },
   info: {
-    row: 'bg-surface-800/60 border-surface-700',
+    row: STATUS_TONE.neutral.row,
     icon: Info,
-    iconColor: 'text-brand-400',
+    iconColor: STATUS_TONE.accent.text,
     title: 'text-surface-100',
   },
 }

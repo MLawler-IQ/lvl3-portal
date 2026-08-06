@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Target as TargetIcon } from 'lucide-react'
 import type { PacingRow, PacingStatus } from '@/lib/dashboard/pacing'
+import { STATUS_TONE, PACING_TONE } from '@/lib/status-tone'
 
 interface TargetsProps {
   pacing: PacingRow[]
@@ -15,21 +16,17 @@ const STATUS_STYLES: Record<
   Exclude<PacingStatus, 'no_target'>,
   { bar: string; chip: string; label: string }
 > = {
-  ahead: {
-    bar: 'bg-brand-400',
-    chip: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
-    label: 'Ahead',
-  },
-  on_track: {
-    bar: 'bg-sky-400',
-    chip: 'text-sky-400 border-sky-400/40 bg-sky-400/10',
-    label: 'On track',
-  },
-  behind: {
-    bar: 'bg-rose-400',
-    chip: 'text-rose-400 border-rose-400/40 bg-rose-400/10',
-    label: 'Behind',
-  },
+  // on_track was the app's only sky-* use; "no new colours" retires it. The three
+  // states stay distinct as accent / success / error, and the label does the real
+  // work of separating "Ahead" from "On track".
+  ahead: { ...bars('ahead'), label: 'Ahead' },
+  on_track: { ...bars('on_track'), label: 'On track' },
+  behind: { ...bars('behind'), label: 'Behind' },
+}
+
+function bars(status: keyof typeof PACING_TONE) {
+  const s = STATUS_TONE[PACING_TONE[status]]
+  return { bar: s.bar, chip: s.chip }
 }
 
 const MONO = { fontFamily: 'var(--font-newsreader), Georgia, serif', fontVariantNumeric: 'tabular-nums' }

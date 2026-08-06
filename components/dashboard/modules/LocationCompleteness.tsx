@@ -2,6 +2,7 @@ import { ClipboardCheck, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { gbpLocationLabel, hasDuplicateTitles } from '@/lib/dashboard/gbp-labels'
 import type { DashboardGBPData, GBPAccountAudit } from '@/app/actions/dashboard-gbp'
+import { STATUS_TONE, SCORE_TONE } from '@/lib/status-tone'
 
 // ── Score → grade colors (matches HealthScorecard token usage) ───────────────
 
@@ -14,21 +15,9 @@ function scoreTone(score: number): ScoreTone {
 }
 
 const TONE_STYLES: Record<ScoreTone, { text: string; bar: string; chip: string }> = {
-  good: {
-    text: 'text-accent-400',
-    bar: 'bg-brand-400',
-    chip: 'text-accent-400 border-accent-400/40 bg-accent-400/10',
-  },
-  warn: {
-    text: 'text-amber-400',
-    bar: 'bg-amber-400',
-    chip: 'text-amber-400 border-amber-400/40 bg-amber-400/10',
-  },
-  bad: {
-    text: 'text-rose-400',
-    bar: 'bg-rose-400',
-    chip: 'text-rose-400 border-rose-400/40 bg-rose-400/10',
-  },
+  good: STATUS_TONE[SCORE_TONE.good],
+  warn: STATUS_TONE[SCORE_TONE.warn],
+  bad: STATUS_TONE[SCORE_TONE.bad],
 }
 
 // Distribution buckets, ordered best → worst.

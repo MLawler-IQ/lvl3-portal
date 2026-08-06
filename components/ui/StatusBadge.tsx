@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Zap,
 } from "lucide-react";
+import { STATUS_TONE } from "@/lib/status-tone";
 
 // ---------------------------------------------------------------------------
 // RunStatusBadge — tool / pipeline run status pill
@@ -111,7 +112,7 @@ const STATUS_CONFIG: Record<
   "needs-review": {
     label: "Needs review",
     icon: Clock,
-    className: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+    className: STATUS_TONE.warning.chip,
   },
   "in-progress": {
     label: "In progress",
@@ -121,7 +122,7 @@ const STATUS_CONFIG: Record<
   blocked: {
     label: "Blocked",
     icon: AlertCircle,
-    className: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+    className: STATUS_TONE.error.chip,
   },
   resolved: {
     label: "Resolved",

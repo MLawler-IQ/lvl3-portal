@@ -1,39 +1,25 @@
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react'
 import type { InsightCard, InsightDirection, InsightSeverity } from '@/lib/dashboard/types'
+import { STATUS_TONE, SEVERITY_TONE } from '@/lib/status-tone'
 
 interface InsightCardsProps {
   cards: InsightCard[]
 }
 
-/** Per-severity color tokens. */
+/** Per-severity tokens. Colours come from lib/status-tone; only the wording is local. */
 const SEVERITY_STYLES: Record<
   InsightSeverity,
   { border: string; accent: string; chip: string; label: string }
 > = {
-  positive: {
-    border: 'border-accent-400/30',
-    accent: 'text-accent-400',
-    chip: 'bg-accent-400/10 text-accent-400 border-accent-400/20',
-    label: 'Positive',
-  },
-  neutral: {
-    border: 'border-surface-700',
-    accent: 'text-surface-400',
-    chip: 'bg-surface-700/50 text-surface-400 border-surface-600',
-    label: 'Steady',
-  },
-  warning: {
-    border: 'border-amber-500/30',
-    accent: 'text-amber-400',
-    chip: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-    label: 'Watch',
-  },
-  critical: {
-    border: 'border-rose-500/40',
-    accent: 'text-rose-400',
-    chip: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    label: 'Attention',
-  },
+  positive: { ...toneOf('positive'), label: 'Positive' },
+  neutral: { ...toneOf('neutral'), label: 'Steady' },
+  warning: { ...toneOf('warning'), label: 'Watch' },
+  critical: { ...toneOf('critical'), label: 'Attention' },
+}
+
+function toneOf(severity: keyof typeof SEVERITY_TONE) {
+  const s = STATUS_TONE[SEVERITY_TONE[severity]]
+  return { border: s.border, accent: s.text, chip: s.chip }
 }
 
 const DIRECTION_ICON: Record<InsightDirection, React.ElementType> = {

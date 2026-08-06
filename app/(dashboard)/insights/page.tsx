@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { Lightbulb } from "lucide-react";
 import NarrativeCard from "@/components/ui/NarrativeCard";
 import RefreshAnalyticsButton from "@/components/home/RefreshAnalyticsButton";
+import { STATUS_TONE } from "@/lib/status-tone";
 
 type Post = {
   id: string;
@@ -20,21 +21,17 @@ type InsightsClient = {
   analytics_summary_updated_at: string | null;
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  SEO: "bg-brand-500/15 text-brand-400 border-brand-500/20",
-  CRO: "bg-accent-400/15 text-accent-400 border-accent-400/20",
-  Analytics: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  "AI Search": "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-};
+// Categories are labels, not statuses. Colouring them with the status palette said
+// things that weren't true — "Analytics" carried the warning amber and "AI Search"
+// the success green, so a neutral taxonomy read as a set of verdicts. One neutral
+// chip; the word does the work. (§4 also reserves status colour for actual state.)
+const CATEGORY_CHIP = STATUS_TONE.neutral.chip;
 
 function CategoryTag({ category }: { category: string | null }) {
   if (!category) return null;
-  const cls =
-    CATEGORY_COLORS[category] ??
-    "bg-surface-700/50 text-surface-400 border-surface-600/50";
   return (
     <span
-      className={`text-xs font-medium px-2 py-0.5 rounded-full border ${cls}`}
+      className={`text-xs font-medium px-2 py-0.5 rounded-full border ${CATEGORY_CHIP}`}
     >
       {category}
     </span>

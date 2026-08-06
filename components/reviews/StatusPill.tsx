@@ -1,9 +1,10 @@
 import type { ReviewBatchStatus } from '@/lib/review/types'
+import { STATUS_TONE } from '@/lib/status-tone'
 
 const STATUS_CLASSES: Record<ReviewBatchStatus, string> = {
   draft: 'bg-surface-700 text-surface-300 border-surface-600',
   open: 'bg-brand-400/15 text-brand-400 border-brand-400/20',
-  submitted: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  submitted: STATUS_TONE.success.chip,
   archived: 'bg-surface-800 text-surface-400 border-surface-700',
 }
 
