@@ -23,12 +23,8 @@ import type { StationBundle } from '@/lib/findings/types'
 import type { CrawlPageRecord, CrawlStationData, GbpProfileRecord } from '@/lib/tools/crawl-record'
 import type { GSCRow } from '@/lib/tools-gsc'
 import type { EvalManifest } from './manifest'
-import {
-  googlebotDisallowRules,
-  readMagnitude,
-  robotsPathBlocked,
-  type PredicateInput,
-} from './injectors/predicates'
+import { readMagnitude, type PredicateInput } from './injectors/predicates'
+import { blockedUrls } from '@/lib/robots'
 
 export type LintRule =
   | 'gsc-page-not-in-crawl'
@@ -74,12 +70,6 @@ export interface LintInput {
 
 /** 'City, ST' — the shape CrawlPageRecord.targetGeo and GBP service areas use. */
 const CITY_STATE = /^[A-Z][A-Za-z.'’-]+(?: [A-Z][A-Za-z.'’-]+)*, [A-Z]{2}$/
-
-function pathOf(url: string): string | null {
-  const m = /^[a-z][a-z0-9+.-]*:\/\/[^/]+(\/[^\s]*)?$/i.exec(url)
-  if (!m) return null
-  return m[1] ?? '/'
-}
 
 function originOf(url: string): string | null {
   const m = /^([a-z][a-z0-9+.-]*:\/\/[^/]+)/i.exec(url)
@@ -173,12 +163,8 @@ export function lintFixture(input: LintInput): LintReport {
     for (const key of urlKeys(page.url)) crawlIndex.set(key, page)
   }
 
-  const disallow = googlebotDisallowRules(crawl.site)
-  const blocked = new Set<string>()
+  const blocked = new Set(blockedUrls(crawl.site.robotsTxt, crawl.pages.map((p) => p.url)))
   for (const page of crawl.pages) {
-    const path = pathOf(page.url)
-    if (path === null) continue
-    if (disallow.length > 0 && robotsPathBlocked(path, disallow)) blocked.add(page.url)
     if (/\bnoindex\b/i.test(page.robotsMeta)) blocked.add(page.url)
   }
 

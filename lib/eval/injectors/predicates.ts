@@ -19,14 +19,34 @@
 // Where a predicate is deliberately stricter than a detector currently is, the
 // generator's encoding mix (encodings.ts) is what decides whether that stricter
 // reading is exercised — the predicate itself stays faithful to the rubric.
+//
+// ONE DELIBERATE EXCEPTION: robots.txt.
+//
+// `robotsBlockedPages` calls the same lib/robots module the TECH-001 detector calls,
+// so for that one predicate the "two independent implementations" claim above does
+// NOT hold. That is a considered trade, not an oversight.
+//
+// There genuinely were two independent robots implementations — this file's and the
+// detector's. They disagreed on three probes (user-agent grouping, Googlebot-Image
+// binding, query-string rules), and neither was right: between them they had six
+// defects including a ReDoS that hung on a crafted robots.txt. See
+// docs/robots-parser-findings.md. Duplicating an implementation only buys
+// independence when the two authors reason differently; both of these were written
+// by the same author from the same misunderstanding, so the duplication bought a
+// disagreement instead of a cross-check, and a disagreeing gate carries no signal.
+//
+// Independence for robots now lives in tests/unit/robots.test.ts, which is written
+// from RFC 9309 and Google's published matching rules rather than from lib/robots —
+// a spec-derived test suite in place of a second implementation. If robots semantics
+// are wrong, that suite is what catches it; this predicate no longer pretends to.
 
 import type {
   CrawlPageRecord,
-  CrawlSiteRecord,
   CrawlStationData,
   GbpProfileRecord,
 } from '@/lib/tools/crawl-record'
 import type { GSCRow } from '@/lib/tools-gsc'
+import { blockedUrls } from '@/lib/robots'
 
 /** Which evidence field the manifest asserts for a given check. */
 export type MagnitudeMetric = 'affectedUrls' | 'value'
@@ -242,71 +262,10 @@ export const GBP_AUDITED_FIELDS = GBP_COMPLETENESS_FIELDS.map((f) => f.field)
 // score zero without needing an allowlist of "acceptable" disallows.
 // ---------------------------------------------------------------------------
 
-interface RobotsRule {
-  /** The raw Disallow path pattern. */
-  pattern: string
-}
-
-/** Disallow rules from the groups that apply to Googlebot ('*' or 'googlebot'). */
-export function googlebotDisallowRules(site: CrawlSiteRecord | undefined): RobotsRule[] {
-  const body = site?.robotsTxt
-  if (!body) return [] // A 404 robots.txt blocks nothing — that is not a defect.
-  const rules: RobotsRule[] = []
-  let applies = false
-  let inGroup = false
-  for (const rawLine of body.split(/\r?\n/)) {
-    const line = rawLine.replace(/#.*$/, '').trim()
-    if (line === '') continue
-    const sep = line.indexOf(':')
-    if (sep < 0) continue
-    const field = line.slice(0, sep).trim().toLowerCase()
-    const value = line.slice(sep + 1).trim()
-    if (field === 'user-agent') {
-      // A new user-agent line after directives starts a new group.
-      if (inGroup) {
-        applies = false
-        inGroup = false
-      }
-      const agent = value.toLowerCase()
-      if (agent === '*' || agent === 'googlebot') applies = true
-      continue
-    }
-    if (field === 'disallow') {
-      inGroup = true
-      if (applies && value !== '') rules.push({ pattern: value })
-      continue
-    }
-    if (field === 'allow') {
-      inGroup = true
-      continue
-    }
-  }
-  return rules
-}
-
-function pathOf(url: string): string {
-  const m = /^[a-z]+:\/\/[^/]+(\/.*)?$/i.exec(url)
-  const withQuery = m ? m[1] ?? '/' : url
-  return withQuery
-}
-
-/** robots.txt prefix matching with `*` wildcards and a trailing `$` anchor. */
-export function robotsPathBlocked(path: string, rules: RobotsRule[]): boolean {
-  return rules.some((rule) => {
-    const anchored = rule.pattern.endsWith('$')
-    const raw = anchored ? rule.pattern.slice(0, -1) : rule.pattern
-    const escaped = raw.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')
-    const re = new RegExp(`^${escaped}${anchored ? '$' : ''}`)
-    return re.test(path)
-  })
-}
-
 export function robotsBlockedPages(input: PredicateInput): MagnitudeReading {
   const pages = input.crawl?.pages ?? []
-  const rules = googlebotDisallowRules(input.crawl?.site)
-  if (rules.length === 0) return { metric: 'affectedUrls', count: 0, subjects: [] }
-  const bad = pages.filter((p) => robotsPathBlocked(pathOf(p.url), rules))
-  return { metric: 'affectedUrls', count: bad.length, subjects: bad.map((p) => p.url) }
+  const bad = blockedUrls(input.crawl?.site?.robotsTxt, pages.map((p) => p.url))
+  return { metric: 'affectedUrls', count: bad.length, subjects: bad }
 }
 
 // ---------------------------------------------------------------------------

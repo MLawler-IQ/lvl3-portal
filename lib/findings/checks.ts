@@ -16,6 +16,12 @@ import type { CheckDefinition, Finding, StationBundle } from './types'
 // all see one list of checks.
 import { DERIVED_CHECKS } from './detectors'
 import type { CrawlPageRecord } from '@/lib/tools/crawl-record'
+// robots.txt semantics live in ONE place, shared with the eval predicates. The two
+// implementations that used to exist disagreed on three probes; see
+// docs/robots-parser-findings.md. Independence from the detector now lives in
+// tests/unit/robots.test.ts, which is written from RFC 9309 rather than from the
+// implementation — a spec-derived test suite, not a duplicate implementation.
+import { blockedUrls, blocksSiteRoot, disallowPatterns } from '@/lib/robots'
 import type { GSCRow } from '@/lib/tools-gsc'
 
 const cap = <T>(arr: T[], n = 5): T[] => arr.slice(0, n)
@@ -52,8 +58,10 @@ const tech001: CheckDefinition = {
     // Found by writing the eval injectors from the rubric text rather than from
     // this file. Now it reports the blocked-URL count, which is the magnitude the
     // rubric implies and the number a client can act on.
-    const rules = parseGooglebotDisallows(txt)
-    const blocked = pages.filter((p) => rules.some((rule) => pathMatchesRule(p.url, rule)))
+    // `patterns` describes, `blocked` decides — they are not the same question, because
+    // an `Allow:` can override a Disallow that still belongs in the evidence string.
+    const patterns = disallowPatterns(txt)
+    const blocked = blockedUrls(txt, pages.map((p) => p.url))
 
     if (blocked.length > 0) {
       return {
@@ -61,15 +69,15 @@ const tech001: CheckDefinition = {
         status: 'fail',
         evidence: {
           affectedUrls: blocked.length,
-          detail: `robots.txt blocks Googlebot from ${blocked.length} of ${pages.length} crawled URLs (rules: ${rules.join(', ')}).`,
-          examples: cap(blocked.map((p) => p.url)),
+          detail: `robots.txt blocks Googlebot from ${blocked.length} of ${pages.length} crawled URLs (rules: ${patterns.join(', ')}).`,
+          examples: cap(blocked),
         },
         source: 'crawl',
       }
     }
 
     // A root block with no pages to attribute it to is still a root block.
-    if (rules.some((r) => r === '/' || r === '/*')) {
+    if (blocksSiteRoot(txt)) {
       return {
         checkId: 'TECH-001',
         status: 'fail',
@@ -86,58 +94,13 @@ const tech001: CheckDefinition = {
       status: 'pass',
       evidence: {
         detail:
-          rules.length > 0
-            ? `robots.txt blocks no crawled URL (${rules.length} Disallow rule(s), all scoped away from crawled paths).`
+          patterns.length > 0
+            ? `robots.txt blocks no crawled URL (${patterns.length} Disallow rule(s), all scoped away from crawled paths).`
             : 'robots.txt contains no Googlebot-applicable Disallow rules.',
       },
       source: 'crawl',
     }
   },
-}
-
-/**
- * Disallow paths from every user-agent group that applies to Googlebot.
- *
- * Parsed as directives split on the first colon rather than matched as exact
- * strings: `Disallow:/` without a space and `Disallow: /*` are both valid and
- * both root-blocking, and an exact-match comparison missed them.
- */
-export function parseGooglebotDisallows(robotsTxt: string): string[] {
-  const out: string[] = []
-  let appliesToGoogle = false
-  for (const raw of robotsTxt.split('\n')) {
-    const line = raw.trim().toLowerCase()
-    if (!line || line.startsWith('#')) continue
-    const colon = line.indexOf(':')
-    if (colon === -1) continue
-    const directive = line.slice(0, colon).trim()
-    const value = line.slice(colon + 1).trim()
-    if (directive === 'user-agent') {
-      appliesToGoogle = value === '*' || value.includes('googlebot')
-    } else if (appliesToGoogle && directive === 'disallow' && value.length > 0) {
-      out.push(value)
-    }
-  }
-  return out
-}
-
-/** Does a robots Disallow rule match a URL? Supports `*` and a trailing `$`. */
-export function pathMatchesRule(url: string, rule: string): boolean {
-  let path: string
-  try {
-    path = new URL(url).pathname.toLowerCase()
-  } catch {
-    path = url.toLowerCase()
-  }
-  if (rule === '/' || rule === '/*') return true
-  const anchored = rule.endsWith('$')
-  const body = anchored ? rule.slice(0, -1) : rule
-  // Escape regex metacharacters except '*', which robots.txt uses as a wildcard.
-  const pattern = body
-    .split('*')
-    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
-    .join('.*')
-  return new RegExp(`^${pattern}${anchored ? '$' : ''}`).test(path)
 }
 
 // ── ONPAGE-003: one H1 per page ───────────────────────────────────────────────

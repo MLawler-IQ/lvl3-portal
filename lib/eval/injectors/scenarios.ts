@@ -51,7 +51,7 @@ import {
   type GscClusterEncoding,
   type PageEncoding,
 } from './encodings'
-import { googlebotDisallowRules, robotsPathBlocked } from './predicates'
+import { isUrlAllowed, parseRobotsTxt } from '@/lib/robots'
 import type { Rng } from './rng'
 import {
   QueryPool,
@@ -677,9 +677,8 @@ const migrationGoneWrong: ScenarioTemplate = {
     // GSC candidates: 200, and not blocked by whichever robots.txt was chosen —
     // computed from the robots.txt itself rather than a hardcoded prefix, so the
     // fixture stays physical whichever encoding the seed draws.
-    const disallow = googlebotDisallowRules(site)
-    const indexable = (url: string): boolean =>
-      disallow.length === 0 || !robotsPathBlocked(new URL(url).pathname, disallow)
+    const robotsGroups = site.robotsTxt ? parseRobotsTxt(site.robotsTxt) : []
+    const indexable = (url: string): boolean => isUrlAllowed(url, robotsGroups)
     const candidates = pages.filter((p) => p.status === 200 && indexable(p.url)).map((p) => p.url)
     const pairs = survivors.filter(([a, b]) => indexable(a) && indexable(b))
 
