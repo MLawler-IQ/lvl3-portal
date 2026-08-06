@@ -11,6 +11,10 @@
 // lives in the rubric, prioritisation in the scoring stage.
 
 import type { CheckDefinition, Finding, StationBundle } from './types'
+// The derived-analysis detectors live in ./detectors and wrap pure functions from
+// ./analyses. Registered here so the engine, the eval gate and the scoring stage
+// all see one list of checks.
+import { DERIVED_CHECKS } from './detectors'
 import type { CrawlPageRecord } from '@/lib/tools/crawl-record'
 import type { GSCRow } from '@/lib/tools-gsc'
 
@@ -22,8 +26,11 @@ const tech001: CheckDefinition = {
   id: 'TECH-001',
   requires: ['crawl'],
   evaluate: (s: StationBundle): Finding => {
-    const site = s.crawl!.ok ? s.crawl!.data.site : { robotsTxt: null, sitemapUrls: [] }
+    const data = s.crawl!.ok ? s.crawl!.data : null
+    const site = data?.site ?? { robotsTxt: null, sitemapUrls: [] }
+    const pages = data?.pages ?? []
     const txt = site.robotsTxt
+
     if (txt == null) {
       // No robots.txt at all blocks nothing.
       return {
@@ -33,42 +40,104 @@ const tech001: CheckDefinition = {
         source: 'crawl',
       }
     }
-    // A root disallow under *, or one aimed at Googlebot, blocks the whole site.
-    // Parsed as directives (split on the first colon), not exact strings — the
-    // verification pass showed 'Disallow:/' (no space) and 'Disallow: /*' are
-    // valid, root-blocking, and slipped past an exact-match comparison.
-    const lines = txt.split('\n').map((l) => l.trim().toLowerCase())
-    let agentAppliesToGoogle = false
-    const blockedRoots: string[] = []
-    for (const line of lines) {
-      const colon = line.indexOf(':')
-      if (colon === -1) continue
-      const directive = line.slice(0, colon).trim()
-      const value = line.slice(colon + 1).trim()
-      if (directive === 'user-agent') {
-        agentAppliesToGoogle = value === '*' || value.includes('googlebot')
-      } else if (agentAppliesToGoogle && directive === 'disallow' && (value === '/' || value === '/*')) {
-        blockedRoots.push(line)
-      }
-    }
-    if (blockedRoots.length > 0) {
+
+    // Which crawled URLs does a Googlebot-applicable Disallow actually block?
+    //
+    // This used to ask only whether the SITE ROOT was disallowed, so
+    // `Disallow: /services/` passed — despite the rubric note naming money pages
+    // explicitly ("No Disallow on money pages, CSS or JS for Googlebot"). It also
+    // reported evidence.value = 1, a yes/no dressed as a magnitude, which no
+    // rubric-derived magnitude assertion could ever match.
+    //
+    // Found by writing the eval injectors from the rubric text rather than from
+    // this file. Now it reports the blocked-URL count, which is the magnitude the
+    // rubric implies and the number a client can act on.
+    const rules = parseGooglebotDisallows(txt)
+    const blocked = pages.filter((p) => rules.some((rule) => pathMatchesRule(p.url, rule)))
+
+    if (blocked.length > 0) {
       return {
         checkId: 'TECH-001',
         status: 'fail',
         evidence: {
-          value: blockedRoots.length,
+          affectedUrls: blocked.length,
+          detail: `robots.txt blocks Googlebot from ${blocked.length} of ${pages.length} crawled URLs (rules: ${rules.join(', ')}).`,
+          examples: cap(blocked.map((p) => p.url)),
+        },
+        source: 'crawl',
+      }
+    }
+
+    // A root block with no pages to attribute it to is still a root block.
+    if (rules.some((r) => r === '/' || r === '/*')) {
+      return {
+        checkId: 'TECH-001',
+        status: 'fail',
+        evidence: {
+          affectedUrls: pages.length,
           detail: 'robots.txt disallows the site root for Googlebot.',
         },
         source: 'crawl',
       }
     }
+
     return {
       checkId: 'TECH-001',
       status: 'pass',
-      evidence: { detail: 'robots.txt does not block Googlebot from the site root.' },
+      evidence: {
+        detail:
+          rules.length > 0
+            ? `robots.txt blocks no crawled URL (${rules.length} Disallow rule(s), all scoped away from crawled paths).`
+            : 'robots.txt contains no Googlebot-applicable Disallow rules.',
+      },
       source: 'crawl',
     }
   },
+}
+
+/**
+ * Disallow paths from every user-agent group that applies to Googlebot.
+ *
+ * Parsed as directives split on the first colon rather than matched as exact
+ * strings: `Disallow:/` without a space and `Disallow: /*` are both valid and
+ * both root-blocking, and an exact-match comparison missed them.
+ */
+export function parseGooglebotDisallows(robotsTxt: string): string[] {
+  const out: string[] = []
+  let appliesToGoogle = false
+  for (const raw of robotsTxt.split('\n')) {
+    const line = raw.trim().toLowerCase()
+    if (!line || line.startsWith('#')) continue
+    const colon = line.indexOf(':')
+    if (colon === -1) continue
+    const directive = line.slice(0, colon).trim()
+    const value = line.slice(colon + 1).trim()
+    if (directive === 'user-agent') {
+      appliesToGoogle = value === '*' || value.includes('googlebot')
+    } else if (appliesToGoogle && directive === 'disallow' && value.length > 0) {
+      out.push(value)
+    }
+  }
+  return out
+}
+
+/** Does a robots Disallow rule match a URL? Supports `*` and a trailing `$`. */
+export function pathMatchesRule(url: string, rule: string): boolean {
+  let path: string
+  try {
+    path = new URL(url).pathname.toLowerCase()
+  } catch {
+    path = url.toLowerCase()
+  }
+  if (rule === '/' || rule === '/*') return true
+  const anchored = rule.endsWith('$')
+  const body = anchored ? rule.slice(0, -1) : rule
+  // Escape regex metacharacters except '*', which robots.txt uses as a wildcard.
+  const pattern = body
+    .split('*')
+    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+    .join('.*')
+  return new RegExp(`^${pattern}${anchored ? '$' : ''}`).test(path)
 }
 
 // ── ONPAGE-003: one H1 per page ───────────────────────────────────────────────
@@ -78,12 +147,20 @@ const onpage003: CheckDefinition = {
   requires: ['crawl'],
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
-    const affected = pages.filter((p) => p.h1s.length !== 1)
+    // Count H1s that carry USABLE TEXT, not array entries.
+    //
+    // This counted h1s.length, so `[""]`, `["   "]` and an <h1> wrapping only an
+    // image all read as one good heading and scored pass. Found by writing the
+    // eval injectors from the rubric text instead of from this file — the exact
+    // circularity the harness design exists to break. The rubric asks for "one H1
+    // per page DESCRIBING PRIMARY INTENT"; an empty element describes nothing.
+    const usableH1s = (p: { h1s: string[] }) => p.h1s.filter((h) => h.trim().length > 0).length
+    const affected = pages.filter((p) => usableH1s(p) !== 1)
     if (affected.length === 0) {
       return {
         checkId: 'ONPAGE-003',
         status: 'pass',
-        evidence: { detail: `All ${pages.length} pages carry exactly one H1.` },
+        evidence: { detail: `All ${pages.length} pages carry exactly one H1 with text.` },
         source: 'crawl',
       }
     }
@@ -93,7 +170,7 @@ const onpage003: CheckDefinition = {
       status: 'fail',
       evidence: {
         affectedUrls: affected.length,
-        detail: `${affected.length} of ${pages.length} pages do not have exactly one H1.`,
+        detail: `${affected.length} of ${pages.length} pages do not have exactly one H1 with text.`,
         examples: cap(affected.map((p) => p.url)),
       },
       source: 'crawl',
@@ -342,6 +419,10 @@ export const CHECKS: CheckDefinition[] = [
   onpage006,
   local016,
   local003,
+  // ONPAGE-012 (content-to-template ratio). Registering it changes the findings
+  // set for every fixture, which deliberately invalidates the scoring snapshots —
+  // re-baselining them is a reviewed step, not an automatic one.
+  ...DERIVED_CHECKS,
 ]
 
 export const CHECK_IDS = new Set(CHECKS.map((c) => c.id))
