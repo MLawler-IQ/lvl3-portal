@@ -79,6 +79,37 @@ title, `components/report-shell.tsx` (`IgniteIQ`, `Ask IgniteIQ`), and the
 
 ## Notable divergences from the spec
 
+### Delta colours keep green/red instead of sienna (stage 4)
+
+**Spec §4 says** a positive delta is `brand-400` sienna, a neutral one
+`surface-400`, and a regression `--color-error`. lvl3.com's ledger renders both
+`+28%` and `−23%` in sienna.
+
+**We render** positive as `--color-success` (#7FB069) and negative as
+`--color-error` (#F2555A) — the token pair, not the emerald-500/rose-500 the app
+had before.
+
+**Why:** a client-facing dashboard is scanned by people who read green-good/red-bad
+without thinking, and dropping that costs more comprehension than the editorial
+consistency gains. Matt made this call explicitly. The compromise is that the
+convention stays while the *colours* move onto the palette — no new colours, and
+`brand-400` remains reserved for accents, links and active states.
+
+Direction never depends on colour alone: every delta also renders an arrow, and
+where there's room a word ("Up 9%").
+
+Owned by `lib/delta-tone.ts`, which is the only place those three classes are
+chosen. Anyone wanting to return to the letter of the spec changes
+`DELTA_TONE_TEXT` and nothing else.
+
+### The exec band is ledger rows; the analytics strips stay tiles (stage 4)
+
+Spec §4 allows either, and both are used deliberately. The exec band became
+`components/ui/LedgerRow.tsx`. The three analytics KPI strips are genuine 3- and
+8-up grids, so they keep `KpiCard` with the spec's internal treatment applied
+(value in `surface-100`, hairline border, 2px radius) per "Where a grid of tiles
+must stay a grid".
+
 ### `--surface-500` (stage 1b)
 
 The token block labels `--surface-500` (`#6B6353`) as *muted on light* — a paper-mode
