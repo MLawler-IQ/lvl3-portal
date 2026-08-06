@@ -8,6 +8,14 @@
 
 import { keywordQuickWinsTool } from './keyword-quick-wins'
 import { aiVisibilityTool } from './ai-visibility'
+import { contentGapsTool } from './content-gaps'
+import { backlinkOverviewTool } from './backlink-overview'
+import {
+  coreWebVitalsTool,
+  pageSeoAuditTool,
+  contentQualityTool,
+  keywordResearchTool,
+} from './page-audits'
 import type { CallableTool, ToolContext, ToolResult } from '../contract'
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- the registry is heterogeneous
@@ -17,6 +25,12 @@ import type { CallableTool, ToolContext, ToolResult } from '../contract'
 export const CALLABLE_TOOLS: Record<string, CallableTool<any, any>> = {
   [keywordQuickWinsTool.slug]: keywordQuickWinsTool,
   [aiVisibilityTool.slug]: aiVisibilityTool,
+  [contentGapsTool.slug]: contentGapsTool,
+  [backlinkOverviewTool.slug]: backlinkOverviewTool,
+  [coreWebVitalsTool.slug]: coreWebVitalsTool,
+  [pageSeoAuditTool.slug]: pageSeoAuditTool,
+  [contentQualityTool.slug]: contentQualityTool,
+  [keywordResearchTool.slug]: keywordResearchTool,
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -51,4 +65,13 @@ export async function runTool(
   return tool.run(input, ctx)
 }
 
-export { keywordQuickWinsTool, aiVisibilityTool }
+export {
+  keywordQuickWinsTool,
+  aiVisibilityTool,
+  contentGapsTool,
+  backlinkOverviewTool,
+  coreWebVitalsTool,
+  pageSeoAuditTool,
+  contentQualityTool,
+  keywordResearchTool,
+}

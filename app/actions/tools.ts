@@ -5,30 +5,14 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { buildToolContext } from '@/lib/tools/context'
 import { keywordQuickWinsTool, type QuickWin } from '@/lib/tools/callable/keyword-quick-wins'
 import { aiVisibilityTool, type AIVisibilityResult } from '@/lib/tools/callable/ai-visibility'
+import { contentGapsTool, type ContentGap } from '@/lib/tools/callable/content-gaps'
 
 // Re-exported so existing importers of this module keep working; the canonical
 // definitions moved to lib/tools/callable/*.
 export type { QuickWin } from '@/lib/tools/callable/keyword-quick-wins'
 export type { AIVisibilityResult } from '@/lib/tools/callable/ai-visibility'
-import { fetchGSCRows } from '@/lib/tools-gsc'
+export type { ContentGap } from '@/lib/tools/callable/content-gaps'
 import Anthropic from '@anthropic-ai/sdk'
-
-// ── Shared helper ─────────────────────────────────────────────────────────────
-
-async function getClientGSCUrl(clientId: string): Promise<string> {
-  const service = await createServiceClient()
-  const { data } = await service
-    .from('clients')
-    .select('gsc_site_url, name')
-    .eq('id', clientId)
-    .single()
-  if (!data?.gsc_site_url) {
-    throw new Error(
-      `No Search Console site configured for ${data?.name ?? 'this client'}. Set it in client settings.`
-    )
-  }
-  return data.gsc_site_url
-}
 
 // ── Keyword Quick Wins ────────────────────────────────────────────────────────
 
@@ -387,87 +371,16 @@ export async function runSemrushAnalysis(params: {
 
 // ── Content Gap Finder ────────────────────────────────────────────────────────
 
-export type ContentGap = {
-  query: string
-  impressions: number
-  clicks: number
-  position: number
-  ctr: number
-  gapType: 'high-impression-no-clicks' | 'ranking-but-weak' | 'near-page-one'
-  recommendation: string
-}
 
 export async function fetchContentGaps(clientId: string): Promise<{
   gaps?: ContentGap[]
   error?: string
 }> {
   try {
-    await requireAdmin()
-    const siteUrl = await getClientGSCUrl(clientId)
-    const rows = await fetchGSCRows(siteUrl, 90)
-
-    const queryMap = new Map<string, {
-      impressions: number; clicks: number; position: number; count: number
-    }>()
-    for (const r of rows) {
-      const prev = queryMap.get(r.query) ?? { impressions: 0, clicks: 0, position: 0, count: 0 }
-      queryMap.set(r.query, {
-        impressions: prev.impressions + r.impressions,
-        clicks: prev.clicks + r.clicks,
-        position: prev.position + r.position,
-        count: prev.count + 1,
-      })
-    }
-
-    const gaps: ContentGap[] = []
-
-    for (const [query, v] of Array.from(queryMap.entries())) {
-      const position = v.position / v.count
-      const ctr = v.impressions > 0 ? v.clicks / v.impressions : 0
-
-      if (v.impressions >= 200 && ctr < 0.01 && position <= 30) {
-        gaps.push({
-          query,
-          impressions: v.impressions,
-          clicks: v.clicks,
-          position: Math.round(position * 10) / 10,
-          ctr: Math.round(ctr * 1000) / 10,
-          gapType: 'high-impression-no-clicks',
-          recommendation:
-            'High visibility but no engagement — title/meta likely mismatched to intent. Rewrite the title tag to directly address what searchers want.',
-        })
-      } else if (position > 10.5 && position <= 20 && v.impressions >= 150) {
-        gaps.push({
-          query,
-          impressions: v.impressions,
-          clicks: v.clicks,
-          position: Math.round(position * 10) / 10,
-          ctr: Math.round(ctr * 1000) / 10,
-          gapType: 'near-page-one',
-          recommendation:
-            'Just off page one — strengthen on-page signals (header tags, internal links, content depth) to push into top 10.',
-        })
-      } else if (position <= 10.5 && v.impressions >= 100) {
-        const expectedCtr = position <= 3 ? 0.08 : position <= 5 ? 0.04 : 0.02
-        if (ctr < expectedCtr) {
-          gaps.push({
-            query,
-            impressions: v.impressions,
-            clicks: v.clicks,
-            position: Math.round(position * 10) / 10,
-            ctr: Math.round(ctr * 1000) / 10,
-            gapType: 'ranking-but-weak',
-            recommendation: `Ranking #${Math.round(position)} but CTR is below average for this position. Add a power word to the title tag and make the meta description more specific and action-oriented.`,
-          })
-        }
-      }
-    }
-
-    return {
-      gaps: gaps
-        .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, 50),
-    }
+    const { user } = await requireAdmin()
+    const ctx = await buildToolContext({ clientId, invoker: { kind: 'user', userId: user.id } })
+    const res = await contentGapsTool.run({}, ctx)
+    return res.ok ? { gaps: res.data } : { error: res.error }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to fetch content gaps' }
   }

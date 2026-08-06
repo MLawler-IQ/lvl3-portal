@@ -1,4 +1,5 @@
-import { fetchPageSpeedInsights } from '@/lib/connectors/pagespeed'
+import { coreWebVitalsTool } from '@/lib/tools/callable/page-audits'
+import type { ToolContext } from '@/lib/tools/contract'
 import type { AskTool } from './types'
 
 export const pagespeedTools: AskTool[] = [
@@ -18,13 +19,15 @@ Use this when the user asks about page speed, performance, or Core Web Vitals.`,
         required: ['url'],
       },
     },
-    handler: async (input) => {
-      const url = input.url as string
-      const strategy = (input.strategy as 'mobile' | 'desktop') ?? 'mobile'
-      const apiKey = process.env.PAGESPEED_API_KEY
-      const result = await fetchPageSpeedInsights(url, strategy, apiKey)
-      if (!result.ok) return `Error: PageSpeed analysis failed — ${result.error}`
-      return JSON.stringify(result.data)
+    handler: async (input, ctx) => {
+      // Delegates to the callable tool, so quota handling and the degraded-vs-failed
+      // distinction live in one place rather than being duplicated per surface.
+      const res = await coreWebVitalsTool.run(
+        { url: input.url as string, strategy: (input.strategy as 'mobile' | 'desktop') ?? 'mobile' },
+        ctx as unknown as ToolContext,
+      )
+      if (!res.ok) return `Error: PageSpeed analysis failed — ${res.error}`
+      return JSON.stringify(res.data)
     },
   },
 ]

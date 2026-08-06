@@ -1,4 +1,5 @@
 import { fetchAndParse } from '@/lib/connectors/crawler'
+import { pageSeoIssues } from '@/lib/tools/callable/page-audits'
 import type { AskTool } from './types'
 
 export const crawlTools: AskTool[] = [
@@ -21,16 +22,12 @@ Use this when the user asks about on-page SEO for a specific URL, or wants a pag
       const result = await fetchAndParse(url)
       if (!result.ok) return `Error: Failed to crawl ${url} — ${result.error}`
       const page = result.data
-      const issues: string[] = []
-      if (!page.title) issues.push('Missing title tag')
-      if (!page.metaDescription) issues.push('Missing meta description')
-      if (page.title.length > 60) issues.push('Title too long (>60 chars)')
-      if (page.metaDescription.length > 160) issues.push('Meta description too long (>160 chars)')
-      const h1s = page.headings.filter((h) => h.level === 1)
-      if (h1s.length === 0) issues.push('Missing H1')
-      if (h1s.length > 1) issues.push(`Multiple H1 tags (${h1s.length})`)
-      const missingAlt = page.images.filter((i) => !i.hasAlt).length
-      if (missingAlt > 0) issues.push(`${missingAlt} images missing alt text`)
+      // Same rule set the Page SEO Audit tool uses. This handler previously carried
+      // its own copy with SEVEN rules where that one has eleven — no noindex,
+      // canonical, structured-data or thin-content check, and different wording for
+      // the ones it shared. So Ask LVL3 and the audit screen gave different answers
+      // about the same page. One implementation now.
+      const issues = pageSeoIssues(page)
       return JSON.stringify({ ...page, issues })
     },
   },
