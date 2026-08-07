@@ -65,6 +65,9 @@ export async function getClientListForUser(
     const { data } = await service
       .from('clients')
       .select('id, name')
+      // The TopBar picker. An archived client is not selectable; reaching one
+      // is done by URL from the archived list, which is how it gets restored.
+      .is('archived_at', null)
       .order('name')
     return {
       clientList: (data ?? []) as { id: string; name: string }[],

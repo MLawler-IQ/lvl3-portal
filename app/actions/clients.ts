@@ -424,6 +424,7 @@ export async function getClientsWithStats(): Promise<ClientWithStats[]> {
   const { data: clients, error } = await service
     .from('clients')
     .select('id, name, logo_url, slug, google_sheet_id, looker_embed_url, created_at')
+    .is('archived_at', null)
     .order('name')
 
   if (error) throw new Error(error.message)
@@ -494,4 +495,242 @@ export async function getClientUsers(clientId: string): Promise<UserWithAccess[]
   return [...clientRows, ...memberRows].sort(
     (a, b) => new Date(a.granted_at).getTime() - new Date(b.granted_at).getTime()
   )
+}
+
+// ── Archiving and deletion ────────────────────────────────────────────────────
+
+/**
+ * Every table that cascades off clients.id, and the buckets keyed by client id.
+ *
+ * Hardcoded rather than read from the catalog at runtime because this list is
+ * the safety brief shown to a human before an irreversible action — it should
+ * change only when someone deliberately edits it, and a schema change that adds
+ * a cascade SHOULD break the test that pins this list rather than silently
+ * widening what delete destroys.
+ *
+ * review-images is deliberately absent: it is keyed by review_batches.id, and
+ * review_batches.client is free text with no foreign key, so those files belong
+ * to no client and must not be purged here.
+ */
+const CASCADING_TABLES = [
+  'deliverables',
+  'tool_runs',
+  'semrush_reports',
+  'seo_content_engine_runs',
+  'ask_lvl3_conversations',
+  'client_annotations',
+  'client_context_items',
+  'client_onboarding_sessions',
+  'user_client_access',
+] as const
+
+const CLIENT_BUCKETS = ['client-assets', 'deliverables', 'chat-artifacts'] as const
+
+export interface ClientDeletionImpact {
+  clientName: string
+  archived: boolean
+  /** Row counts per cascading table, only those with rows. */
+  rows: { table: string; count: number }[]
+  totalRows: number
+  storageFiles: number
+  /**
+   * Client-role users who would be left able to log in but see nothing, because
+   * this is the only client they can reach.
+   */
+  strandedUsers: { id: string; email: string }[]
+}
+
+/**
+ * What deleting this client would actually destroy.
+ *
+ * Shown before the irreversible action rather than described in the abstract: a
+ * confirm dialog that says "this cannot be undone" teaches nothing, whereas one
+ * that says "14 deliverables, 62 tool runs, and Dana loses her only client" is
+ * a decision someone can actually make.
+ */
+export async function getClientDeletionImpact(clientId: string): Promise<ClientDeletionImpact> {
+  await requireAdmin()
+  const service = await createServiceClient()
+
+  const { data: client } = await service
+    .from('clients')
+    .select('name, archived_at')
+    .eq('id', clientId)
+    .single()
+
+  const rows: { table: string; count: number }[] = []
+  for (const table of CASCADING_TABLES) {
+    const { count } = await service
+      .from(table)
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', clientId)
+    if (count && count > 0) rows.push({ table, count })
+  }
+
+  let storageFiles = 0
+  for (const bucket of CLIENT_BUCKETS) {
+    const { data } = await service.storage.from(bucket).list(clientId, { limit: 1000 })
+    storageFiles += (data ?? []).length
+  }
+
+  // Who can reach this client, and of those, who can reach nothing else.
+  const { data: access } = await service
+    .from('user_client_access')
+    .select('user_id')
+    .eq('client_id', clientId)
+
+  const strandedUsers: { id: string; email: string }[] = []
+  for (const row of access ?? []) {
+    const userId = (row as { user_id: string }).user_id
+    const { count: otherClients } = await service
+      .from('user_client_access')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .neq('client_id', clientId)
+
+    if (otherClients && otherClients > 0) continue
+
+    const { data: u } = await service
+      .from('users')
+      .select('id, email, role')
+      .eq('id', userId)
+      .single()
+
+    // An admin or member is not stranded — they see the portal regardless.
+    if (u && (u as { role: string }).role === 'client') {
+      strandedUsers.push({ id: u.id as string, email: u.email as string })
+    }
+  }
+
+  return {
+    clientName: (client?.name as string) ?? 'this client',
+    archived: !!client?.archived_at,
+    rows,
+    totalRows: rows.reduce((n, r) => n + r.count, 0),
+    storageFiles,
+    strandedUsers,
+  }
+}
+
+/**
+ * Hide a client without destroying anything. The everyday action.
+ *
+ * Reversible by design, so it needs no dire confirmation: nothing is lost, the
+ * client simply stops appearing in lists, pickers, triage and sheet lookups.
+ */
+export async function archiveClient(clientId: string): Promise<{ error?: string }> {
+  try {
+    const user = await requireAdmin()
+    const service = await createServiceClient()
+
+    const { error } = await service
+      .from('clients')
+      .update({ archived_at: new Date().toISOString(), archived_by: user.id })
+      .eq('id', clientId)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/clients')
+    revalidatePath(`/clients/${clientId}`)
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to archive' }
+  }
+}
+
+export async function restoreClient(clientId: string): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+
+    const { error } = await service
+      .from('clients')
+      .update({ archived_at: null, archived_by: null })
+      .eq('id', clientId)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/clients')
+    revalidatePath(`/clients/${clientId}`)
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to restore' }
+  }
+}
+
+/**
+ * Permanently delete a client, its cascading rows, and its storage files.
+ *
+ * Guarded three ways, because nothing here is recoverable:
+ *  1. The client must already be archived. Deletion is never a first action —
+ *     archiving first means an accidental removal has a step where nothing has
+ *     happened yet.
+ *  2. `confirmName` must match the client's name exactly. Typing a name is a
+ *     deliberate act in a way that clicking a red button is not.
+ *  3. Storage is purged BEFORE the row is deleted. Files do not cascade, so
+ *     deleting the row first would strand them permanently with no client id
+ *     left to find them by. If the purge fails, the row survives and the whole
+ *     thing can be retried — the recoverable failure is the right one to have.
+ */
+export async function deleteClientPermanently(
+  clientId: string,
+  confirmName: string,
+): Promise<{ error?: string; deletedFiles?: number }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+
+    const { data: client } = await service
+      .from('clients')
+      .select('name, archived_at')
+      .eq('id', clientId)
+      .single()
+
+    if (!client) return { error: 'Client not found.' }
+    if (!client.archived_at) {
+      return { error: 'Archive this client first. Deletion is never a first action.' }
+    }
+    if (confirmName.trim() !== (client.name as string).trim()) {
+      return { error: `That name does not match. Type “${client.name}” exactly to confirm.` }
+    }
+
+    let deletedFiles = 0
+    for (const bucket of CLIENT_BUCKETS) {
+      const { data: files } = await service.storage.from(bucket).list(clientId, { limit: 1000 })
+      const paths = (files ?? []).map((f) => `${clientId}/${f.name}`)
+      if (paths.length === 0) continue
+
+      const { error: rmErr } = await service.storage.from(bucket).remove(paths)
+      if (rmErr) {
+        return {
+          error: `Could not clear ${bucket}: ${rmErr.message}. Nothing was deleted — retry, or clear it by hand first.`,
+        }
+      }
+      deletedFiles += paths.length
+    }
+
+    const { error } = await service.from('clients').delete().eq('id', clientId)
+    if (error) return { error: error.message }
+
+    revalidatePath('/clients')
+    return { deletedFiles }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete' }
+  }
+}
+
+/** Archived clients, for the restore list. */
+export async function getArchivedClients(): Promise<
+  { id: string; name: string; slug: string; archived_at: string }[]
+> {
+  await requireAdmin()
+  const service = await createServiceClient()
+
+  const { data } = await service
+    .from('clients')
+    .select('id, name, slug, archived_at')
+    .not('archived_at', 'is', null)
+    .order('archived_at', { ascending: false })
+
+  return (data ?? []) as { id: string; name: string; slug: string; archived_at: string }[]
 }

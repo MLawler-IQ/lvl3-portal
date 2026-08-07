@@ -3,7 +3,13 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getClientUsers } from '@/app/actions/clients'
+import {
+  getClientUsers,
+  getClientDeletionImpact,
+  archiveClient,
+  restoreClient,
+  deleteClientPermanently,
+} from '@/app/actions/clients'
 import {
   getActiveSession,
   addClientContext,
@@ -15,6 +21,7 @@ import { computeCompleteness } from '@/lib/onboarding/completeness'
 import { SLOTS } from '@/lib/onboarding/schema'
 import ClientUsersTable from '@/components/clients/client-users-table'
 import ClientSettingsForm from '@/components/clients/ClientSettingsForm'
+import ClientDangerZone from '@/components/clients/ClientDangerZone'
 import OnboardingWorkspace from '@/components/onboarding/OnboardingWorkspace'
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton'
 import ContextPaste from '@/components/onboarding/ContextPaste'
@@ -51,6 +58,7 @@ export default async function ClientDetailPage({ params }: Props) {
   const users = await getClientUsers(id)
   const { session, messages } = await getActiveSession(id)
   const contextItems = await listContextItems(id)
+  const deletionImpact = await getClientDeletionImpact(id)
 
   // Slot metadata is static; pass it down rather than round-tripping an action.
   const slots = SLOTS.map((s) => ({
@@ -94,6 +102,22 @@ export default async function ClientDetailPage({ params }: Props) {
           <p className="text-surface-400 text-sm font-mono">{client.slug}</p>
         </div>
       </div>
+
+      {client.archived_at && (
+        <div
+          className="mb-8 rounded-sm px-4 py-3 text-sm"
+          style={{
+            color: 'var(--color-warning)',
+            backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'color-mix(in srgb, var(--color-warning) 25%, transparent)',
+          }}
+        >
+          This client is archived — hidden from every list, picker and report. Nothing has been
+          deleted. Restore it below to bring it back.
+        </div>
+      )}
 
       {!client.service_context && !session && (
         <div
@@ -217,6 +241,14 @@ export default async function ClientDetailPage({ params }: Props) {
           }}
         />
       </div>
+
+      <ClientDangerZone
+        clientId={id}
+        impact={deletionImpact}
+        onArchive={archiveClient}
+        onRestore={restoreClient}
+        onDelete={deleteClientPermanently}
+      />
     </div>
   )
 }

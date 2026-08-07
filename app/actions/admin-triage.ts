@@ -153,6 +153,9 @@ export async function getAdminTriage(): Promise<{ data?: TriageRow[]; error?: st
     const { data, error } = await service
       .from('clients')
       .select('id, name, ga4_property_id, gsc_site_url, gbp_account_id, targets')
+      // An archived client must not raise alerts or appear in triage — the
+      // point of archiving is that it stops demanding attention.
+      .is('archived_at', null)
       .order('name')
     if (error) return { error: error.message }
 

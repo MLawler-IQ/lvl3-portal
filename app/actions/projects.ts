@@ -30,6 +30,9 @@ export async function getSheetData(
       .from('clients')
       .select('id')
       .eq('google_sheet_id', sheetId)
+      // A sheet must not resolve to an archived client, or archiving would
+      // leave a live data path into a client that is supposed to be gone.
+      .is('archived_at', null)
       .maybeSingle()
     if (!owner || !(await userCanAccessClient(user, (owner as { id: string }).id))) {
       throw new Error('Not authorized to read this sheet')

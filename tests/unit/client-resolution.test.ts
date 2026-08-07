@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => {
   builder.from = vi.fn(() => builder)
   builder.select = vi.fn(() => builder)
   builder.eq = vi.fn(() => builder)
+  // `.is('archived_at', null)` — archived clients are excluded from the picker.
+  builder.is = vi.fn(() => builder)
   builder.order = vi.fn(async () => state.queryResult)
   builder.single = vi.fn(async () => state.queryResult)
   // member path: .select(...).eq(...) is awaited directly — make eq thenable
@@ -127,6 +129,10 @@ describe('getClientListForUser', () => {
       { id: 'c1', name: 'Acme' },
       { id: 'c2', name: 'Beta' },
     ])
+    // An archived client must never be selectable from the TopBar picker —
+    // otherwise archiving hides a client everywhere except the one control that
+    // pins the whole session to it.
+    expect(mocks.builder.is).toHaveBeenCalledWith('archived_at', null)
   })
 
   it('member role: returns only granted clients, sorted by name', async () => {
