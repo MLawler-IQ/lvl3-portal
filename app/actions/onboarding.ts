@@ -12,8 +12,11 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { computeCompleteness, type Completeness } from '@/lib/onboarding/completeness'
-import { SLOTS, answersSchema, type Answers } from '@/lib/onboarding/schema'
+import { SLOTS, answersSchema, isFilled, type Answers } from '@/lib/onboarding/schema'
 import { buildClientUpdate } from '@/lib/onboarding/promote'
+import { CONTEXT_ITEM_KINDS, type ContextItemKind } from '@/lib/onboarding/context-items'
+import { createAnthropicExtractor, extractSlotValues } from '@/lib/onboarding/extract'
+import { logError } from '@/lib/logging'
 
 export interface OnboardingSession {
   id: string
@@ -183,6 +186,17 @@ export async function approveOnboardingSession(
       }
     }
 
+    // The client's CURRENT context, read immediately before the write. It is the
+    // authority on which slots an admin has overridden by hand in settings, and
+    // buildClientUpdate leaves those columns alone. Read here rather than
+    // trusting the session because the session is what the interview believes;
+    // the row is what the agency decided.
+    const { data: priorClient } = await service
+      .from('clients')
+      .select('service_context')
+      .eq('id', session.client_id)
+      .single()
+
     // Promote to clients.*, including the structured context. Pure mapping in
     // lib/onboarding/promote.ts so it can be unit-tested without a database.
     const clientUpdate = buildClientUpdate(
@@ -190,6 +204,7 @@ export async function approveOnboardingSession(
       completeness,
       sessionId,
       new Date().toISOString(),
+      priorClient?.service_context ?? null,
     )
 
     const { error: clientErr } = await service
@@ -240,6 +255,112 @@ export async function abandonOnboardingSession(
     return { ok: true }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to abandon' }
+  }
+}
+
+/**
+ * Store a pasted transcript/email/note and read suggestions out of it.
+ *
+ * Implements ContextPasteProps['onSubmit']. Two things are load-bearing here:
+ *
+ * 1. The row is stored FIRST and independently of extraction. The item is the
+ *    evidence; the suggestions are a derived read of it that we may well want to
+ *    redo with a better prompt later. A model failure must not lose the paste.
+ * 2. Everything merged into the draft carries source 'context', which isFilled()
+ *    refuses to count. So this action cannot answer a slot, cannot move a
+ *    session to ready_for_review, and cannot reach clients.*. It only ever adds
+ *    suggestions for a human to confirm — and it never overwrites a slot that is
+ *    already answered, because a guess must not displace an answer.
+ */
+export async function addClientContext(input: {
+  clientId: string
+  kind: ContextItemKind
+  title: string | null
+  body: string
+  occurredAt: string | null
+}): Promise<{ error?: string; suggestedSlotIds?: string[]; nothingExtracted?: boolean }> {
+  try {
+    const { user } = await requireAdmin()
+    const service = await createServiceClient()
+
+    const body = input.body.trim()
+    if (!body) return { error: 'Nothing to save — paste some context first.' }
+    if (!CONTEXT_ITEM_KINDS.includes(input.kind)) return { error: 'Unknown context kind.' }
+
+    const { data: item, error: insertErr } = await service
+      .from('client_context_items')
+      .insert({
+        client_id: input.clientId,
+        kind: input.kind,
+        title: input.title?.trim() || null,
+        body,
+        occurred_at: input.occurredAt || null,
+        added_by: user.id,
+      })
+      .select('id')
+      .single()
+
+    if (insertErr) return { error: `Could not save the context: ${insertErr.message}` }
+
+    revalidatePath(`/clients/${input.clientId}`)
+
+    // No open session means there is nothing to suggest into. The item is still
+    // saved and will be read whenever an interview is started.
+    const { data: sessionRow } = await service
+      .from('client_onboarding_sessions')
+      .select('id, answers')
+      .eq('client_id', input.clientId)
+      .in('status', ['in_progress', 'ready_for_review'])
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (!sessionRow) return {}
+
+    const existing = answersSchema.safeParse(sessionRow.answers).data ?? {}
+    const open = SLOTS.filter((s) => !isFilled(existing[s.id])).map((s) => s.id)
+    if (open.length === 0) return {}
+
+    let result
+    try {
+      result = await extractSlotValues(
+        [{ id: item.id as string, kind: input.kind, title: input.title, body, occurredAt: input.occurredAt }],
+        open,
+        { callModel: createAnthropicExtractor() },
+      )
+    } catch (err) {
+      // The paste succeeded; only the reading of it failed. Report that honestly
+      // rather than implying the context was lost.
+      logError('onboarding.context', 'Extraction failed', {
+        clientId: input.clientId,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      return { error: 'Context saved, but reading it failed. You can retry extraction later.' }
+    }
+
+    const suggested = Object.keys(result.answers)
+    if (suggested.length === 0) return { nothingExtracted: true }
+
+    // Suggestions never displace an answer, and never overwrite an earlier
+    // suggestion silently either — last read wins only for slots still open.
+    const merged: Answers = { ...existing }
+    for (const [slotId, value] of Object.entries(result.answers)) {
+      if (isFilled(existing[slotId])) continue
+      merged[slotId] = value
+    }
+
+    const { error: sessionErr } = await service
+      .from('client_onboarding_sessions')
+      .update({ answers: merged, updated_at: new Date().toISOString() })
+      .eq('id', sessionRow.id)
+
+    if (sessionErr) {
+      return { error: `Context saved, but the suggestions could not be attached: ${sessionErr.message}` }
+    }
+
+    return { suggestedSlotIds: suggested }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to add context' }
   }
 }
 

@@ -1,12 +1,27 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronLeft, MessagesSquare } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getClientUsers } from '@/app/actions/clients'
+import { getActiveSession, addClientContext } from '@/app/actions/onboarding'
+import { computeCompleteness } from '@/lib/onboarding/completeness'
+import { SLOTS } from '@/lib/onboarding/schema'
 import ClientUsersTable from '@/components/clients/client-users-table'
 import ClientSettingsForm from '@/components/clients/ClientSettingsForm'
+import OnboardingWorkspace from '@/components/onboarding/OnboardingWorkspace'
+import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton'
+import ContextPaste from '@/components/onboarding/ContextPaste'
+import type { Answers } from '@/lib/onboarding/schema'
 import type { Targets } from '@/lib/dashboard/types'
+
+/**
+ * Setup runs here now, so this page inherits the duration budget the standalone
+ * onboarding page used to carry: server actions inherit the invoking page's
+ * budget, and runDiscovery's cold-cache path fans out one dataStreams.list call
+ * per GA4 property. On the Vercel default that gets cut off mid-index.
+ */
+export const maxDuration = 300
 
 interface Props {
   params: Promise<{ id: string }>
@@ -27,6 +42,18 @@ export default async function ClientDetailPage({ params }: Props) {
   if (!client) notFound()
 
   const users = await getClientUsers(id)
+  const { session, messages } = await getActiveSession(id)
+
+  // Slot metadata is static; pass it down rather than round-tripping an action.
+  const slots = SLOTS.map((s) => ({
+    id: s.id,
+    label: s.label,
+    group: s.group,
+    why: s.why,
+    required: s.required,
+    kind: s.kind,
+    choices: s.choices ?? null,
+  }))
 
   return (
     <div className="p-8 max-w-4xl">
@@ -58,16 +85,9 @@ export default async function ClientDetailPage({ params }: Props) {
           <h1 className="text-surface-100 text-2xl font-medium">{client.name}</h1>
           <p className="text-surface-400 text-sm font-mono">{client.slug}</p>
         </div>
-        <Link
-          href={`/clients/${id}/onboarding`}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-sm border border-surface-800 px-3.5 py-2 text-sm font-medium text-surface-100 transition-colors hover:bg-surface-850 hover:border-surface-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
-        >
-          <MessagesSquare size={14} />
-          {client.service_context ? 'Re-run onboarding' : 'Onboarding interview'}
-        </Link>
       </div>
 
-      {!client.service_context && (
+      {!client.service_context && !session && (
         <div
           className="mb-8 rounded-sm px-4 py-3 text-sm"
           style={{
@@ -79,9 +99,55 @@ export default async function ClientDetailPage({ params }: Props) {
           }}
         >
           No onboarding context captured yet. The pipeline is guessing at service radius,
-          average job value and lead handling until the interview is run.
+          average job value and lead handling until setup is run.
         </div>
       )}
+
+      {/*
+        Setup is the primary content of this page. It used to be a separate
+        destination, which is how the interview and the settings form ended up
+        writing the same nine columns without either knowing about the other.
+        Reading as one status is the point, so it sits above settings rather than
+        beside it.
+      */}
+      <section className="mb-12">
+        <h2 className="text-surface-100 text-xl font-medium mb-1">Setup</h2>
+        <p className="text-surface-400 text-sm mb-6 max-w-2xl leading-relaxed">
+          What the pipeline needs to know about {client.name} — service radius, average job
+          value, how leads are handled, which Google properties are theirs. Everything stays a
+          draft until you approve it.
+        </p>
+
+        {session ? (
+          <OnboardingWorkspace
+            sessionId={session.id}
+            clientId={id}
+            clientName={client.name}
+            slots={slots}
+            answers={session.answers}
+            completeness={computeCompleteness(session.answers)}
+            messages={messages}
+          />
+        ) : (
+          <div className="rounded-sm border border-surface-800 bg-surface-900 p-8 text-center">
+            <h3 className="text-surface-100 text-lg font-medium mb-1.5">No setup in progress</h3>
+            <p className="text-sm text-surface-400 mb-5 max-w-md mx-auto leading-relaxed">
+              Starting one opens a conversation alongside a live checklist of what still needs
+              covering. You can leave and come back — progress is saved as you go.
+            </p>
+            <StartOnboardingButton clientId={id} />
+          </div>
+        )}
+
+        <div className="mt-6 rounded-sm border border-surface-800 bg-surface-900 p-5">
+          <h3 className="text-surface-100 text-sm font-medium mb-1">Paste context</h3>
+          <p className="text-surface-400 text-xs mb-4 max-w-2xl leading-relaxed">
+            A kickoff transcript, an email thread, a note. Anything read out of it is a
+            suggestion to confirm, never an answer.
+          </p>
+          <ContextPaste clientId={id} onSubmit={addClientContext} />
+        </div>
+      </section>
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
@@ -135,6 +201,10 @@ export default async function ClientDetailPage({ params }: Props) {
             brand_terms: (client.brand_terms as string[] | null) ?? null,
             brand_match_mode: (client.brand_match_mode as string | null) ?? null,
             targets: (client.targets as Targets | null) ?? null,
+            // Provenance for the nine columns setup also writes. No migration
+            // and no join — promote.ts already wrote it onto this row.
+            service_context:
+              (client.service_context as { answers?: Answers } | null) ?? null,
           }}
         />
       </div>

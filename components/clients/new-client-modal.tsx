@@ -104,7 +104,9 @@ export default function NewClientModal({ onClose, existingSlugs = [] }: NewClien
       // Creation captures only name/website/slug/logo. Everything else — GA4, GSC, GBP,
       // client type, competitors — is captured by the onboarding interview, so
       // go straight there rather than leaving a half-configured client behind.
-      router.push(`/clients/${id}/onboarding`)
+      // Setup lives on the client page now; /onboarding still redirects here for
+      // older links, but there is no reason to route through it.
+      router.push(`/clients/${id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
       setLoading(false)

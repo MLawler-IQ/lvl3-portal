@@ -88,7 +88,17 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
         </div>
       )}
 
-      {newOpen && <NewClientModal onClose={() => setNewOpen(false)} />}
+      {/*
+        The grid already holds every client, so the slug collision check costs
+        nothing extra here. Without it the modal would happily propose a slug
+        that is already taken and only fail at the insert.
+      */}
+      {newOpen && (
+        <NewClientModal
+          onClose={() => setNewOpen(false)}
+          existingSlugs={clients.map((c) => c.slug)}
+        />
+      )}
     </>
   )
 }

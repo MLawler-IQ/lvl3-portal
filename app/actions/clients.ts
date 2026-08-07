@@ -8,6 +8,12 @@ import {
 import { parseSheetId } from '@/lib/google-sheets'
 import { CLIENT_TYPES, type ClientType, type Targets } from '@/lib/dashboard/types'
 import { TARGET_METRIC_IDS } from '@/lib/dashboard/pacing'
+// One slug implementation. The modal derives the slug as the admin types and
+// this action falls back to the same function, so the two cannot disagree.
+import { slugify } from '@/lib/slug'
+import { startSession } from './onboarding'
+import { runDiscovery } from './onboarding-discover'
+import { logError } from '@/lib/logging'
 
 /** Parse a comma/newline-separated list into a clean string[] (or null when empty). */
 function parseStringList(raw: string | null): string[] | null {
@@ -78,26 +84,24 @@ async function requireAdmin() {
   return user
 }
 
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
 // ── Actions ───────────────────────────────────────────────────────────────────
 
 /**
- * Create a client and return its id.
+ * Create a client, open its setup session, and try to discover its config.
  *
- * Deliberately minimal: a client row has to exist before an onboarding session
- * can reference it (FK), so creation captures only name/slug/logo and the caller
- * hands straight off to the onboarding interview, which is where every other
- * field — GA4, GSC, GBP, client_type, competitors — is actually captured.
+ * Creation captures only name/slug/website/logo. Every other field — GA4, GSC,
+ * GBP, client_type, competitors — comes from setup, either matched automatically
+ * against the agency's own Google account or asked for in the interview.
  *
- * Returns the id rather than void so the modal can route into the interview.
- * Still throws on failure; the modal catches and renders the message.
+ * Discovery runs here rather than on first visit so the admin lands on a page
+ * that already knows things. It is best-effort BY DESIGN: runDiscovery already
+ * treats each source independently and swallows its own failures, and a source
+ * that did not match is a visible gap in the completeness panel rather than an
+ * error. So a client is never left uncreated because Google was slow, and the
+ * failure mode is a form with more blanks in it, not a lost client.
+ *
+ * Returns the id rather than void so the modal can route into setup. Still
+ * throws on a genuine creation failure; the modal catches and renders it.
  */
 export async function createClient(formData: FormData): Promise<{ id: string }> {
   await requireAdmin()
@@ -121,8 +125,23 @@ export async function createClient(formData: FormData): Promise<{ id: string }> 
   if (error) throw new Error(error.message)
   if (!data?.id) throw new Error('Client was created but no id came back')
 
+  const clientId = data.id as string
+
+  // Open the setup session and seed it. Both steps are best-effort: the client
+  // exists, and setup can start (or restart) a session itself. Failing the whole
+  // creation because discovery could not reach GA4 would be the wrong trade.
+  try {
+    const { session } = await startSession(clientId)
+    if (session) await runDiscovery(session.id)
+  } catch (err) {
+    logError('clients.create', 'Setup seeding failed; client still created', {
+      clientId,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+
   revalidatePath('/clients')
-  return { id: data.id as string }
+  return { id: clientId }
 }
 
 export async function updateClient(clientId: string, formData: FormData) {
