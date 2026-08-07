@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { computeCompleteness } from '@/lib/onboarding/completeness'
 import { buildClientUpdate, type ServiceContext } from '@/lib/onboarding/promote'
-import type { Answers } from '@/lib/onboarding/schema'
+import { LIBRARY_TOPICS, type Answers } from '@/lib/onboarding/schema'
 import { applyRecordAnswers } from '@/lib/onboarding/tools'
 
 const filled = (value: unknown): Answers[string] =>
@@ -114,28 +114,81 @@ describe('buildClientUpdate — never clobber live config', () => {
 })
 
 describe('buildClientUpdate — service_context provenance', () => {
+  // `gaps` is built from completeness.unknown, which is scoped to REQUIRED slots.
+  // So the subject of a gap assertion has to be a required slot (client_type,
+  // ga4_property_id, gsc_site_url) — marking an optional slot unknown is recorded
+  // in `answers` but is deliberately not a named gap. Using an optional slot here
+  // would assert an empty array and prove nothing.
   it('carries unknown slots forward as named gaps with their reasons', () => {
     const answers: Answers = {
-      seasonality: filled('summer peak'),
-      avg_job_value: { value: null, unknown: true, reason: 'not tracked by service' },
+      avg_job_value: filled('$450 average ticket'),
+      gsc_site_url: { value: null, unknown: true, reason: 'not tracked by service' },
     }
     const ctx = build(answers).service_context as ServiceContext
 
-    expect(ctx.gaps).toEqual([{ slot: 'avg_job_value', reason: 'not tracked by service' }])
+    expect(ctx.gaps).toEqual([{ slot: 'gsc_site_url', reason: 'not tracked by service' }])
     expect(ctx.sessionId).toBe('sess-1')
     expect(ctx.approvedAt).toBe(APPROVED_AT)
-    expect(ctx.answers.seasonality?.value).toBe('summer peak')
+    expect(ctx.answers.avg_job_value?.value).toBe('$450 average ticket')
   })
 
+  // Fill the other two required slots so the gap is the ONLY thing between this
+  // client and 100%. Otherwise the percentage would sit below 100 because nothing
+  // was answered at all, and the test would pass without the gap mattering.
   it('records a completeness percentage below 100 when a gap exists', () => {
     const ctx = build({
-      avg_job_value: { value: null, unknown: true, reason: 'unknown' },
+      client_type: filled('local_service'),
+      ga4_property_id: filled('123456789'),
+      gsc_site_url: { value: null, unknown: true, reason: 'unknown' },
     }).service_context as ServiceContext
     expect(ctx.completenessPct).toBeLessThan(100)
   })
 
   it('reports no gaps when every answer is real', () => {
-    const ctx = build({ seasonality: filled('summer') }).service_context as ServiceContext
+    const ctx = build({
+      client_type: filled('local_service'),
+      ga4_property_id: filled('123456789'),
+      gsc_site_url: filled('sc-domain:tornadohvacca.com'),
+    }).service_context as ServiceContext
+    expect(ctx.gaps).toEqual([])
+    expect(ctx.completenessPct).toBe(100)
+  })
+
+  // The other half of the required-only scoping above, stated explicitly so a
+  // consumer of service_context does not read `gaps: []` as "the client answered
+  // everything". An optional slot the client could not answer keeps its reason in
+  // `answers`, which is where anyone chasing it down has to look.
+  // A gap is recorded because someone said "we don't know", not because the slot
+  // happened to gate approval. When twelve slots were required that distinction
+  // did not matter; with three, scoping gaps to required slots would have made
+  // them almost always empty and quietly thrown away the most useful thing an
+  // interview produces — a named, reasoned absence.
+  it('names an optional unknown as a gap too, not just a required one', () => {
+    const ctx = build({
+      avg_job_value: { value: null, unknown: true, reason: 'not tracked by service' },
+    }).service_context as ServiceContext
+
+    expect(ctx.gaps).toEqual([{ slot: 'avg_job_value', reason: 'not tracked by service' }])
+    expect(ctx.answers.avg_job_value?.reason).toBe('not tracked by service')
+  })
+
+  it('records required and optional gaps together', () => {
+    const ctx = build({
+      gsc_site_url: { value: null, unknown: true, reason: 'prior vendor still holds the account' },
+      avg_job_value: { value: null, unknown: true, reason: 'not tracked by service' },
+    }).service_context as ServiceContext
+
+    expect(ctx.gaps.map((g) => g.slot).sort()).toEqual(['avg_job_value', 'gsc_site_url'])
+  })
+
+  // An unknown with no reason is not a gap — it is nothing. That rule predates
+  // the slot cut and must survive it for optional slots too, or "I skipped it"
+  // would read identically to "I asked and they could not say".
+  it('still ignores an unknown with no reason, optional or not', () => {
+    const ctx = build({
+      avg_job_value: { value: null, unknown: true },
+    }).service_context as ServiceContext
+
     expect(ctx.gaps).toEqual([])
   })
 })
@@ -304,13 +357,13 @@ describe('buildClientUpdate — a context-sourced value never reaches a column',
 
 describe('applyRecordAnswers', () => {
   it('merges a patch onto existing answers without dropping earlier slots', () => {
-    const current: Answers = { seasonality: filled('summer') }
+    const current: Answers = { avg_job_value: filled('$450 average ticket') }
     const result = applyRecordAnswers(
-      { answers: { cms_hosting: { value: 'WordPress + Yoast' } } },
+      { answers: { services_by_revenue: { value: ['drain cleaning', 'water heaters'] } } },
       current,
     )
-    expect(Object.keys(result.answers).sort()).toEqual(['cms_hosting', 'seasonality'])
-    expect(result.appliedIds).toEqual(['cms_hosting'])
+    expect(Object.keys(result.answers).sort()).toEqual(['avg_job_value', 'services_by_revenue'])
+    expect(result.appliedIds).toEqual(['services_by_revenue'])
     expect(result.rejected).toEqual([])
   })
 
@@ -318,7 +371,7 @@ describe('applyRecordAnswers', () => {
     const result = applyRecordAnswers(
       {
         answers: {
-          seasonality: { value: 'summer' },
+          avg_job_value: { value: '$450 average ticket' },
           invented_slot: { value: 'x' },
         },
       },
@@ -326,7 +379,23 @@ describe('applyRecordAnswers', () => {
     )
     expect(result.rejected).toEqual(['invented_slot'])
     expect(result.message).toContain('invented_slot')
-    expect(result.answers.seasonality).toBeTruthy()
+    expect(result.answers.avg_job_value).toBeTruthy()
+  })
+
+  // A context-library topic is prose the library answers, not a form field, so it
+  // is not a slot id and the model may not write one. Same enforcement path as an
+  // invented id — membership is checked in code, never trusted from the prompt —
+  // which matters more here because these ids WERE slots and still read as
+  // plausible to a model working from stale phrasing.
+  it('rejects a context-library topic id, which is no longer a slot', () => {
+    expect(LIBRARY_TOPICS.map((t) => t.id)).toContain('seasonality')
+
+    const current: Answers = { avg_job_value: filled('$450 average ticket') }
+    const result = applyRecordAnswers({ answers: { seasonality: { value: 'summer peak' } } }, current)
+
+    expect(result.rejected).toEqual(['seasonality'])
+    expect(result.appliedIds).toEqual([])
+    expect(result.answers).toEqual(current)
   })
 
   // Regression. `answers` used to be the applied DELTA, so a fully-rejected
@@ -335,8 +404,8 @@ describe('applyRecordAnswers', () => {
   // back as the complete map.
   it('returns the existing answers intact when the whole patch is invalid', () => {
     const current: Answers = {
-      seasonality: filled('summer'),
-      cms_hosting: filled('WordPress'),
+      avg_job_value: filled('$450 average ticket'),
+      service_radius: filled(['Sherman Oaks', 'Van Nuys']),
     }
     const result = applyRecordAnswers({ answers: { bogus: { value: 1 } } }, current)
 
@@ -346,7 +415,7 @@ describe('applyRecordAnswers', () => {
   })
 
   it('returns the existing answers intact for malformed input, without throwing', () => {
-    const current: Answers = { seasonality: filled('summer') }
+    const current: Answers = { avg_job_value: filled('$450 average ticket') }
     expect(() => applyRecordAnswers({}, current)).not.toThrow()
     expect(applyRecordAnswers({}, current).answers).toEqual(current)
     expect(applyRecordAnswers({ answers: 'nope' }, current).answers).toEqual(current)
@@ -355,7 +424,7 @@ describe('applyRecordAnswers', () => {
   })
 
   it('never returns an empty map when it was given a non-empty one', () => {
-    const current: Answers = { seasonality: filled('summer') }
+    const current: Answers = { avg_job_value: filled('$450 average ticket') }
     for (const bad of [{}, { answers: null }, { answers: 'x' }, { answers: [] }, { answers: { bogus: {} } }]) {
       expect(Object.keys(applyRecordAnswers(bad, current).answers).length).toBeGreaterThan(0)
     }

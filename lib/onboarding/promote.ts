@@ -126,7 +126,10 @@ export function buildClientUpdate(
     // settings form reads this map to render the badge, and a slot whose column
     // we just refused to touch must not read as freshly answered by interview.
     answers: { ...answers, ...overrides },
-    gaps: completeness.unknown.map((id) => ({
+    // Every slot the client explicitly could not answer, required or not. A gap
+    // is worth recording because someone said "we don't know", which is a fact
+    // about the client — not because the slot happened to gate approval.
+    gaps: [...completeness.unknown, ...completeness.optionalUnknown].map((id) => ({
       slot: id,
       reason: answers[id]?.reason ?? null,
     })),

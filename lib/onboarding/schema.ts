@@ -83,7 +83,7 @@ export const SLOTS: readonly Slot[] = [
     questionHint:
       'Which services actually make the money, in order? Not what the website lists — what pays the bills.',
     why: 'Opportunity sizing weights keywords by the service they feed. Without this the pipeline ranks by search volume, which is how you end up optimising a service the client barely sells.',
-    required: true,
+    required: false,
     kind: 'list',
   },
   {
@@ -93,17 +93,7 @@ export const SLOTS: readonly Slot[] = [
     questionHint:
       'Roughly what does a completed job bill for, per service? A range is fine. Ask for the top 3 services at minimum.',
     why: 'THE missing number. Turns every traffic forecast into a revenue model — without it the pipeline can only forecast clicks, which no client cares about.',
-    required: true,
-    kind: 'text',
-  },
-  {
-    id: 'seasonality',
-    label: 'Seasonality and pre-season timing',
-    group: 'business',
-    questionHint:
-      'When does demand spike, and how far ahead do you need content and coverage live for it?',
-    why: 'Sets scheduling for content and campaign work. Publishing AC content in June is late.',
-    required: true,
+    required: false,
     kind: 'text',
   },
 
@@ -115,72 +105,8 @@ export const SLOTS: readonly Slot[] = [
     questionHint:
       'Where do technicians actually drive? Name the real cities and the furthest you will go — not the aspirational list.',
     why: 'The Tornado pilot had pages targeting Orange County from a Sherman Oaks address 45-65 miles away. A service-area business ranks by proximity to its real address, so this catches the whole class of wasted location pages on day one.',
-    required: true,
-    kind: 'list',
-  },
-  {
-    id: 'gbp_service_areas_confirmed',
-    label: 'GBP service areas confirmed',
-    group: 'geography',
-    questionHint:
-      'Read back the service areas listed on the Google Business Profile and confirm they match reality.',
-    why: 'LOCAL-016 (service-area radius coherence) needs this, and the audit cannot fully read the declared area list from the API.',
-    required: true,
-    kind: 'text',
-  },
-
-  // ── Operations ────────────────────────────────────────────────────────────
-  {
-    id: 'lead_handling',
-    label: 'What happens after the phone rings',
-    group: 'operations',
-    questionHint:
-      'Who answers the phone, during and after hours? What happens to a web form? Is anything tracked?',
-    why: 'Home-services phone leads convert at ~46% on the call. Outcome reporting is impossible without knowing where a lead lands, and it scopes the call-tracking gap.',
-    required: true,
-    kind: 'text',
-  },
-  {
-    id: 'prior_vendor_work',
-    label: 'Prior vendor work, and attachment to it',
-    group: 'operations',
-    questionHint:
-      'What did the last agency build? Is the client attached to any of it? Ask specifically about bulk-generated pages.',
-    why: 'Would have surfaced Tornado\'s 130 AI-generated service pages immediately. Consolidation is the highest-impact fix and it is politically impossible to plan without knowing what the client is proud of.',
-    required: true,
-    kind: 'text',
-  },
-  {
-    id: 'approval_authority',
-    label: 'Who approves changes',
-    group: 'operations',
-    questionHint:
-      'Who signs off on site changes, and what specifically needs sign-off versus what we can just do?',
-    why: 'Gates tier-1 agent execution later. Also decides whether a recommendation can ship at all.',
-    required: true,
-    kind: 'text',
-  },
-  {
-    id: 'cms_hosting',
-    label: 'CMS and hosting reality',
-    group: 'operations',
-    questionHint:
-      'What is the site built on, who hosts it, and who has admin access? WordPress version and page builder if known.',
-    why: 'Decides DFY-versus-handoff for every recommendation, and whether the WordPress plugin path is available.',
-    required: true,
-    kind: 'text',
-  },
-
-  // ── Brand ─────────────────────────────────────────────────────────────────
-  {
-    id: 'brand_constraints',
-    label: 'Brand constraints and forbidden language',
-    group: 'brand',
-    questionHint:
-      'Any words, claims or comparisons you will not use? Licensing or warranty language you must include?',
-    why: 'Grounds content generation and keeps drafts inside what the client will actually approve, which is what makes the draft gate cheap to clear.',
     required: false,
-    kind: 'text',
+    kind: 'list',
   },
 
   // ── Access (this interview replaces the intake form) ───────────────────────
@@ -277,6 +203,106 @@ export const SLOTS: readonly Slot[] = [
     required: false,
     promotesTo: 'google_sheet_id',
     kind: 'text',
+  },
+] as const
+
+/**
+ * Context the portal wants but does not ask for as a form field.
+ *
+ * These were slots. They were required, they gated approval, and nothing in the
+ * portal read any of them — so an interview could not be finished without
+ * answering nine questions that changed no behaviour anywhere. All four sessions
+ * ever started are still in_progress, and no client has ever had a
+ * service_context written. That is the cost of asking for prose in a field.
+ *
+ * They are still worth knowing. They are just the wrong SHAPE for a slot: a slot
+ * is a value deterministic code reads, and none of these is. A model reads them
+ * out of the context library when something needs them — which is also where
+ * they naturally live, since a strategist hears all of this on the kickoff call
+ * without anyone having to ask a form question.
+ *
+ * Kept as a declared list rather than deleted so the library knows what it is
+ * expected to be able to answer, and so retrieval and the rolling client brief
+ * have something to aim at. See docs/CONTEXT-LIBRARY.md §2.
+ */
+export interface LibraryTopic {
+  id: string
+  label: string
+  group: SlotGroup
+  /** What a strategist would ask if the client volunteered nothing. */
+  questionHint: string
+  /** Who wants to know, and why. */
+  why: string
+}
+
+export const LIBRARY_TOPICS: readonly LibraryTopic[] = [
+  {
+    id: 'seasonality',
+    label: 'Seasonality and pre-season timing',
+    group: 'business',
+    questionHint:
+      'When does demand spike, and how far ahead do you need content and coverage live for it?',
+    why: 'Sets scheduling for content and campaign work. Publishing AC content in June is late.',
+  },
+  {
+    id: 'lead_handling',
+    label: 'What happens after the phone rings',
+    group: 'operations',
+    questionHint:
+      'Who answers the phone, during and after hours? What happens to a web form? Is anything tracked?',
+    why: 'Home-services phone leads convert at ~46% on the call. Outcome reporting is impossible without knowing where a lead lands, and it scopes the call-tracking gap.',
+  },
+  {
+    id: 'prior_vendor_work',
+    label: 'Prior vendor work, and attachment to it',
+    group: 'operations',
+    questionHint:
+      'What did the last agency build? Is the client attached to any of it? Ask specifically about bulk-generated pages.',
+    why: "Would have surfaced Tornado's 130 AI-generated service pages immediately. Consolidation is the highest-impact fix and it is politically impossible to plan without knowing what the client is proud of.",
+  },
+  {
+    id: 'approval_authority',
+    label: 'Who approves changes',
+    group: 'operations',
+    questionHint:
+      'Who signs off on site changes, and what specifically needs sign-off versus what we can just do?',
+    why: 'Gates tier-1 agent execution later. Also decides whether a recommendation can ship at all.',
+  },
+  {
+    id: 'cms_hosting',
+    label: 'CMS and hosting reality',
+    group: 'operations',
+    questionHint:
+      'What is the site built on, who hosts it, and who has admin access? WordPress version and page builder if known.',
+    why: 'Decides DFY-versus-handoff for every recommendation, and whether the WordPress plugin path is available.',
+  },
+  {
+    id: 'brand_constraints',
+    label: 'Brand constraints and forbidden language',
+    group: 'brand',
+    questionHint:
+      'Any words, claims or comparisons you will not use? Licensing or warranty language you must include?',
+    why: 'Grounds content generation and keeps drafts inside what the client will actually approve, which is what makes the draft gate cheap to clear.',
+  },
+  {
+    // Deliberately NOT a slot, and deliberately not fed to LOCAL-016.
+    //
+    // Its old `why` named LOCAL-016 as the consumer, but that check tests set
+    // membership against DECLARED areas (lib/findings/checks.ts:342-346) while
+    // its own rubric note says a service-area business ranks by proximity to its
+    // REAL address. Feeding it declared areas turns the documented Tornado P1 —
+    // Orange County pages served from Sherman Oaks — into a PASS. A fabricated
+    // pass is worse than the not_run it replaces.
+    //
+    // The fact is still worth holding; the check needs redesigning around
+    // distance before anything should consume it. service_radius, which is still
+    // a slot, encodes the real constraint better.
+    id: 'gbp_service_areas_confirmed',
+    label: 'GBP service areas as declared',
+    group: 'geography',
+    questionHint:
+      'Read back the service areas listed on the Google Business Profile and confirm they match reality.',
+    why: 'Records the gap between declared and actual service area. NOT a pass/fail input — see docs/CONTEXT-LIBRARY.md §3.',
   },
 ] as const
 

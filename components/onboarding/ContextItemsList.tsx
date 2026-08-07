@@ -2,10 +2,14 @@
 
 // The stored context for a client, with the retention controls.
 //
-// Retention policy: an item is purged 60 days after it was added unless it is
-// pinned, in which case it is kept for the life of the client. This list is
-// where that becomes visible and actionable — a policy nobody can see is one
-// nobody can comply with, and these rows hold transcripts and email verbatim.
+// Retention: context is kept for the life of the client. Nothing expires on a
+// timer — a fact derived from a transcript points at that transcript, so deleting
+// it on a schedule would leave the fact still claiming a source that no longer
+// exists. Removal is a deliberate act instead, which is also the honest answer
+// when a client asks for something to be deleted.
+//
+// Pinning no longer exempts anything from anything. It marks the items that
+// matter most, so retrieval and summarisation can prefer them.
 //
 // Only a preview of each body is loaded (see listContextItems), so the whole
 // confidential payload is never shipped to the page just to render a list.
@@ -31,14 +35,9 @@ const KIND_LABELS: Record<ContextItemKind, string> = {
   web_page: 'Web page',
 }
 
-/** Whole days until the 60-day purge; negative means it is already overdue. */
-const RETENTION_DAYS = 60
-
-function daysLeft(createdAt: string): number {
-  const added = new Date(createdAt).getTime()
-  if (Number.isNaN(added)) return RETENTION_DAYS
-  const elapsed = (Date.now() - added) / 86_400_000
-  return Math.ceil(RETENTION_DAYS - elapsed)
+function addedOn(createdAt: string): string {
+  const d = new Date(createdAt)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString()
 }
 
 interface Props {
@@ -70,9 +69,7 @@ export default function ContextItemsList({ items, onSetPinned, onDelete }: Props
     <div className="mt-6">
       <div className="flex items-baseline justify-between mb-2">
         <h3 className="text-surface-100 text-sm font-medium">Stored context</h3>
-        <p className="text-[11px] text-surface-400">
-          Kept {RETENTION_DAYS} days unless pinned
-        </p>
+        <p className="text-[11px] text-surface-400">Kept for the life of the client</p>
       </div>
 
       {error && (
@@ -83,7 +80,6 @@ export default function ContextItemsList({ items, onSetPinned, onDelete }: Props
 
       <ul className="divide-y divide-surface-800 rounded-sm border border-surface-800 bg-surface-950">
         {items.map((item) => {
-          const left = daysLeft(item.created_at)
           const busy = busyId === item.id && pending
           return (
             <li key={item.id} className="flex items-start gap-3 px-3 py-2.5">
@@ -95,16 +91,12 @@ export default function ContextItemsList({ items, onSetPinned, onDelete }: Props
                   <span className="truncate text-xs text-surface-100">
                     {item.title || 'Untitled'}
                   </span>
-                  {item.pinned ? (
-                    <span className="text-[10px] text-brand-400">Kept for the life of the client</span>
-                  ) : (
-                    <span
-                      className="text-[10px] text-surface-400"
-                      title={`Added ${new Date(item.created_at).toLocaleDateString()}`}
-                    >
-                      {left > 0 ? `Expires in ${left}d` : 'Due for purge'}
-                    </span>
+                  {item.pinned && (
+                    <span className="text-[10px] text-brand-400">High signal</span>
                   )}
+                  <span className="text-[10px] text-surface-400">
+                    Added {addedOn(item.created_at)}
+                  </span>
                 </div>
                 <p className="mt-1 truncate text-[11px] text-surface-400">{item.preview}</p>
               </div>
@@ -114,8 +106,8 @@ export default function ContextItemsList({ items, onSetPinned, onDelete }: Props
                   type="button"
                   disabled={busy}
                   onClick={() => run(item.id, () => onSetPinned(item.id, !item.pinned))}
-                  aria-label={item.pinned ? 'Unpin — let this expire' : 'Pin — keep for the life of the client'}
-                  title={item.pinned ? 'Unpin — let this expire' : 'Pin — keep for the life of the client'}
+                  aria-label={item.pinned ? 'Unmark as high signal' : 'Mark as high signal'}
+                  title={item.pinned ? 'Unmark as high signal' : 'Mark as high signal'}
                   className="rounded-sm p-1.5 text-surface-400 transition-colors hover:bg-surface-850 hover:text-surface-100 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
                 >
                   {busy ? (

@@ -32,15 +32,15 @@ const item = (overrides: Partial<ContextItem> = {}): ContextItem => ({
 
 const ITEMS = [item()]
 
-/** Every slot referenced below is treated as still open. */
-const OPEN = [
-  'services_by_revenue',
-  'avg_job_value',
-  'service_radius',
-  'cms_hosting',
-  'client_type',
-  'seasonality',
-]
+/**
+ * Every slot referenced below is treated as still open.
+ *
+ * All four are real entries in SLOTS. The prose questions this fixture used to
+ * name — seasonality, cms_hosting — are LIBRARY_TOPICS now, not slots, so they
+ * would be rejected as `unknown_slot` and would silently stop testing whatever
+ * they were standing in for.
+ */
+const OPEN = ['services_by_revenue', 'avg_job_value', 'service_radius', 'client_type']
 
 /** A stub model that returns whatever payload the test hands it. */
 const stubModel = (payload: unknown): CallModel =>
@@ -85,6 +85,24 @@ describe('evidenceQuotesSource', () => {
   it('rejects empty evidence', () => {
     expect(evidenceQuotesSource('   ', TRANSCRIPT_BODY)).toBe(false)
   })
+
+  // DOCUMENTS PRESENT BEHAVIOUR — this is not an endorsement of it.
+  //
+  // The check is a normalized substring match, so it has no notion that "30"
+  // and "thirty" name the same fact. A model that helpfully digitises a spoken
+  // number has not fabricated anything, but its quote is rejected all the same.
+  // Recorded rather than fixed because the error runs in the safe direction: a
+  // false REJECTION costs one suggestion the admin can still type in by hand,
+  // where a false ACCEPT would put an invented quote in front of a reviewer and
+  // hollow out the confirmation step this module exists to feed. If the check
+  // is ever taught about numerals, this expectation is the one to flip.
+  it('rejects a numeral where the source spelled the number out (present behaviour)', () => {
+    const source = 'Owner: we run about thirty trucks out of the Van Nuys yard.'
+    expect(evidenceQuotesSource('we run about 30 trucks', source)).toBe(false)
+    // The same span copied verbatim is accepted, which pins the rejection on
+    // the substitution alone rather than on anything else in the sentence.
+    expect(evidenceQuotesSource('we run about thirty trucks', source)).toBe(true)
+  })
 })
 
 describe('valueMatchesKind', () => {
@@ -96,9 +114,9 @@ describe('valueMatchesKind', () => {
   })
 
   it('requires a text slot to hold a string', () => {
-    const slot = SLOTS_BY_ID.get('cms_hosting')!
-    expect(valueMatchesKind(slot, 'WordPress')).toBe(true)
-    expect(valueMatchesKind(slot, ['WordPress'])).toBe(false)
+    const slot = SLOTS_BY_ID.get('avg_job_value')!
+    expect(valueMatchesKind(slot, 'Duct cleaning ~$450')).toBe(true)
+    expect(valueMatchesKind(slot, ['Duct cleaning ~$450'])).toBe(false)
   })
 })
 
@@ -202,15 +220,20 @@ describe('validateExtractions', () => {
   // The check that does not exist anywhere else in the codebase, and the one
   // the whole human-confirmation step rests on: a plausible quote that was
   // never said. Without this, review is confirming the model's fluency.
+  //
+  // The slot here is one the transcript DOES discuss, and the invented quote
+  // borrows its vocabulary — "furnace install", a dollar figure, the Owner
+  // speaker label. That is the realistic shape of the failure: not a quote about
+  // some unrelated topic, but a real topic embellished with a number nobody gave.
   it('drops fabricated evidence that is not present in the source', () => {
     const out = validateExtractions(
       {
         extractions: [
           {
-            slotId: 'seasonality',
-            value: 'AC peaks May through September',
+            slotId: 'avg_job_value',
+            value: 'Furnace install ~$1,200',
             confidence: 'high',
-            evidence: 'Owner: our AC work peaks from May through September every year.',
+            evidence: 'Owner: a furnace install runs about $1,200 all in.',
             sourceItemId: 'item-1',
           },
         ],
@@ -220,7 +243,7 @@ describe('validateExtractions', () => {
     )
     expect(out.accepted).toEqual([])
     expect(out.rejected[0]).toMatchObject({
-      slotId: 'seasonality',
+      slotId: 'avg_job_value',
       reason: 'evidence_not_in_source',
     })
   })
@@ -237,7 +260,10 @@ describe('validateExtractions', () => {
   })
 
   it('drops a suggestion for a slot that is not open', () => {
-    const out = validateExtractions({ extractions: [goodServices] }, ITEMS, ['cms_hosting'])
+    // The open list names a different real slot, so services_by_revenue is a
+    // valid slot that has already been answered — the case where a transcript
+    // would otherwise overwrite something a human confirmed.
+    const out = validateExtractions({ extractions: [goodServices] }, ITEMS, ['avg_job_value'])
     expect(out.accepted).toEqual([])
     expect(out.rejected).toEqual([
       { slotId: 'services_by_revenue', reason: 'already_answered' },
@@ -321,8 +347,8 @@ describe('extractSlotValues', () => {
       seen = system
       return '{"extractions":[]}'
     }
-    await extractSlotValues(ITEMS, ['cms_hosting', 'not_a_slot'], { callModel })
-    expect(seen).toContain('cms_hosting')
+    await extractSlotValues(ITEMS, ['avg_job_value', 'not_a_slot'], { callModel })
+    expect(seen).toContain('avg_job_value')
     expect(seen).not.toContain('not_a_slot')
   })
 })
