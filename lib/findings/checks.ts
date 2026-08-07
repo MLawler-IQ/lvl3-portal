@@ -326,6 +326,96 @@ const onpage006: CheckDefinition = {
 }
 
 // ── LOCAL-016: service-area radius coherence ──────────────────────────────────
+//
+// THIS DETECTOR DOES NOT YET TEST WHAT ITS RUBRIC ROW SAYS, AND THAT IS RECORDED RATHER
+// THAN QUIETLY LIVED WITH.
+//
+// The rubric's howToTest is "GBP service areas + real business address vs geography
+// targeted by location pages", and its note — added after the pilot — is explicit: "An
+// SAB ranks by proximity to its REAL address, not declared areas." The body below tests
+// SET MEMBERSHIP against the declared areas, which is a different question. On the
+// documented Tornado P1 (a Sherman Oaks profile serving pages for Orange County, 45-65
+// miles away) a profile that had simply DECLARED Orange County would be reported as
+// coherent — the check would turn one of §9's five P1s green. Declaring an area is a
+// claim about intent; ranking is a fact about distance.
+//
+// WHAT A REAL PROXIMITY TEST WOULD NEED. Two of the three now exist; the blocker has
+// moved, and pretending otherwise would send the next reader looking for a geocoder that
+// is already here:
+//   1. An anchor with coordinates. Location.storefrontAddress is a postal address, not a
+//      lat/lng, and Google's own field doc says it "should not be set for locations of
+//      type CUSTOMER_LOCATION_ONLY" — i.e. the address is structurally absent for exactly
+//      the service-area businesses this check is about. Location.latlng is user-provided,
+//      only returned when it was accepted at create time, and writable only by approved
+//      clients, so it is not a substitute. STILL OPEN: for a hidden-address SAB there may
+//      be no anchor to geocode at all, which is a not_run, not a distance.
+//   2. Coordinates for each page's target. SOLVED, as of 2026-08-07: lib/geo/distance.ts
+//      wraps the Geocoding and Distance Matrix APIs (both enabled on this Cloud project)
+//      behind a discriminated union in which coordinates exist only on the `ok` branch, so
+//      a failed or ambiguous lookup cannot become a number. It also reports a precision
+//      scale, which matters more than it sounds: "Orange County, CA" geocodes to an AREA
+//      centroid 46.4 miles from Sherman Oaks while Santa Ana — a city inside it — is 43.5,
+//      so an `area` result must weaken or withhold a verdict rather than quote a confident
+//      distance. haversineMiles() is free and screens; driveDistance() costs a request and
+//      is reserved for pairs whose verdict turns on the number.
+//   3. A way to get either into a check. STILL THE BLOCKER, and it is an interface change,
+//      not a wiring one. `evaluate` is `(stations: StationBundle) => Finding`
+//      (lib/findings/types.ts:64): synchronous, so it cannot geocode; and its only GBP
+//      input is a `GbpProfileRecord` (lib/tools/crawl-record.ts:171), which has no
+//      coordinate field and no per-page distance field to carry a precomputed answer. A
+//      radius to compare against has the same shape of problem — `clients.service_radius`
+//      exists, but no client fact can reach a detector at all (docs/CONTEXT-LIBRARY.md §1).
+//      The honest place to do the measuring is lib/stations/gbp.ts, which is already async
+//      and already talks to Google; it needs somewhere on the record to put the result.
+//
+// WHY THE SET-MEMBERSHIP BODY IS STILL HERE. Replacing it is a rubric decision
+// (CONTEXT-LIBRARY §7 open decision 3) and the eval harness is the thing that encodes the
+// rubric: fixtures/eval/healthy/manifest.json lists LOCAL-016 under must_pass with
+// location pages targeting DECLARED areas, and fixtures/eval/tornado/manifest.json lists
+// it under must_find with a magnitude computed by lib/eval/injectors/predicates.ts using
+// the same membership rule. Any honest replacement changes both fixtures, two manifests
+// and a scoring snapshot — and re-baselining those is a reviewed step, deliberately not an
+// automatic one (AUTOMATION-PLAN.md slice 6). Changing the detector alone would leave the
+// spec asserting one thing and the code doing another, which is worse than either.
+//
+// WHAT IS CLOSED HERE, AND WHY IT TOOK TWO GUARDS RATHER THAN ONE.
+//
+// Membership is only a question at all when the profile has actually stated a geography.
+// It states one in exactly two places — the city it operates from, and the areas it
+// declares — and the check needs BOTH, because each covers a hole the other leaves open:
+//
+//   NO BUSINESS CITY. The city is the only thing in the record that stands in for the real
+//   address, and the rubric says proximity to that address is the whole test. It is empty
+//   for a service-area business whose address the API does not expose, which is correct
+//   configuration rather than a defect.
+//
+//   NO DECLARED SERVICE AREAS. This is the one that shipped a live fabricated fail, and it
+//   is not an edge case: lib/connectors/gbp.ts:307 derives `serviceAreas` from
+//   Location.serviceArea, and the Business Information API returns that object ONLY for a
+//   service-area business — so `serviceAreas: []` is what EVERY storefront client produces.
+//   With an empty set, "outside the service area" degenerates into "anywhere but the
+//   business's own city", and a Pasadena plumber with pages for Glendale and Burbank —
+//   eight and twelve miles away, both plainly rankable — scored a verticalCritical FAIL
+//   with affectedUrls: 2 attached to make it look measured. An empty declaration is
+//   "nothing was declared", never "serves nowhere"; Google also caps the list at 20 places,
+//   so even a full list is a floor on coverage rather than a boundary.
+//
+// Both are `not_run` with their own sentence. Refusing here is the only place either can
+// be caught: the station is `ok` and non-empty, so the engine's rules cannot see them.
+//
+// WHAT THIS CHECK STILL CANNOT DO, STATED SO NOBODY RE-DERIVES IT. The measuring
+// instrument for the real test now exists — lib/geo/distance.ts exposes geocode(),
+// haversineMiles() and driveDistance() with typed failures and a precision scale, and both
+// Google APIs are enabled. It cannot be called from here. `evaluate` is
+// `(stations: StationBundle) => Finding` (lib/findings/types.ts:64) — synchronous, and its
+// only GBP input is a `GbpProfileRecord`, which carries no coordinates and no field a
+// distance could be attached to. So a proximity test needs one of two interface changes,
+// neither of which is a change to this file: an async check signature, or coordinates and
+// per-page distances measured in lib/stations/gbp.ts and carried on the record. Until then
+// this check measures declared-set membership and says so in its own evidence, rather than
+// claiming a proximity result it did not compute.
+
+const normGeo = (v: string): string => v.trim().toLowerCase()
 
 const local016: CheckDefinition = {
   id: 'LOCAL-016',
@@ -333,14 +423,39 @@ const local016: CheckDefinition = {
   evaluate: (s): Finding => {
     const pages = s.crawl!.ok ? s.crawl!.data.pages : []
     const gbp = s.gbp!.ok ? s.gbp!.data : null
-    const served = new Set((gbp?.serviceAreas ?? []).map((a) => a.trim().toLowerCase()))
-    const home = gbp?.businessCity.trim().toLowerCase()
+    const declared = (gbp?.serviceAreas ?? []).map(normGeo).filter((a) => a.length > 0)
+    const served = new Set(declared)
+    const home = normGeo(gbp?.businessCity ?? '')
+
+    // NO STATED GEOGRAPHY, NO VERDICT — in either direction.
+    if (home.length === 0 || served.size === 0) {
+      const reason =
+        home.length === 0 && served.size === 0
+          ? 'the GBP profile exposes neither a business city nor a declared service area, so there is no proximity anchor and nothing to test page geography against'
+          : home.length === 0
+            ? 'the GBP profile exposes no business city, so there is no proximity anchor'
+            : 'the GBP profile declares no service areas, so "outside the service area" would only mean "not the business\'s own city"'
+      const detail =
+        home.length === 0
+          ? `The profile exposes no business city, so there is no real address to measure the ${pages.length} crawled URLs' target geography against.` +
+            (served.size === 0
+              ? ' It declares no service areas either, so the profile states no geography at all.'
+              : ' Declared service areas alone are a claim about coverage, not evidence the profile can rank there.')
+          : `The profile declares no service areas — the Business Information API returns them only for a service-area business, so this is the normal state for a storefront profile — leaving only the business's own city (${gbp?.businessCity}). Treating every other target as out of area would fault the ${pages.length} crawled URLs against a boundary nobody drew.`
+      return {
+        checkId: 'LOCAL-016',
+        status: 'not_run',
+        evidence: { detail },
+        source: 'derived',
+        reason,
+      }
+    }
 
     const locationPages = pages.filter((p): p is CrawlPageRecord & { targetGeo: string } =>
       Boolean(p.targetGeo),
     )
     const incoherent = locationPages.filter((p) => {
-      const geo = p.targetGeo.trim().toLowerCase()
+      const geo = normGeo(p.targetGeo)
       // Targeting the business's own city is always coherent, listed or not.
       return geo !== home && !served.has(geo)
     })
@@ -367,6 +482,18 @@ const local016: CheckDefinition = {
       }
     }
 
+    // THIS SENTENCE IS FROZEN, AND NOT BY PREFERENCE. It would read better as "target a
+    // city the profile neither operates from nor lists among the N service areas it
+    // declares" — "the profile's service area" invites a reader to hear a measured
+    // coverage boundary where only a declaration was tested. But
+    // fixtures/eval/tornado/scoring.snapshot.json stores this exact string and
+    // tests/unit/eval-snapshot.test.ts asserts the serialized snapshot byte-for-byte, so
+    // changing the wording re-baselines a gate — a reviewed step, deliberately not an
+    // automatic one (AUTOMATION-PLAN.md slice 6). lib/eval/snapshot.ts:54 intends `detail`
+    // to be un-asserted prose; the byte-identity test is stricter than that design, and
+    // reconciling the two belongs with whoever owns the harness. The magnitude is real
+    // either way, and the pass branch below — which no snapshot pins — says what was
+    // actually measured.
     if (incoherent.length > 0) {
       return {
         checkId: 'LOCAL-016',
@@ -383,7 +510,7 @@ const local016: CheckDefinition = {
       checkId: 'LOCAL-016',
       status: 'pass',
       evidence: {
-        detail: `All ${locationPages.length} location pages target geography the profile serves.`,
+        detail: `All ${locationPages.length} location pages target the business's own city or one of the ${served.size} areas the profile declares it serves. That is membership in a declaration, not a proximity measurement — it does not establish that the profile can rank in them.`,
       },
       source: 'derived',
     }
@@ -415,6 +542,28 @@ const local003: CheckDefinition = {
     if (blank(gbp.phone)) missing.push('phone')
     if (blank(gbp.websiteUri)) missing.push('website')
     if (blank(gbp.description)) missing.push('description')
+    // THIS CLAUSE NOW HAS A LIVE SOURCE, and the correction is worth recording because
+    // the comment that used to sit here asserted the opposite as established fact.
+    //
+    // It said photos "are behind the Media API, which this portal is not authorised for",
+    // and lib/stations/gbp.ts recorded `photoCount` as unobtainable on that basis and
+    // refused to emit any record at all. That was never checked: the Google My Business
+    // v4 API is enabled on this Cloud project with 250,000 requests/day granted and the
+    // OAuth token already carries business.manage — verified in the console 2026-08-07.
+    // lib/connectors/gbp-reviews.ts reads it (media.list, counting mediaFormat === 'PHOTO',
+    // NOT totalMediaItemCount, which includes videos).
+    //
+    // What has NOT changed is why the station still refuses when that read fails: a
+    // placeholder count would make this line report "missing photos" about a client whose
+    // photos nobody looked at — a fabricated fail dressed in a real magnitude. The gate
+    // moved from "no API supplies this" to "this run did not read it"; the rule is the same.
+    //
+    // Deleting the clause would be worse in a different way: it silently narrows a rubric
+    // criterion that names photos, and lib/eval/injectors/predicates.ts counts photos when
+    // computing this check's expected magnitude, so the eval harness and the detector would
+    // disagree about what LOCAL-003 means. The narrowing belongs in the criterion
+    // declaration slice 5 adds (CheckDefinition.criteria), where it is stated rather than
+    // inferred.
     if (gbp.photoCount < 3) missing.push('photos')
     // THE §9 FALSE POSITIVE, FIXED AT THE DETECTOR: a service-area business with a
     // hidden storefront address is configured CORRECTLY — Google tells SABs to

@@ -563,6 +563,8 @@ const KIND_GUIDANCE: Record<ContextItemKind, string> = {
   email: 'written by a person. Quote it as-is.',
   note: 'written by a colleague, often shorthand. Quote it as-is.',
   web_page: "scraped page text. It is the client's marketing copy, not their testimony.",
+  audit_run:
+    'our own audit output — a machine reading of a crawl against a rubric. Quote it verbatim like anything else, but it is evidence about the SITE, not testimony about the BUSINESS: it can support a fact about what the site does, and never a fact about what the client wants, sells or has decided. If a question asks what the client thinks, this is not a source for it.',
 }
 
 export function buildExtractionPrompts(

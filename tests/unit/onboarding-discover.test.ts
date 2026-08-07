@@ -12,6 +12,15 @@ import {
 import { describeDiscovery, seedFromDiscovery } from '@/lib/onboarding/seed'
 import { isFilled, type Answers } from '@/lib/onboarding/schema'
 
+/**
+ * These tests exercise the Google-source half of discovery, not brand-term
+ * derivation, so they pass an explicitly empty identity rather than omitting it.
+ * The argument is required precisely so a caller cannot forget it: it used to be
+ * optional "so existing callers keep compiling", which is the property that let
+ * app/actions/onboarding-discover.ts go without it unnoticed.
+ */
+const NO_IDENTITY = { name: null, slug: null }
+
 describe('siteMatchesDomain', () => {
   it('matches a URL-prefix property on an exact host', () => {
     expect(siteMatchesDomain('https://tornadohvacca.com/', 'tornadohvacca.com')).toBe(true)
@@ -395,7 +404,7 @@ describe('discoverClientConfig — partial failure', () => {
   })
 
   it('finds all three when everything works', async () => {
-    const d = await discoverClientConfig(DOMAIN, workingDeps())
+    const d = await discoverClientConfig(DOMAIN, workingDeps(), NO_IDENTITY)
     expect([d.ga4.status, d.gsc.status, d.gbp.status]).toEqual(['ok', 'ok', 'ok'])
     expect(d.clientType?.value).toBe('local_service')
   })
@@ -406,7 +415,7 @@ describe('discoverClientConfig — partial failure', () => {
       buildGa4Index: async () => {
         throw new Error('token expired')
       },
-    })
+    }, NO_IDENTITY)
     expect(d.ga4.status).toBe('failed')
     expect(d.ga4.message).toContain('token expired')
     expect(d.ga4.data).toBeNull()
@@ -421,7 +430,7 @@ describe('discoverClientConfig — partial failure', () => {
       listGscSites: async () => {
         throw new Error('quota')
       },
-    })
+    }, NO_IDENTITY)
     expect(d.gsc.status).toBe('failed')
     expect(d.ga4.status).toBe('ok')
     expect(d.gbp.status).toBe('ok')
@@ -437,7 +446,7 @@ describe('discoverClientConfig — partial failure', () => {
       listGscSites: boom,
       listGbpAccounts: boom,
       listGbpLocations: boom,
-    })
+    }, NO_IDENTITY)
     expect([d.ga4.status, d.gsc.status, d.gbp.status]).toEqual(['failed', 'failed', 'failed'])
     // And a failed GBP must NOT be read as "no locations", which would infer lead_gen.
     expect(d.clientType).toBeNull()
@@ -449,7 +458,7 @@ describe('discoverClientConfig — partial failure', () => {
       listGbpAccounts: async () => {
         throw new Error('gbp down')
       },
-    })
+    }, NO_IDENTITY)
     expect(d.gbp.status).toBe('failed')
     expect(d.clientType).toBeNull()
   })
@@ -458,13 +467,13 @@ describe('discoverClientConfig — partial failure', () => {
     const d = await discoverClientConfig(DOMAIN, {
       ...workingDeps(),
       listGbpLocations: async () => [] as never,
-    })
+    }, NO_IDENTITY)
     expect(d.gbp.status).toBe('no_match')
     expect(d.clientType?.value).toBe('lead_gen')
   })
 
   it('reports GBP unavailable rather than empty when there is no GBP token', async () => {
-    const d = await discoverClientConfig(DOMAIN, { ...workingDeps(), gbpAuth: null })
+    const d = await discoverClientConfig(DOMAIN, { ...workingDeps(), gbpAuth: null }, NO_IDENTITY)
     expect(d.gbp.status).toBe('failed')
     expect(d.gbp.message).toContain('not connected')
     expect(d.clientType).toBeNull()
@@ -481,7 +490,7 @@ describe('discoverClientConfig — partial failure', () => {
         if (accountName === 'accounts/broken') throw new Error('403')
         return [{ title: 'Sherman Oaks', websiteUri: 'https://tornadohvacca.com' }] as never
       },
-    })
+    }, NO_IDENTITY)
     expect(d.gbp.status).toBe('ok')
     expect(d.gbp.data?.accountName).toBe('Good')
   })
@@ -493,7 +502,7 @@ describe('discoverClientConfig — partial failure', () => {
       listGbpLocations: async () => {
         throw new Error('403')
       },
-    })
+    }, NO_IDENTITY)
     // Reporting "no location matched" here would be a silent pass over data we
     // never actually read.
     expect(d.gbp.status).toBe('failed')
@@ -501,13 +510,13 @@ describe('discoverClientConfig — partial failure', () => {
   })
 
   it('normalizes the input, so a full URL works as the match key', async () => {
-    const d = await discoverClientConfig('https://www.tornadohvacca.com/contact', workingDeps())
+    const d = await discoverClientConfig('https://www.tornadohvacca.com/contact', workingDeps(), NO_IDENTITY)
     expect(d.domain).toBe(DOMAIN)
     expect(d.ga4.status).toBe('ok')
   })
 
   it('records a duration for every source', async () => {
-    const d = await discoverClientConfig(DOMAIN, workingDeps())
+    const d = await discoverClientConfig(DOMAIN, workingDeps(), NO_IDENTITY)
     for (const s of [d.ga4, d.gsc, d.gbp]) expect(s.durationMs).toBeGreaterThanOrEqual(0)
   })
 })

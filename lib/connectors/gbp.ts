@@ -68,6 +68,34 @@ export interface GBPLocation {
   hoursPeriods: GBPHoursPeriod[]
   mapsUri: string | null
   newReviewUri: string | null
+  /**
+   * Whether Google models this location as a service-area business.
+   *
+   * A BOOLEAN RATHER THAN A TRISTATE, and only because `serviceArea` is in
+   * LOCATION_READ_MASK. The API returns the field only for an SAB, so with the field
+   * requested its absence is real evidence of "storefront business" rather than "we did
+   * not ask" — the same robotsTxtStatus distinction one layer down. If anyone removes
+   * `serviceArea` from the mask, every location silently becomes `false` and the §9 false
+   * positive comes back; the read mask and this field must move together.
+   *
+   * The stale-cache half of that hazard is closed by the `gbp:account-audit:v3:` key bump
+   * — an 18h payload written before the mask change has no such key and must not be served.
+   */
+  isServiceAreaBusiness: boolean
+  /**
+   * Raw `serviceArea.businessType`, null for a storefront business.
+   * 'CUSTOMER_LOCATION_ONLY' is the one that hides the storefront address.
+   */
+  serviceAreaBusinessType: string | null
+  /**
+   * Declared service areas as localized place names — the API's own example is
+   * "Scottsdale, AZ", which is the 'City, ST' shape GbpProfileRecord.serviceAreas wants.
+   *
+   * A DECLARATION, NOT A MEASUREMENT. Google caps this at 20 places and a business may
+   * declare anywhere; nothing here says the profile can rank there. Never use it as a
+   * proximity test — see the LOCAL-016 note in lib/findings/checks.ts.
+   */
+  serviceAreas: string[]
 }
 
 export interface LocationAudit extends GBPLocation {
@@ -91,6 +119,17 @@ export async function listGBPAccounts(auth: OAuth2Client): Promise<GBPAccount[]>
 
 // NOTE: Business Information API v1 nests primary/additional categories under `categories`.
 // Top-level `primaryCategory` is not a valid readMask field — using it returns INVALID_ARGUMENT.
+//
+// AN INVALID FIELD HERE IS A 400 ON EVERY GBP CALL, not a degraded one — it breaks the
+// dashboard for every client at once. So every entry must be verified against the API's
+// own field list before it lands, never guessed from the shape of the JSON.
+//
+// `serviceArea` was verified against the generated discovery typings shipped with the
+// installed googleapis package — node_modules/googleapis/build/src/apis/
+// mybusinessbusinessinformation/v1.d.ts, `Schema$Location.serviceArea?:
+// Schema$ServiceAreaBusiness`, whose members are `businessType`, `places` and
+// `regionCode`. That file is generated from the live discovery document, so it is the
+// same source the request itself is validated against.
 const LOCATION_READ_MASK = [
   'name',
   'title',
@@ -102,6 +141,12 @@ const LOCATION_READ_MASK = [
   'profile',
   'openInfo',
   'metadata',
+  // Present only for a service-area business. Requesting it is what turns "no address"
+  // into an answerable question: without it, a correctly configured SAB with a hidden
+  // address is indistinguishable from a storefront that forgot to enter one, and the
+  // documented §9 false positive ("No storefront address", score docked to 85 on a
+  // client doing exactly what Google tells SABs to do) is unavoidable.
+  'serviceArea',
 ].join(',')
 
 /** Whether a location list was narrowed to one client, or is a whole account. */
@@ -212,6 +257,13 @@ interface RawGBPLocation {
   profile?: { description?: string | null } | null
   openInfo?: { status?: string | null } | null
   metadata?: { mapsUri?: string | null; newReviewUri?: string | null } | null
+  // Schema$ServiceAreaBusiness. `places.placeInfos[].placeName` is documented as "the
+  // localized name of the place. For example, `Scottsdale, AZ`".
+  serviceArea?: {
+    businessType?: string | null
+    places?: { placeInfos?: Array<{ placeId?: string | null; placeName?: string | null }> | null } | null
+    regionCode?: string | null
+  } | null
 }
 
 function parseLocation(loc: RawGBPLocation): GBPLocation {
@@ -249,6 +301,14 @@ function parseLocation(loc: RawGBPLocation): GBPLocation {
     hoursPeriods: hours,
     mapsUri: loc.metadata?.mapsUri ?? null,
     newReviewUri: loc.metadata?.newReviewUri ?? null,
+    // Presence of the object is the signal, not the truthiness of businessType: the API
+    // returns `serviceArea` only for a service-area business, and a payload carrying
+    // `places` but an unset `businessType` is still one.
+    isServiceAreaBusiness: loc.serviceArea != null,
+    serviceAreaBusinessType: loc.serviceArea?.businessType ?? null,
+    serviceAreas: (loc.serviceArea?.places?.placeInfos ?? [])
+      .map((p) => p?.placeName ?? '')
+      .filter((n) => n.trim().length > 0),
   }
 }
 
@@ -392,7 +452,23 @@ export function auditLocation(loc: GBPLocation): LocationAudit {
     issues.push('No primary category set')
     score -= 10
   }
-  if (!loc.address) {
+  // THE DOCUMENTED §9 FALSE POSITIVE, FIXED AT THE SOURCE.
+  //
+  // This branch used to be unconditional, and it is the one the pilot caught: Tornado is
+  // a service-area business with a deliberately hidden address, the audit reported "No
+  // storefront address" and docked the score to 85 — faulting a client for doing exactly
+  // what Google tells service-area businesses to do. "An automated audit that faults a
+  // client for correct configuration destroys trust in every other finding."
+  //
+  // Google's own Location resource says the storefront address "should not be set for
+  // locations of type CUSTOMER_LOCATION_ONLY, but if set, any value provided will be
+  // discarded" — so for those businesses the absence is not merely acceptable, it is the
+  // only state the API permits. Only a storefront business missing its address is a
+  // defect. Same precondition, same reasoning, as the LOCAL-003 detector.
+  //
+  // This could not be written until `serviceArea` joined LOCATION_READ_MASK: without it
+  // every location parsed as a storefront and the fix would have been a coin flip.
+  if (!loc.address && !loc.isServiceAreaBusiness) {
     issues.push('No storefront address')
     score -= 15
   }
@@ -645,8 +721,13 @@ export async function auditGBPAccount(
   opts: { ttlSeconds?: number } = {},
 ): Promise<GBPAccountAudit> {
   const ttlSeconds = opts.ttlSeconds ?? 60 * 60 * 18 // 18h
-  // v2: same reason as client-insights above — accountName is now a scoped parent.
-  const cacheKey = `gbp:account-audit:v2:${accountName}`
+  // v3: the payload shape changed. LocationAudit extends GBPLocation, which now carries
+  // `isServiceAreaBusiness` — and an entry written before `serviceArea` joined the read
+  // mask has no such key, so it deserializes as `undefined` and every service-area
+  // business re-acquires the "No storefront address" false positive for up to 18 hours.
+  // Bumping the key is the only way a shape change and a cache can both be safe.
+  // (v2 bumped v1 for the scoped-parent change; see client-insights above.)
+  const cacheKey = `gbp:account-audit:v3:${accountName}`
 
   return cachedFetch(cacheKey, ttlSeconds, async () => {
     const auth = await getAdminGBPOAuthClient()

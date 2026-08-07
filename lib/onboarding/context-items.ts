@@ -23,6 +23,13 @@ export const CONTEXT_ITEM_KINDS = [
   'email',
   'note',
   'web_page',
+  // Our own audit report, written by app/actions/audit.ts with source_ref =
+  // audit_runs.id. DERIVED data in the sense of docs/CONTEXT-LIBRARY.md §5 — a
+  // reading of a crawl export through our rubric, never a record of anything a
+  // client said. It is not a paraphrase of testimony either, so it stays out of
+  // PARAPHRASE_CONTEXT_ITEM_KINDS below: that cap is about a note-taker model
+  // retelling a call, which is a different failure from a detector being wrong.
+  'audit_run',
 ] as const
 
 export type ContextItemKind = (typeof CONTEXT_ITEM_KINDS)[number]
@@ -57,7 +64,29 @@ export const CONTEXT_ITEM_KIND_LABELS: Record<ContextItemKind, string> = {
   email: 'Email',
   note: 'Note',
   web_page: 'Web page',
+  audit_run: 'Audit run (ours)',
 }
+
+/**
+ * Kinds a human may paste by hand.
+ *
+ * Deliberately NOT every kind. `audit_run` is written by the portal after a run
+ * completes and carries source_ref pointing at the audit_runs row that produced
+ * it. A hand-pasted one would have no run behind it and would be
+ * indistinguishable downstream from a real one — including to the extractor,
+ * which is told an audit_run is our own measured output. Offering it in the
+ * paste picker is offering a way to forge a measurement.
+ *
+ * The picker reads THIS, not CONTEXT_ITEM_KINDS, so a machine-written kind added
+ * later is excluded by default rather than by remembering.
+ */
+export const PASTEABLE_CONTEXT_ITEM_KINDS: readonly ContextItemKind[] = [
+  'meeting_transcript',
+  'meeting_summary',
+  'email',
+  'note',
+  'web_page',
+]
 
 /** One row of public.client_context_items, as the extractor needs it. */
 export interface ContextItem {

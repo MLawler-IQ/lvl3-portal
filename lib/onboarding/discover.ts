@@ -378,7 +378,7 @@ export async function discoverClientConfig(
    * is a separate optional argument rather than another field on `deps`. Absent
    * means brand terms come from the domain alone, which is still worth having.
    */
-  client?: { name?: string | null; slug?: string | null },
+  client: { name?: string | null; slug?: string | null },
 ): Promise<Discovery> {
   const domain = normalizeDomain(websiteOrDomain)
 

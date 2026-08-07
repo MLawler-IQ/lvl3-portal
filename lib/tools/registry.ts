@@ -18,6 +18,7 @@ import {
   LayoutTemplate,
   Activity,
   MapPin,
+  ClipboardCheck,
 } from 'lucide-react'
 
 import type { ToolCategory, ToolManifest } from './types'
@@ -312,6 +313,24 @@ export const TOOLS: ToolManifest[] = [
     persistsRuns: true,
     estimatedRuntime: 'slow',
     route: '/tools/gbp-audit',
+  },
+  {
+    // The slug IS the route directory name (app/(dashboard)/tools/audit/), which
+    // tests/unit/tool-reachability.test.ts pins in both directions.
+    slug: 'audit',
+    name: 'SEO Audit',
+    description:
+      "Upload a Sitebulb export and run the registered rubric checks over it, Search Console, and the site's robots files. Every run is stored, including a failed one.",
+    icon: ClipboardCheck,
+    category: 'audit',
+    tags: ['sitebulb', 'rubric', 'crawl', 'findings'],
+    inputType: 'mixed',
+    dataSources: ['gsc'],
+    access: 'admin',
+    status: 'new',
+    persistsRuns: true,
+    estimatedRuntime: 'slow',
+    route: '/tools/audit',
   },
 ]
 

@@ -77,7 +77,15 @@ export function buildClientUpdate(
   completeness: Completeness,
   sessionId: string,
   approvedAt: string,
-  priorContext?: unknown,
+  /**
+   * REQUIRED, deliberately. This was optional so it could land before its caller,
+   * and the result was that approveOnboardingSession never passed it: the
+   * override protection compiled, passed 185 lines of tests built on hand-made
+   * priorContext literals, and did nothing in production. Optionality is what
+   * hid it — the compiler had no reason to name the caller. Pass null explicitly
+   * when there is genuinely no prior context.
+   */
+  priorContext: unknown,
 ): Record<string, unknown> {
   const update: Record<string, unknown> = {}
   const overrides = manualOverrides(priorContext)

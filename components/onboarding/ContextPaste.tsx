@@ -22,8 +22,8 @@ import { FileText, Info, Loader2 } from 'lucide-react'
 // Deliberately NOT from '@/lib/onboarding/extract' — that module imports the
 // Anthropic SDK at module scope, and this is a client component.
 import {
-  CONTEXT_ITEM_KINDS,
   CONTEXT_ITEM_KIND_LABELS,
+  PASTEABLE_CONTEXT_ITEM_KINDS,
   type ContextItemKind,
 } from '@/lib/onboarding/context-items'
 import { SLOTS_BY_ID } from '@/lib/onboarding/schema'
@@ -137,7 +137,7 @@ export default function ContextPaste({ clientId, onSubmit }: ContextPasteProps) 
             onChange={(e) => setKind(e.target.value as ContextItemKind)}
             className={`${inputClass} cursor-pointer`}
           >
-            {CONTEXT_ITEM_KINDS.map((k) => (
+            {PASTEABLE_CONTEXT_ITEM_KINDS.map((k) => (
               <option key={k} value={k}>
                 {CONTEXT_ITEM_KIND_LABELS[k]}
               </option>

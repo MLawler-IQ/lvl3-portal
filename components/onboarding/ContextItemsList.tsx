@@ -32,6 +32,7 @@ const BADGE_LABELS: Record<ContextItemKind, string> = {
   email: 'Email',
   note: 'Note',
   web_page: 'Web page',
+  audit_run: 'Audit',
 }
 
 export interface ContextItemRow {

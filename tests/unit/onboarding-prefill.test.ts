@@ -15,6 +15,9 @@ import { isFilled, sanitizeAnswerPatch, type Answers } from '@/lib/onboarding/sc
 
 // ── deriveBrandTerms ──────────────────────────────────────────────────────────
 
+/** Identity is required; these tests do not exercise brand-term derivation. */
+const NO_IDENTITY = { name: null, slug: null }
+
 describe('deriveBrandTerms — the normal case', () => {
   const d = deriveBrandTerms({
     name: 'Tapps Electric',
@@ -306,7 +309,7 @@ describe('discoverClientConfig — competitors', () => {
     const d = await discoverClientConfig(DOMAIN, {
       ...workingDeps(),
       fetchCompetitors: async () => ({ ok: true as const, data: [] }),
-    })
+    }, NO_IDENTITY)
     expect(d.competitors?.status).toBe('no_match')
     expect(d.competitors?.data).toBeNull()
   })
@@ -315,7 +318,7 @@ describe('discoverClientConfig — competitors', () => {
     const d = await discoverClientConfig(DOMAIN, {
       ...workingDeps(),
       fetchCompetitors: async () => ({ ok: false as const, error: 'API units exhausted' }),
-    })
+    }, NO_IDENTITY)
     expect(d.competitors?.status).toBe('failed')
     expect(d.competitors?.message).toContain('API units exhausted')
     // The whole point of the independence rule:
@@ -330,7 +333,7 @@ describe('discoverClientConfig — competitors', () => {
       fetchCompetitors: async () => {
         throw new Error('socket hang up')
       },
-    })
+    }, NO_IDENTITY)
     expect(d.competitors?.status).toBe('failed')
     expect(d.gsc.status).toBe('ok')
   })
@@ -353,7 +356,7 @@ describe('discoverClientConfig — brand terms', () => {
   })
 
   it('falls back to the domain alone when no client identity is passed', async () => {
-    const d = await discoverClientConfig(DOMAIN, workingDeps())
+    const d = await discoverClientConfig(DOMAIN, workingDeps(), NO_IDENTITY)
     expect(d.brandTerms?.terms).toEqual(['tornadohvacca'])
   })
 })

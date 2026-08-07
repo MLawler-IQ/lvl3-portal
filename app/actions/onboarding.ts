@@ -21,7 +21,7 @@ import {
 } from '@/lib/onboarding/schema'
 import { buildClientUpdate } from '@/lib/onboarding/promote'
 import {
-  CONTEXT_ITEM_KINDS,
+  PASTEABLE_CONTEXT_ITEM_KINDS,
   type ContextItem,
   type ContextItemKind,
 } from '@/lib/onboarding/context-items'
@@ -326,7 +326,14 @@ export async function addClientContext(input: {
 
     const body = input.body.trim()
     if (!body) return { error: 'Nothing to save — paste some context first.' }
-    if (!CONTEXT_ITEM_KINDS.includes(input.kind)) return { error: 'Unknown context kind.' }
+    // PASTEABLE, not every kind. The picker no longer offers audit_run, but a
+    // picker is a convenience and never a gate — this action is reachable with
+    // any payload. A hand-posted audit_run would carry no source_ref and no
+    // audit_runs row, yet read downstream as our own measured output, which is
+    // a way to forge a measurement rather than merely to mislabel a note.
+    if (!PASTEABLE_CONTEXT_ITEM_KINDS.includes(input.kind)) {
+      return { error: 'That kind cannot be added by hand.' }
+    }
 
     const { data: item, error: insertErr } = await service
       .from('client_context_items')

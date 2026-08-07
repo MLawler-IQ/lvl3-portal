@@ -71,7 +71,7 @@ interface ClientData {
    * Until it does, every field simply renders without a badge — which is the
    * same as a client who has never been interviewed, so nothing misreports.
    */
-  service_context?: { answers?: Answers } | null
+  service_context: { answers?: Answers } | null
 }
 
 interface Props {

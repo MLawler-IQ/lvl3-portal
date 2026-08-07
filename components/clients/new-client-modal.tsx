@@ -18,13 +18,13 @@ interface NewClientModalProps {
    * client already held `tornado-hvac`. The server checks again regardless: this
    * list is a snapshot, and it is stale the moment anyone else creates a client.
    */
-  existingSlugs?: string[]
+  existingSlugs: string[]
 }
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
-export default function NewClientModal({ onClose, existingSlugs = [] }: NewClientModalProps) {
+export default function NewClientModal({ onClose, existingSlugs }: NewClientModalProps) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
