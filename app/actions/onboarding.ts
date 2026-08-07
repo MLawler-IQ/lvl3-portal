@@ -429,9 +429,9 @@ export async function listContextItems(clientId: string): Promise<ContextItemSum
 /**
  * Mark an item important, or release it.
  *
- * Pinned items are exempt from the 60-day purge and kept for the life of the
- * client. Deliberately an explicit act: the alternative is inferring importance
- * from `kind`, which means guessing about what to delete.
+ * Context is kept for the life of the client, so pinning no longer exempts a row
+ * from anything. It marks the items that matter most, so retrieval and
+ * summarisation can prefer them.
  */
 export async function setContextItemPinned(
   itemId: string,
@@ -457,10 +457,11 @@ export async function setContextItemPinned(
 }
 
 /**
- * Delete a context item now, ahead of its expiry.
+ * Delete a context item.
  *
- * The deletion path a confidentiality question needs an answer to: a client asks
- * for a transcript to be removed, and the answer must not be "in up to 60 days".
+ * The deletion path a confidentiality question needs an answer to. Nothing
+ * expires on a timer any more, so this is the ONLY way a stored item leaves —
+ * which is the point: removal should be a decision someone made.
  * Extracted answers are unaffected — they live on clients.service_context with
  * their own quoted evidence, so removing the source does not silently rewrite
  * the client's configuration.

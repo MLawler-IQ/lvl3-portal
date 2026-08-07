@@ -114,11 +114,9 @@ describe('buildClientUpdate — never clobber live config', () => {
 })
 
 describe('buildClientUpdate — service_context provenance', () => {
-  // `gaps` is built from completeness.unknown, which is scoped to REQUIRED slots.
-  // So the subject of a gap assertion has to be a required slot (client_type,
-  // ga4_property_id, gsc_site_url) — marking an optional slot unknown is recorded
-  // in `answers` but is deliberately not a named gap. Using an optional slot here
-  // would assert an empty array and prove nothing.
+  // `gaps` records every slot marked unknown WITH a reason, required or not — see
+  // the optional-gap tests below. A gap assertion still needs a real reason on the
+  // slot it names, because an unknown with no reason is not a gap at all.
   it('carries unknown slots forward as named gaps with their reasons', () => {
     const answers: Answers = {
       avg_job_value: filled('$450 average ticket'),
@@ -154,10 +152,6 @@ describe('buildClientUpdate — service_context provenance', () => {
     expect(ctx.completenessPct).toBe(100)
   })
 
-  // The other half of the required-only scoping above, stated explicitly so a
-  // consumer of service_context does not read `gaps: []` as "the client answered
-  // everything". An optional slot the client could not answer keeps its reason in
-  // `answers`, which is where anyone chasing it down has to look.
   // A gap is recorded because someone said "we don't know", not because the slot
   // happened to gate approval. When twelve slots were required that distinction
   // did not matter; with three, scoping gaps to required slots would have made

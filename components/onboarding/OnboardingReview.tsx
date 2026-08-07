@@ -165,14 +165,22 @@ export default function OnboardingReview({
       <div className="shrink-0 border-b border-surface-800 px-5 py-4">
         <div className="flex items-baseline justify-between gap-3 mb-2">
           <h2 className="font-serif text-lg text-surface-100">Coverage</h2>
+          {/*
+            Coverage over EVERY slot, not just the required three. Showing the
+            required percentage here would read 100% on a session where three
+            Google ids were auto-discovered and nine questions were never asked —
+            technically true, and an invitation to approve an interview nobody
+            has had. The approve gate is still required-only; this is the picture
+            of what we actually know.
+          */}
           <span className="font-serif tabular-nums text-2xl text-brand-400">
-            {completeness.pct}%
+            {completeness.totalPct}%
           </span>
         </div>
         <div className="h-1 w-full bg-surface-800 rounded-full overflow-hidden">
           <div
             className="h-full bg-brand-400 transition-all"
-            style={{ width: `${completeness.pct}%` }}
+            style={{ width: `${completeness.totalPct}%` }}
           />
         </div>
         <p className="mt-2 text-xs text-surface-400">
@@ -181,6 +189,14 @@ export default function OnboardingReview({
             : completeness.unknown.length > 0
               ? `Ready to review, with ${completeness.unknown.length} recorded gap${completeness.unknown.length === 1 ? '' : 's'}.`
               : 'Every required topic answered.'}
+          {completeness.optionalMissing.length > 0 && (
+            <>
+              {' '}
+              <span className="text-surface-300">
+                {completeness.optionalMissing.length} more worth capturing before you approve.
+              </span>
+            </>
+          )}
         </p>
       </div>
 

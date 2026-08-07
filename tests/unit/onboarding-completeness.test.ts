@@ -148,6 +148,51 @@ describe('context values cannot unlock review', () => {
   })
 })
 
+describe('coverage counts every slot, approval counts only the required ones', () => {
+  // The trap the slot cut opened. Discovery seeds exactly the three required
+  // slots — ga4_property_id, gsc_site_url, client_type — and an exact-domain GA4
+  // or GSC match is recorded auto/high, which isFilled counts. So a session can
+  // be 100% by `pct` and ready_for_review before anyone has asked a question.
+  //
+  // That is correct for the GATE: those three really are known. It is a lie as a
+  // headline number, which is why the review pane renders totalPct instead.
+  it('separates the approve gate from the picture of what we know', () => {
+    const answers: Answers = {}
+    for (const slot of SLOTS) {
+      if (!slot.required) continue
+      answers[slot.id] = {
+        value: slot.kind === 'choice' ? slot.choices![0] : 'discovered',
+        unknown: false,
+        source: 'auto',
+        confidence: 'high',
+      } as Answers[string]
+    }
+
+    const c = computeCompleteness(answers)
+    expect(c.readyForReview).toBe(true)
+    expect(c.pct).toBe(100)
+    // ...but most of what the interview exists to capture is still missing.
+    expect(c.totalPct).toBeLessThan(100)
+    expect(c.optionalMissing.length).toBeGreaterThan(0)
+  })
+
+  it('reaches 100% total only when every slot is answered', () => {
+    const answers: Answers = {}
+    for (const slot of SLOTS) {
+      answers[slot.id] =
+        slot.kind === 'list'
+          ? filled(['something'])
+          : slot.kind === 'choice'
+            ? filled(slot.choices![0])
+            : filled('an answer')
+    }
+    const c = computeCompleteness(answers)
+    expect(c.totalPct).toBe(100)
+    expect(c.pct).toBe(100)
+    expect(c.optionalMissing).toEqual([])
+  })
+})
+
 describe('isKnownGap', () => {
   // An unknown with no reason is a gap nobody can interpret later, so it counts
   // as empty rather than as a recorded gap — otherwise it would unblock approval

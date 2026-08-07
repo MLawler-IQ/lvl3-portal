@@ -49,6 +49,17 @@ export interface Completeness {
   /** Percentage of required slots filled. Excludes `unknown` on purpose. */
   pct: number
   /**
+   * Percentage of ALL slots filled, required or not.
+   *
+   * `pct` answers "can this be approved"; this answers "how much do we actually
+   * know". They diverged badly when required dropped from twelve slots to three:
+   * a session with three auto-discovered Google ids and nine untouched questions
+   * is legitimately 100% by `pct`, and showing that alone invites approving an
+   * interview nobody has had. The gate and the picture of coverage are different
+   * questions and the UI needs both.
+   */
+  totalPct: number
+  /**
    * True only when every required slot is either filled or marked unknown WITH
    * a reason. `unknown` is allowed to unblock review — a client who doesn't know
    * their average ticket shouldn't be able to deadlock onboarding — but it is
@@ -95,6 +106,10 @@ export function computeCompleteness(answers: Answers): Completeness {
     optionalMissing,
     optionalUnknown,
     pct: required.length === 0 ? 100 : Math.round((filled.length / required.length) * 100),
+    totalPct:
+      slots.length === 0
+        ? 100
+        : Math.round((slots.filter((s) => s.state === 'filled').length / slots.length) * 100),
     readyForReview: missing.length === 0,
   }
 }
