@@ -228,11 +228,38 @@ export default async function ClientDetailPage({ params }: Props) {
       {/* Users table */}
       <ClientUsersTable users={users} clientId={id} clientName={client.name} />
 
+      {/*
+        ClientSettingsForm seeds 23 useState values from these props, and a
+        useState initialiser runs exactly once. approveOnboardingSession calls
+        revalidatePath and the review pane calls router.refresh(), so this server
+        component re-renders and hands the form fresh props — which it then
+        ignores, because its state was already seeded from the row as it was
+        BEFORE the approval.
+
+        That is why approving looked like it saved nothing: the columns were
+        written correctly and the form kept showing the old values. The tell was
+        that the provenance badge and the input disagreed on the same field — the
+        badge reads props directly and was right, the radio read state and was
+        stale.
+
+        Remounting on a key derived from the data is the fix OnboardingWorkspace
+        already uses for its review pane, for the same reason: reconciling
+        controlled inputs against incoming props is more error-prone than
+        starting them again. The key is built from the columns setup promotes to,
+        derived from promotesTo rather than hand-listed so a new promoting slot
+        is covered without anyone remembering to add it here.
+      */}
       {/* Settings */}
       <div className="mt-12">
         <h2 className="text-surface-100 text-xl font-medium mb-1">Settings</h2>
         <p className="text-surface-400 text-sm mb-6">Update details and integrations for {client.name}.</p>
         <ClientSettingsForm
+          key={[
+            ...SLOTS.filter((sl) => sl.promotesTo).map((sl) =>
+              String((client as Record<string, unknown>)[sl.promotesTo!] ?? ''),
+            ),
+            (client.service_context as { approvedAt?: string } | null)?.approvedAt ?? '',
+          ].join('|')}
           client={{
             id: client.id,
             name: client.name,
