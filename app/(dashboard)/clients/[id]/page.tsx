@@ -22,9 +22,12 @@ import { SLOTS } from '@/lib/onboarding/schema'
 import ClientUsersTable from '@/components/clients/client-users-table'
 import ClientSettingsForm from '@/components/clients/ClientSettingsForm'
 import ClientDangerZone from '@/components/clients/ClientDangerZone'
+import { findClientCalls, importClientCalls } from '@/app/actions/zoom-context'
+import { normalizeDomain } from '@/lib/normalize-domain'
 import OnboardingWorkspace from '@/components/onboarding/OnboardingWorkspace'
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton'
 import ContextPaste from '@/components/onboarding/ContextPaste'
+import ZoomCallFinder from '@/components/onboarding/ZoomCallFinder'
 import ContextItemsList from '@/components/onboarding/ContextItemsList'
 import type { Answers } from '@/lib/onboarding/schema'
 import type { Targets } from '@/lib/dashboard/types'
@@ -171,8 +174,25 @@ export default async function ClientDetailPage({ params }: Props) {
           </div>
         )}
 
-        {/* ContextPaste renders its own heading and explanation. */}
+        {/*
+          Zoom first, pasting second. Going to find a transcript by hand is the
+          fallback for what the connector cannot reach, not the workflow — the
+          client's domain is already on the row, so finding the calls is the
+          portal's job.
+        */}
         <div className="mt-6 rounded-sm border border-surface-800 bg-surface-900 p-5">
+          <ZoomCallFinder
+            clientId={id}
+            defaultQuery={
+              client.website_url ? normalizeDomain(client.website_url as string) : client.name
+            }
+            slotLabels={Object.fromEntries(slots.map((s) => [s.id, s.label]))}
+            onSearch={findClientCalls}
+            onImport={importClientCalls}
+          />
+
+          <div className="my-5 border-t border-surface-800" />
+
           <ContextPaste clientId={id} onSubmit={addClientContext} />
           <ContextItemsList
             items={contextItems}
