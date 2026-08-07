@@ -5,23 +5,24 @@ import { useRouter } from 'next/navigation'
 import { X, RefreshCw } from 'lucide-react'
 import { createClient } from '@/app/actions/clients'
 import { fetchLogoUrl } from '@/app/actions/analytics'
+import { uniqueSlug } from '@/lib/slug'
 
 interface NewClientModalProps {
   onClose: () => void
+  /**
+   * Slugs already in use, so the derived slug never lands on a taken one.
+   * TODO(integration): pass this from components/clients/clients-grid.tsx —
+   * it already holds the full client list (`clients.map((c) => c.slug)`) and is
+   * the only render site. Until it does, the default below means the modal
+   * derives an unsuffixed slug and a duplicate is caught server-side instead.
+   */
+  existingSlugs?: string[]
 }
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
-function slugify(text: string) {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-export default function NewClientModal({ onClose }: NewClientModalProps) {
+export default function NewClientModal({ onClose, existingSlugs = [] }: NewClientModalProps) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
@@ -71,7 +72,9 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
 
   function handleNameChange(val: string) {
     setName(val)
-    if (!slugManual) setSlug(slugify(val))
+    // Track the name until the admin edits the slug themselves. After that the
+    // slug is theirs and re-deriving would silently discard their edit.
+    if (!slugManual) setSlug(uniqueSlug(val, existingSlugs))
   }
 
   async function handleFetchLogo() {
@@ -98,7 +101,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
       fd.set('website', website)
       const { id } = await createClient(fd)
       onClose()
-      // Creation captures only name/slug/logo. Everything else — GA4, GSC, GBP,
+      // Creation captures only name/website/slug/logo. Everything else — GA4, GSC, GBP,
       // client type, competitors — is captured by the onboarding interview, so
       // go straight there rather than leaving a half-configured client behind.
       router.push(`/clients/${id}/onboarding`)
@@ -126,9 +129,9 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
         </div>
 
         <p className="text-xs text-surface-400 mb-5 leading-relaxed">
-          Just the basics here. Saving opens the onboarding interview, which captures
-          the analytics properties, service area, job values and everything else the
-          pipeline needs.
+          Name and website are all we need. Saving opens the onboarding interview,
+          which uses the website to find the GA4, Search Console and Business Profile
+          accounts, then captures service area, job values and the rest.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,28 +154,16 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Slug <span className="text-surface-400 text-xs font-normal">(auto-generated)</span>
+              Website <span className="text-brand-400">*</span>
             </label>
-            <input
-              type="text"
-              required
-              value={slug}
-              onChange={(e) => {
-                setSlugManual(true)
-                setSlug(e.target.value)
-              }}
-              placeholder="acme-corp"
-              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 text-sm font-mono"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">
-              Website <span className="text-surface-400 text-xs font-normal">(optional)</span>
-            </label>
+            {/* The domain is the match key auto-discovery uses to find the GA4
+                property, the Search Console site and the GBP location, so a
+                client created without one starts onboarding with nothing to
+                match against. Asked for up front, not treated as an extra. */}
             <div className="flex gap-2">
               <input
                 type="text"
+                required
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="acme.com"
@@ -188,6 +179,29 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
                 Fetch Logo
               </button>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">
+              Slug{' '}
+              <span className="text-surface-400 text-xs font-normal">
+                {slugManual ? '(edited)' : '(from name)'}
+              </span>
+            </label>
+            <input
+              type="text"
+              required
+              value={slug}
+              onChange={(e) => {
+                setSlugManual(true)
+                setSlug(e.target.value)
+              }}
+              placeholder="acme-corp"
+              className="w-full bg-surface-800 border border-surface-600 rounded-lg px-3 py-2 text-surface-100 placeholder-surface-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 text-sm font-mono"
+            />
+            <p className="mt-1.5 text-xs text-surface-400">
+              Used in URLs and exports. Derived from the name — edit it and it stops following.
+            </p>
           </div>
 
           <div>
@@ -226,7 +240,7 @@ export default function NewClientModal({ onClose }: NewClientModalProps) {
             </button>
             <button
               type="submit"
-              disabled={loading || !name.trim() || !slug.trim()}
+              disabled={loading || !name.trim() || !website.trim() || !slug.trim()}
               className="flex-1 bg-brand-400 text-surface-950 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-brand-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating…' : 'Create client'}
