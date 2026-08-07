@@ -54,6 +54,96 @@ describe('isFilled', () => {
   it('treats a missing slot as empty', () => {
     expect(isFilled(undefined)).toBe(false)
   })
+
+  // The load-bearing rule of the setup rebuild. A model reading a meeting
+  // transcript is guessing however fluently it phrases the guess, so a `context`
+  // value is a suggestion to confirm, never an answer — at EVERY confidence.
+  // High confidence is the case that matters: it is the one that looks safe.
+  it('never counts a context value, at any confidence', () => {
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'context', confidence: 'high' })).toBe(false)
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'context', confidence: 'medium' })).toBe(false)
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'context', confidence: 'low' })).toBe(false)
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'context' })).toBe(false)
+    // Not merely a string rule — a context list or number is just as much a guess.
+    expect(isFilled({ value: ['a', 'b'], unknown: false, source: 'context', confidence: 'high' })).toBe(false)
+    expect(isFilled({ value: 42, unknown: false, source: 'context', confidence: 'high' })).toBe(false)
+  })
+
+  it('counts a high-confidence auto match but not a low-confidence one', () => {
+    expect(isFilled({ value: 'properties/123', unknown: false, source: 'auto', confidence: 'high' })).toBe(true)
+    expect(isFilled({ value: 'properties/123', unknown: false, source: 'auto', confidence: 'low' })).toBe(false)
+  })
+
+  it('counts interview and manual answers', () => {
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'interview' })).toBe(true)
+    // A manual value is an admin typing into settings — an explicit, recorded
+    // override, so it counts even though nothing verified it against Google.
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'manual' })).toBe(true)
+    expect(isFilled({ value: 'HVAC', unknown: false, source: 'manual', confidence: 'low' })).toBe(true)
+  })
+
+  // An unknown beats a source: a client who won't say is a gap even if a
+  // transcript or an admin supplied something.
+  it('lets unknown override any source', () => {
+    expect(isFilled({ value: 'HVAC', unknown: true, source: 'manual' })).toBe(false)
+    expect(isFilled({ value: 'HVAC', unknown: true, source: 'auto', confidence: 'high' })).toBe(false)
+  })
+})
+
+describe('context values cannot unlock review', () => {
+  // The seam that matters: isFilled is where the rule lives, but readyForReview
+  // is where breaking it would actually cost something — a session approved on
+  // the strength of a transcript the model paraphrased.
+  it('holds a session open even when every required slot has a high-confidence context value', () => {
+    const answers: Answers = {}
+    for (const slot of SLOTS) {
+      if (!slot.required) continue
+      answers[slot.id] = {
+        value: slot.kind === 'list' ? ['something'] : slot.kind === 'choice' ? slot.choices![0] : 'an answer',
+        unknown: false,
+        source: 'context',
+        confidence: 'high',
+        evidence: 'quoted from the kickoff transcript',
+      } as Answers[string]
+    }
+
+    const c = computeCompleteness(answers)
+    expect(c.readyForReview).toBe(false)
+    expect(c.pct).toBe(0)
+    expect(c.filled).toEqual([])
+    expect(c.missing.sort()).toEqual([...REQUIRED_SLOT_IDS].sort())
+  })
+
+  it('opens review once those same values are confirmed by a human', () => {
+    const answers: Answers = {}
+    for (const slot of SLOTS) {
+      if (!slot.required) continue
+      answers[slot.id] = {
+        value: slot.kind === 'list' ? ['something'] : slot.kind === 'choice' ? slot.choices![0] : 'an answer',
+        unknown: false,
+        source: 'manual',
+      } as Answers[string]
+    }
+
+    expect(computeCompleteness(answers).readyForReview).toBe(true)
+  })
+
+  it('survives the round trip through sanitizeAnswerPatch', () => {
+    const clientTypeSlot = SLOTS.find((s) => s.id === 'client_type')!
+    const patch = sanitizeAnswerPatch({
+      client_type: {
+        value: clientTypeSlot.choices![0],
+        unknown: false,
+        source: 'context',
+        confidence: 'high',
+        evidence: 'they said they do heating and cooling',
+      },
+    })
+    // The provenance must survive sanitization, or the rule has nothing to read.
+    expect(patch['client_type']?.source).toBe('context')
+    expect(patch['client_type']?.evidence).toBe('they said they do heating and cooling')
+    expect(isFilled(patch['client_type'])).toBe(false)
+  })
 })
 
 describe('isKnownGap', () => {

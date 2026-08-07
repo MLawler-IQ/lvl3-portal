@@ -32,7 +32,12 @@ export const slotValueSchema = z.object({
   // 'auto' means the portal matched it against Google's own APIs rather than
   // being told it. Surfaced in the review pane with its evidence so a wrong
   // match is visible instead of merely plausible.
-  source: z.enum(['interview', 'auto']).optional(),
+  //
+  // 'context' means a model inferred it from pasted notes or a transcript. It
+  // carries evidence so a human can check it, but it never counts as answered —
+  // see isFilled. 'manual' means an admin typed it into settings, which is an
+  // explicit override and does count.
+  source: z.enum(['interview', 'auto', 'context', 'manual']).optional(),
   confidence: z.enum(['high', 'medium', 'low']).optional(),
   evidence: z.string().max(300).optional(),
 })
@@ -327,10 +332,18 @@ export function isKnownGap(v: SlotValue | undefined): boolean {
  * but it still counts as missing until a human confirms it. A high-confidence
  * auto match does count: it is a fact read from the agency's own Google account,
  * not a guess.
+ *
+ * A `context` value NEVER counts, at any confidence. That is the whole point of
+ * the source: a model reading a meeting transcript is guessing, however fluently,
+ * and the distinction this function exists to protect is between a fact we read
+ * and a sentence we generated. It is shown pre-filled with the quote it came
+ * from, and a human promotes it by confirming it — which records it as
+ * `interview` or `manual`, and only then does it count.
  */
 export function isFilled(v: SlotValue | undefined): boolean {
   if (!v) return false
   if (v.unknown) return false
+  if (v.source === 'context') return false
   if (v.source === 'auto' && v.confidence === 'low') return false
   if (v.value === null) return false
   if (typeof v.value === 'string') return v.value.trim().length > 0
