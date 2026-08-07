@@ -15,6 +15,7 @@
  *   --gsc <property>   explicit GSC property (sc-domain:example.com | https://example.com/)
  *   --days <n>         GSC window in days (default 90)
  *   --no-gsc           skip the GSC station
+ *   --no-gbp           skip the Business Profile station
  *   --no-robots        skip the site files
  *   --no-record        do not write tool_runs rows
  *   --offline          all three of the above; needs no Supabase and no network
@@ -65,6 +66,7 @@ function parseArgs(argv: string[]): Args {
   let gsc: string | null = null
   let days: number | undefined
   let noGsc = false
+  let noGbp = false
   let robots = true
   let record = true
   let compare = false
@@ -89,6 +91,7 @@ function parseArgs(argv: string[]): Args {
         break
       }
       case '--no-gsc': noGsc = true; break
+      case '--no-gbp': noGbp = true; break
       case '--no-robots': robots = false; break
       case '--no-record': record = false; break
       case '--offline': noGsc = true; robots = false; record = false; break
@@ -115,7 +118,10 @@ function parseArgs(argv: string[]): Args {
     throw new UsageError(`expected one export directory, got ${positional.length} arguments`)
   }
 
-  return { dir, clientId, site, gsc, days, skip: noGsc ? ['gsc'] : [], robots, record, compare, json }
+  const skip: StationName[] = []
+  if (noGsc) skip.push('gsc')
+  if (noGbp) skip.push('gbp')
+  return { dir, clientId, site, gsc, days, skip, robots, record, compare, json }
 }
 
 /**
@@ -127,6 +133,7 @@ function parseArgs(argv: string[]): Args {
 function describeMode(args: Args): string {
   const off: string[] = []
   if (args.skip.includes('gsc')) off.push('no-gsc')
+  if (args.skip.includes('gbp')) off.push('no-gbp')
   if (!args.robots) off.push('no-robots')
   if (!args.record) off.push('no-record')
   return off.length === 0 ? 'all stations, recording on' : off.join(' · ')

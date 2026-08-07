@@ -18,7 +18,7 @@ import type { ToolContext } from './contract'
 
 /** The exact column list ToolContext.client promises. One place, so it can't drift. */
 const CLIENT_COLUMNS =
-  'id, name, slug, gsc_site_url, ga4_property_id, gbp_account_id, website_url, brand_terms, brand_match_mode, competitors'
+  'id, name, slug, gsc_site_url, ga4_property_id, gbp_account_id, gbp_location_group, website_url, brand_terms, brand_match_mode, competitors'
 
 export interface BuildContextOptions {
   clientId?: string | null

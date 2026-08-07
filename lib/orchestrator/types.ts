@@ -17,7 +17,7 @@ import type {
   ToolResult,
   ToolSource,
 } from '@/lib/tools/contract'
-import type { CrawlStationData } from '@/lib/tools/crawl-record'
+import type { CrawlStationData, GbpProfileRecord } from '@/lib/tools/crawl-record'
 import type { RobotsStationData } from '@/lib/stations/robots'
 
 /** Every slot the station strip reports on. `robots` merges into crawl's `site` record. */
@@ -32,11 +32,18 @@ export type StationSlot = StationName | 'robots'
  *
  *   ok            ran, complete
  *   degraded      ran, incomplete — for crawl this means filesMissing.length > 0, and
- *                 NOTHING else (see lib/stations/degradation.ts)
+ *                 NOTHING else (see lib/stations/degradation.ts). The GBP station reports
+ *                 this on EVERY successful run by design: GbpProfileRecord does not model
+ *                 the services and attributes LOCAL-003's rubric row also lists.
  *   failed        attempted, returned a ToolErr
  *   skipped       the caller asked us not to run it
- *   unconfigured  nothing to point it at (no gsc_site_url, no site origin)
- *   unavailable   no such station exists in this pipeline — gbp, always
+ *   unconfigured  nothing to point it at (no gsc_site_url, no gbp_account_id, no
+ *                 Business Profile identity, no site origin)
+ *   unavailable   no such station exists in this pipeline. NOTHING PRODUCES THIS ANY
+ *                 MORE — it was gbp's permanent state until lib/stations/gbp.ts was wired
+ *                 into lib/orchestrator/run.ts. It stays in the union because audit_runs
+ *                 rows persisted before that still carry it, and a stored run must keep
+ *                 rendering the state it was actually in.
  */
 export type StationState =
   | 'ok'
@@ -88,7 +95,11 @@ export interface AuditRunOptions {
 }
 
 export interface AuditRunResult {
-  /** Exactly what runChecks consumed. Three slots; gbp is always absent. */
+  /**
+   * Exactly what runChecks consumed. A slot is absent whenever its station was skipped,
+   * unconfigured, or failed — including gbp, which is absent for every client with no
+   * gbp_account_id and for every run that could not read the profile.
+   */
   stations: StationBundle
   /** All four slots, always present, so the strip can never omit one silently. */
   stationStatus: Record<StationSlot, StationReport>
@@ -153,6 +164,21 @@ export interface AuditRunDeps {
   }) => Promise<ToolContext>
   runCrawl?: (source: CrawlExportSource) => Promise<CrawlStationRun>
   runGsc?: (siteUrl: string | null, days?: number) => Promise<ToolResult<GSCRow[]>>
+  /**
+   * The GBP station. Structural, like the others — the second argument is
+   * lib/stations/gbp.ts's own injection bag and is left off here deliberately: the
+   * orchestrator never supplies it, so declaring it would put the station's internal
+   * seams in this contract.
+   *
+   * `auth` is `ToolContext['gbpAuth']` rather than a fresh `OAuth2Client` import so this
+   * file gains no dependency for one parameter, and so the slot cannot drift from the
+   * context field the orchestrator actually passes it.
+   */
+  runGbp?: (input: {
+    accountName: string | null
+    locationGroup: string | null
+    auth: ToolContext['gbpAuth']
+  }) => Promise<ToolResult<GbpProfileRecord>>
   runRobots?: (
     origin: string,
     opts?: { fetchImpl?: typeof fetch; timeoutMs?: number },

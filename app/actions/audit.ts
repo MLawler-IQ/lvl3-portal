@@ -56,6 +56,13 @@ export interface RunClientAuditInput {
    * A nested `hints/foo.csv` is expected and a top-level export directory prefix is fine.
    */
   files: { name: string; bytes: Uint8Array }[]
+  /**
+   * Storage prefix these bytes were read back from, when they came from storage.
+   * Recorded on the run so a stored audit points at the export it read rather than
+   * implying it from a timestamp. Omitted by the CLI, whose bytes are a local
+   * directory that outlives nothing.
+   */
+  sourcePrefix?: string | null
 }
 
 export interface RunClientAuditResult {
@@ -118,6 +125,7 @@ export async function runClientAudit(input: RunClientAuditInput): Promise<RunCli
     })
 
     const attribution = describeExport(result, {
+      sourcePrefix: input.sourcePrefix ?? null,
       label,
       fileCount: files.size,
       backboneFile,

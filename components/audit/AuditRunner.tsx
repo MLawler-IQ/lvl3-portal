@@ -24,10 +24,12 @@
 // second trip. Relative paths also make the uploaded set legible after the fact. Neither
 // of those is "the ingester needs the prefix".
 //
-// THE BYTES DO NOT GO THROUGH A SERVER ACTION. They cannot: Next 14's Flight encoder turns
-// a `Uint8Array` into a plain number array with nothing raised, and the action body cap is
-// 1 MB. The upload is a multipart POST to `/api/audit/run`, which documents both in full.
-// Only `onLoadRun` — an id in, JSON out — is still an action passed down from the page.
+// THE BYTES DO NOT GO THROUGH THE APP AT ALL ANY MORE. Two ceilings, hit in order: a
+// Server Action re-encoded a `Uint8Array` as a plain number array with nothing raised (and
+// capped the body at 1 MB), and the multipart POST that replaced it inherited Vercel's
+// 4.5 MB request-body limit, refused at the edge before any handler runs. So each file is
+// now PUT straight to Supabase Storage with a signed upload URL, and `/api/audit/run`
+// receives two uuids. app/api/audit/run/route.ts documents both failures in full.
 //
 // WHAT IT REFUSES TO DECIDE. The server is the authority on whether an export is usable —
 // `describeMissingBackbone` in lib/audit/store.ts rejects an upload with no
@@ -37,31 +39,40 @@
 // client-side veto keyed off a filename convention would block a valid export the
 // ingester can read, and the server's message names what arrived, which this one cannot.
 //
-// INTEGRATION POINT — this component owns no server action, following ContextPaste. The
-// page passes `onLoadRun` (app/actions/audit.ts `getAuditRun`) in, typed here against
-// lib/audit/store's shapes, so a drift in that signature is a type error at the page,
-// which is where the seam actually is. The RUN has no prop, because it is not an action:
-// it is a fetch to a Route Handler, and a `onRun` prop typed to take `Uint8Array` across
-// an action boundary is the exact loaded gun this rework exists to unload.
+// A PARTIAL UPLOAD MUST NOT START A RUN. If any file fails to PUT, the remaining uploads
+// are abandoned, the run is never requested, and the message names the file. A run over
+// most of an export produces `not_run` for every check whose report did not make it, which
+// is indistinguishable from an export that never had them.
+//
+// INTEGRATION POINT — the page still passes every READ down as a prop (`onLoadRun`, i.e.
+// app/actions/audit.ts `getAuditRun`), typed here against lib/audit/store's shapes, so a
+// drift in that signature is a type error at the page, which is where that seam is. The
+// RUN is not a prop and never was: it is transport, not a read the page performs. Its two
+// halves — `createAuditUploadUrls` (an action, imported directly) and a fetch to the Route
+// Handler — are imported here rather than threaded through the page, because the page has
+// no business knowing how bytes reach storage. What made the old `onRun` prop dangerous
+// was its TYPE (a `Uint8Array` crossing an action boundary), and nothing crossing either of
+// these boundaries is bytes: ids and filenames out, ids back.
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FolderOpen, Files, Loader2, Play, AlertTriangle, History } from 'lucide-react'
 import type { AuditRunSummary, StoredAuditRun } from '@/lib/audit/store'
+import { createAuditUploadUrls, type AuditUploadTarget } from '@/app/actions/audit-upload'
 import AuditResultView from './AuditResultView'
 
 /** app/api/audit/run/route.ts, whose body is app/actions/audit.ts `RunClientAuditResult`. */
 const RUN_ENDPOINT = '/api/audit/run'
 
 /**
- * Mirrors MAX_UPLOAD_BYTES in app/api/audit/run/route.ts, which is the authority.
+ * How many files are in flight at once.
  *
- * The route cannot export it (Next validates the exports of a `route.ts` and rejects
- * names outside the segment-config set), and it is Vercel's request-body cap rather than
- * a policy, so it is duplicated here to fail the upload BEFORE the browser spends minutes
- * sending a body the edge will refuse with an HTML 413. Both numbers must move together.
+ * A Sitebulb export is dozens of small CSVs and one large one, so the wall-clock cost is
+ * mostly round trips rather than bandwidth and a serial loop is needlessly slow. Four
+ * rather than "all of them" because every upload holds a connection and a browser caps
+ * those anyway — queueing beyond the cap just makes the progress figure lurch.
  */
-const MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+const UPLOAD_CONCURRENCY = 4
 
 /**
  * The backbone, matched exactly as lib/ingest/sitebulb/crawl.ts and
@@ -205,6 +216,167 @@ function timestamp(iso: string | null | undefined): string {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleString()
 }
 
+// ── upload ────────────────────────────────────────────────────────────────────────────
+
+/**
+ * What the operator is shown while the bytes move.
+ *
+ * `sentBytes` counts bytes the browser has HANDED TO THE NETWORK, which can run slightly
+ * ahead of bytes durably stored; `doneFiles` counts files storage has acknowledged with a
+ * 2xx. Both are reported because they answer different questions — "is it moving" and "how
+ * much is actually safe" — and neither is an invented percentage.
+ */
+interface UploadProgress {
+  totalFiles: number
+  doneFiles: number
+  totalBytes: number
+  sentBytes: number
+}
+
+/** The file that broke the upload, and why, in words an operator can act on. */
+interface UploadFailure {
+  path: string
+  reason: string
+}
+
+/**
+ * PUT one file to its signed upload URL.
+ *
+ * XMLHttpRequest RATHER THAN fetch, for one reason: `fetch` reports no upload progress at
+ * all, and this is now the slow part of the screen. The alternative was a spinner with no
+ * number next to it, which for a 60 MB export over a domestic uplink is indistinguishable
+ * from a hang.
+ *
+ * A raw PUT with the File as the body is exactly what supabase-js's `uploadToSignedUrl`
+ * does for a non-Blob body — the signed URL already carries its token, so no session header
+ * is involved and no Supabase client is needed in the browser for this.
+ */
+function putToSignedUrl(
+  target: AuditUploadTarget,
+  file: File,
+  onProgress: (loaded: number) => void,
+  onOpen: (xhr: XMLHttpRequest) => void,
+  onSettle: (xhr: XMLHttpRequest) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', target.signedUrl)
+    // Stored as the object's content type and read by nothing: the ingester identifies a
+    // report by its filename suffix and its bytes. A directory pick reports an empty type
+    // on several browsers, so octet-stream is the honest default rather than a guess.
+    xhr.setRequestHeader('content-type', file.type || 'application/octet-stream')
+    // Makes explicit what the token already enforces — the signature was minted without
+    // upsert. An overwrite would change what a stored run's source is after the run read it.
+    xhr.setRequestHeader('x-upsert', 'false')
+
+    xhr.upload.onprogress = (e) => onProgress(e.loaded)
+    xhr.onload = () => {
+      onSettle(xhr)
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+        return
+      }
+      reject(new Error(describeUploadStatus(xhr)))
+    }
+    xhr.onerror = () => {
+      onSettle(xhr)
+      reject(new Error('the connection dropped mid-upload'))
+    }
+    xhr.onabort = () => {
+      onSettle(xhr)
+      reject(new Error('the upload was abandoned because an earlier file failed'))
+    }
+
+    onOpen(xhr)
+    xhr.send(file)
+  })
+}
+
+/** A storage failure in words, with the one status code that has a specific remedy named. */
+function describeUploadStatus(xhr: XMLHttpRequest): string {
+  const detail = (xhr.responseText || '').slice(0, 200).trim()
+  if (xhr.status === 413) {
+    return (
+      `storage refused it as too large (413). The per-file limit on the audit-exports bucket ` +
+      `is 100 MB, and a Supabase project also has its own global upload limit that a bucket ` +
+      `cannot exceed${detail ? ` — ${detail}` : ''}`
+    )
+  }
+  if (xhr.status === 0) {
+    return 'the request never completed — most likely the network, or a signed URL that has expired'
+  }
+  return `storage answered ${xhr.status}${detail ? `: ${detail}` : ''}`
+}
+
+/**
+ * Upload every file, stopping at the first failure.
+ *
+ * STOPPING IS THE POINT. In-flight requests are aborted and the queue is abandoned, so no
+ * run is requested over a partial export. The first failure wins the message — later ones
+ * are almost always the aborts this function itself caused, and reporting those instead
+ * would name the wrong file.
+ */
+async function uploadAll(
+  uploads: readonly AuditUploadTarget[],
+  filesByPath: Map<string, File>,
+  onProgress: (progress: { sentBytes: number; doneFiles: number }) => void,
+): Promise<UploadFailure | null> {
+  const sent = new Array<number>(uploads.length).fill(0)
+  const inflight = new Set<XMLHttpRequest>()
+  let doneFiles = 0
+  let failure: UploadFailure | null = null
+  let next = 0
+
+  const report = () =>
+    onProgress({ sentBytes: sent.reduce((total, n) => total + n, 0), doneFiles })
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      if (failure !== null) return
+      const index = next
+      next += 1
+      if (index >= uploads.length) return
+
+      const target = uploads[index]
+      const file = filesByPath.get(target.path)
+      if (!file) {
+        // Cannot happen from the picker — the map is built from the same selection the
+        // paths came from — but a silent skip here would upload an export missing a file
+        // and run over it, which is the failure this whole function is shaped to prevent.
+        failure = { path: target.path, reason: 'the picked file was no longer available in this tab' }
+        return
+      }
+
+      try {
+        await putToSignedUrl(
+          target,
+          file,
+          (loaded) => {
+            sent[index] = loaded
+            report()
+          },
+          (xhr) => inflight.add(xhr),
+          (xhr) => inflight.delete(xhr),
+        )
+        sent[index] = file.size
+        doneFiles += 1
+        report()
+      } catch (err) {
+        if (failure === null) {
+          failure = { path: target.path, reason: err instanceof Error ? err.message : String(err) }
+        }
+        for (const xhr of Array.from(inflight)) xhr.abort()
+        return
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(UPLOAD_CONCURRENCY, uploads.length) }, () => worker()),
+  )
+  return failure
+}
+
 export default function AuditRunner({
   clientId,
   clientName,
@@ -216,10 +388,15 @@ export default function AuditRunner({
   const router = useRouter()
   const dirInputRef = useRef<HTMLInputElement>(null)
   const [selection, setSelection] = useState<Selection | null>(null)
-  // There is no separate "reading" phase any more. The browser streams each File straight
-  // out of the multipart body, so nothing is read into JS memory first — which is also why
-  // this can carry an export the old `arrayBuffer()`-per-file loop could not.
-  const [phase, setPhase] = useState<'idle' | 'running' | 'loading'>('idle')
+  // Four phases, because they fail differently and an operator needs to know which one they
+  // are in: `preparing` mints signatures (fast, all-or-nothing), `uploading` moves the
+  // bytes (slow, and the one with a real number attached), `running` is the audit itself
+  // against a 5 minute budget, `loading` is the read-back of the stored run. Nothing is
+  // read into JS memory at any point — each File is handed to XHR as-is.
+  const [phase, setPhase] = useState<'idle' | 'preparing' | 'uploading' | 'running' | 'loading'>(
+    'idle',
+  )
+  const [progress, setProgress] = useState<UploadProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [receipt, setReceipt] = useState<AuditRunSummary | null>(null)
   const [stored, setStored] = useState<StoredAuditRun | null>(null)
@@ -237,6 +414,9 @@ export default function AuditRunner({
 
   function reset() {
     setError(null)
+    // Cleared here rather than only in handleRun, so opening a run from history does not
+    // redisplay the byte counts of a previous upload next to it.
+    setProgress(null)
     setReceipt(null)
     setStored(null)
     setReport(null)
@@ -296,50 +476,69 @@ export default function AuditRunner({
     reset()
     setOpenRunId(null)
 
-    // Refused here as well as at the route, because the route never sees an oversized
-    // body: Vercel rejects it at the edge with an HTML 413 after the browser has spent
-    // minutes uploading. See MAX_UPLOAD_BYTES.
-    if (selection.totalBytes > MAX_UPLOAD_BYTES) {
-      setError(
-        `This selection is ${describeBytes(selection.totalBytes)} and the upload ceiling is ` +
-          `${describeBytes(MAX_UPLOAD_BYTES)}. That limit is Vercel's request-body cap rather than ` +
-          `a setting, so a larger export cannot be run from this screen at all — run it locally ` +
-          `with scripts/audit-dry-run.ts, which reads the folder off disk and has no size limit. ` +
-          `Nothing was uploaded.`,
-      )
-      return
-    }
-
-    // Each File is appended as-is: the browser streams its bytes into the multipart body
-    // and they arrive at the route as bytes. This is the whole fix — the previous version
-    // called `arrayBuffer()` and handed a `Uint8Array` to a Server Action, where Next's
-    // Flight encoder silently turned it into a plain array of numbers and the ingester's
-    // `TextDecoder` threw on every file. The path rides in its own `paths` field, appended
-    // in lockstep so index i names index i; app/api/audit/run/route.ts explains why the
-    // multipart `filename` is not trusted with it.
-    const form = new FormData()
-    form.append('clientId', clientId)
-    for (let i = 0; i < selection.files.length; i += 1) {
-      form.append('paths', selection.paths[i])
-      form.append('files', selection.files[i])
-    }
+    const picked = selection
+    const filesByPath = new Map<string, File>()
+    for (let i = 0; i < picked.files.length; i += 1) filesByPath.set(picked.paths[i], picked.files[i])
 
     try {
-      setPhase('running')
-      const response = await fetch(RUN_ENDPOINT, { method: 'POST', body: form })
+      // ── 1. ask the server where these files may go ──────────────────────────────
+      // The names go up; the PATHS come back. Nothing here chooses an object key — the
+      // action derives every one of them from a client id it validated and a run token it
+      // minted, and each signature is scoped to a single key. A browser-chosen path would
+      // be a write-anywhere primitive against a bucket holding every client's crawl data.
+      setPhase('preparing')
+      const prepared = await createAuditUploadUrls({ clientId, paths: picked.paths })
+      if (prepared.error || !prepared.uploads || !prepared.runToken) {
+        setPhase('idle')
+        setError(prepared.error ?? 'The upload could not be prepared, and no reason was given.')
+        return
+      }
 
-      // A body that is not JSON is not an audit failure. Two real cases: middleware answers
-      // an expired session with a redirect to the HTML login page, and Vercel answers an
-      // oversized body with its own 413 page. Parsing either as JSON gives the operator an
-      // "unexpected token <" and no idea which happened.
+      // ── 2. the bytes, straight to storage ───────────────────────────────────────
+      setPhase('uploading')
+      setProgress({
+        totalFiles: prepared.uploads.length,
+        doneFiles: 0,
+        totalBytes: picked.totalBytes,
+        sentBytes: 0,
+      })
+
+      const failure = await uploadAll(prepared.uploads, filesByPath, ({ sentBytes, doneFiles }) =>
+        setProgress((p) => (p === null ? p : { ...p, sentBytes, doneFiles })),
+      )
+
+      if (failure !== null) {
+        setPhase('idle')
+        // NO RUN IS REQUESTED. An audit over a partial export reports `not_run` for every
+        // check whose report did not arrive, which reads exactly like an export that never
+        // had them. The files that did land stay in storage under a run id nothing will
+        // read; pressing Run again uploads the whole export afresh under a new one.
+        setError(
+          `Uploading ${failure.path} failed: ${failure.reason}. Nothing was run — an audit over ` +
+            `part of an export reports "not run" for the missing reports, which is indistinguishable ` +
+            `from an export that never had them. Press Run audit again to re-upload the whole export.`,
+        )
+        return
+      }
+
+      // ── 3. the run request, which carries no bytes ──────────────────────────────
+      setPhase('running')
+      const response = await fetch(RUN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ clientId, runToken: prepared.runToken }),
+      })
+
+      // A body that is not JSON is not an audit failure. The real case is middleware
+      // answering an expired session with a redirect to the HTML login page; parsing that
+      // as JSON gives the operator an "unexpected token <" and no idea what happened.
       const contentType = response.headers.get('content-type') ?? ''
       if (!contentType.includes('application/json')) {
         setPhase('idle')
         setError(
-          response.status === 413
-            ? 'The upload was rejected as too large before it reached the audit. Nothing was run.'
-            : `The server answered ${response.status} with no JSON. The likeliest cause is an ` +
-              `expired session — reload the page and sign in again. Nothing was run.`,
+          `The server answered ${response.status} with no JSON. The likeliest cause is an ` +
+            `expired session — reload the page and sign in again. The export is uploaded; the ` +
+            `audit did not run.`,
         )
         return
       }
@@ -434,6 +633,20 @@ export default function AuditRunner({
           read correctly: the ingester matches every report by filename{' '}
           <span className="text-surface-300">suffix</span>, not by folder, so a hint file
           picked on its own counts exactly the same.
+        </p>
+
+        {/* The old copy here quoted a 4 MB ceiling. That was the hosting request-body cap,
+            and it is gone: files now go straight to storage and the run request carries
+            two ids. Saying what the limits ARE beats leaving the sentence out — an
+            operator who was refused last week needs to know what changed. */}
+        <p className="mt-2 text-[11px] leading-relaxed text-surface-400">
+          There is no upload size cap on this screen any more — the files go directly to
+          storage rather than through the app, so a full multi-megabyte export is fine. What
+          still bounds it is the <span className="text-surface-300">run</span>: 100 MB per
+          individual file, and a 5 minute budget covering the download, the crawl ingest
+          parsing every CSV, and 90 days of GSC. An export large enough to exhaust that has
+          to go through <span className="font-mono">scripts/audit-dry-run.ts</span>, which
+          reads the folder off disk with no budget at all.
         </p>
 
         {/* what was selected, before anything runs */}
@@ -581,24 +794,59 @@ export default function AuditRunner({
             className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} />}
-            {phase === 'running'
-              ? 'Uploading and running…'
-              : phase === 'loading'
-                ? 'Loading run…'
-                : 'Run audit'}
+            {/* One label per phase, because they fail differently: a stall while preparing
+                is a server problem, a stall while uploading is the network, and a stall
+                while running is the audit against its 5 minute budget. */}
+            {phase === 'preparing'
+              ? 'Preparing upload…'
+              : phase === 'uploading'
+                ? 'Uploading export…'
+                : phase === 'running'
+                  ? 'Running audit…'
+                  : phase === 'loading'
+                    ? 'Loading run…'
+                    : 'Run audit'}
           </button>
           <p className="text-[11px] leading-relaxed text-surface-400">
-            {/* One label covers upload and run: a plain fetch reports no upload progress,
-                and inventing a percentage would be the same class of lie this screen is
-                built to avoid. */}
             A full export takes minutes, not seconds: the upload, then the crawl ingest
-            parsing every CSV, then 90 days of GSC — against a 5 minute budget. Leave this tab
-            open — the run is stored either way, but this is where the result comes back.
-            Uploads are capped at {describeBytes(MAX_UPLOAD_BYTES)}, which is the hosting
-            request-body limit rather than a setting; a larger export has to be run with{' '}
-            <span className="font-mono">scripts/audit-dry-run.ts</span>.
+            parsing every CSV, then 90 days of GSC. Leave this tab open — the run is stored
+            either way, but this is where the result comes back.
           </p>
         </div>
+
+        {/* ── upload progress ──────────────────────────────────────────────────
+            Real numbers only. `sent` counts bytes handed to the network and `stored`
+            counts files storage has acknowledged, which is why both are shown rather
+            than one blended percentage: the second is the one that is actually safe,
+            and it is the one the run depends on. */}
+        {progress && phase !== 'idle' && (
+          <div className="mt-3 rounded-sm border border-surface-800 bg-surface-950 px-3 py-2">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[12px]">
+              <span className="text-surface-100">
+                <span className="tabular-nums">{progress.doneFiles}</span> of{' '}
+                <span className="tabular-nums">{progress.totalFiles}</span> files stored
+              </span>
+              <span className="tabular-nums text-surface-400">
+                {describeBytes(progress.sentBytes)} of {describeBytes(progress.totalBytes)} sent
+              </span>
+              {phase !== 'uploading' && (
+                <span className="text-surface-400">upload complete — the audit is running</span>
+              )}
+            </div>
+            <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-surface-800">
+              <div
+                className="h-full bg-brand-500 transition-[width] duration-200"
+                style={{
+                  width: `${
+                    progress.totalBytes > 0
+                      ? Math.min(100, Math.round((progress.sentBytes / progress.totalBytes) * 100))
+                      : 0
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {error && (
           <p

@@ -26,6 +26,7 @@ const client = (over: Partial<NonNullable<ToolContext['client']>> = {}) => ({
   gsc_site_url: 'sc-domain:tornadohvacca.com',
   ga4_property_id: null,
   gbp_account_id: null,
+  gbp_location_group: null,
   website_url: 'https://tornadohvacca.com',
   brand_terms: null,
   brand_match_mode: null,

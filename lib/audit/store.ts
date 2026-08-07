@@ -74,6 +74,20 @@ export interface AuditExportAttribution {
   originsTruncated: boolean
   /** `clients.website_url`, verbatim. Null when the client row has none. */
   clientWebsiteUrl: string | null
+  /**
+   * Where the export this run read still lives, as a storage prefix.
+   *
+   * The retention decision is to KEEP an uploaded export, on the grounds that a
+   * derived fact should point at an artifact that still exists — but a run with
+   * nowhere to point makes that an argument rather than a link. Provenance was
+   * otherwise an inference from a timestamp and a backbone filename, which is a
+   * guess dressed as a record.
+   *
+   * Null for a run whose bytes never went through storage: the CLI reads a local
+   * directory, and nothing there outlives the process. Null therefore means "not
+   * stored", never "lost".
+   */
+  sourcePrefix: string | null
   verdict: 'match' | 'mismatch' | 'unknown'
   /** Why the verdict is what it is, in words, for the run header. */
   reason: string
@@ -243,7 +257,14 @@ const MAX_ORIGINS = 5
  */
 export function describeExport(
   result: AuditRunResult,
-  opts: { label: string; fileCount: number; backboneFile: string | null; clientWebsiteUrl: string | null },
+  opts: {
+    label: string
+    fileCount: number
+    backboneFile: string | null
+    clientWebsiteUrl: string | null
+    /** Storage prefix the export is retained under, or null when it was never stored. */
+    sourcePrefix?: string | null
+  },
 ): AuditExportAttribution {
   const crawl = result.stations.crawl
   const seen = new Set<string>()
@@ -270,6 +291,7 @@ export function describeExport(
     origins,
     originsTruncated: all.length > origins.length,
     clientWebsiteUrl,
+    sourcePrefix: opts.sourcePrefix ?? null,
   }
 
   if (all.length === 0) {

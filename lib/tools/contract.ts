@@ -54,6 +54,14 @@ export interface ToolContext {
     gsc_site_url: string | null
     ga4_property_id: string | null
     gbp_account_id: string | null
+    /**
+     * Scopes GBP reads to this client's locations inside a shared account. It is
+     * selected by buildToolContext and read by the GBP station; declaring it here
+     * is what lets that read be typed rather than cast. Absent means the account
+     * holds one client, and decideGBPScope refuses to guess otherwise — a shared
+     * container returning another brand's locations is the fa08ce6 bug.
+     */
+    gbp_location_group: string | null
     website_url: string | null
     brand_terms: string[] | null
     /** 'exact' compares the whole query; anything else is a substring match. */

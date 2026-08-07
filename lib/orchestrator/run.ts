@@ -20,6 +20,11 @@ import type { SitebulbCoverage } from '@/lib/ingest/sitebulb/crawl'
 import { contextFromStations, scoreFindings } from '@/lib/scoring'
 import type { ScoringResult } from '@/lib/scoring/types'
 import { runCrawlStation } from '@/lib/stations/crawl'
+// Safe to import statically, and only just: every one of lib/stations/gbp.ts's own static
+// imports is type-only or pure, so this line does not pull `next/headers` into the graph
+// of scripts/audit-dry-run.ts. tests/unit/gbp-station.test.ts pins that property on the
+// station; the runtime proof for this module is the dry-run itself.
+import { runGbpStation } from '@/lib/stations/gbp'
 import { runGscStation } from '@/lib/stations/gsc'
 import { runRobotsStation, withSiteFiles } from '@/lib/stations/robots'
 import type { ToolContext, ToolResult } from '@/lib/tools/contract'
@@ -36,6 +41,7 @@ import type {
 const SLUGS = {
   crawl: 'audit.crawl',
   gsc: 'audit.gsc',
+  gbp: 'audit.gbp',
   robots: 'audit.robots',
 } as const
 
@@ -80,6 +86,7 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
   const checks = deps.checks ?? CHECKS
   const runCrawl = deps.runCrawl ?? runCrawlStation
   const runGsc = deps.runGsc ?? runGscStation
+  const runGbp = deps.runGbp ?? runGbpStation
   const runRobots = deps.runRobots ?? runRobotsStation
   const buildContext = deps.buildContext ?? defaultBuildContext
   const createRecorder = deps.createRecorder ?? createStationRecorder
@@ -94,45 +101,7 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
   const stationStatus: Record<StationSlot, StationReport> = {
     crawl: report('crawl'),
     gsc: report('gsc'),
-    // gbp is `unavailable`, not `skipped`: there is no GBP station wired into this
-    // pipeline, so "we chose not to run it" would overstate what exists.
-    //
-    // AMENDED TWICE, AND THE SECOND AMENDMENT RETRACTS A CLAIM THIS FILE ASSERTED AS FACT.
-    //
-    // (1) It first said GbpProfileRecord "needs seven fields GBPLocation has none of, and
-    // LOCATION_READ_MASK omits serviceArea". The second half stopped being true when
-    // `serviceArea` joined the mask; the first was too broad — lib/stations/gbp.ts resolves
-    // ten of the thirteen fields from Business Information v1 alone.
-    //
-    // (2) It then said the remaining three — photoCount, rating, reviewCount — "have no
-    // source in any API this portal is authorised for". THAT WAS FALSE, and it had never
-    // been checked. Verified in the Google Cloud console on 2026-08-07: the Google My
-    // Business API (mybusiness.googleapis.com) is ENABLED on project lvl3-portal as a
-    // Private API with 250,000 requests/day granted and 0% usage, and the Business Profile
-    // OAuth token already carries business.manage. lib/connectors/gbp-reviews.ts reads all
-    // three, and lib/stations/gbp.ts's blockingFields() is now empty — the station emits.
-    // Asserting an unmeasured negative as established fact is the same move the not_run
-    // rule forbids for a check, and it cost five permanently-not_run rubric rows.
-    //
-    // WHAT ACTUALLY BLOCKS THE WIRING NOW, and it is neither of the above:
-    //   · `gbp_location_group` is not in CLIENT_COLUMNS (lib/tools/context.ts:20), so
-    //     ToolContext.client cannot carry it. decideGBPScope refuses a null group by
-    //     design (fail-closed, commit fa08ce6's rule), so every client would resolve to
-    //     'gbp_scope_unconfigured' and the station would return the same not_run it does
-    //     now — while spending a context build with needsGbp: true to get there.
-    //   · AuditRunOptions.deps has no `runGbp` slot (./types), so the station could not be
-    //     injected and every orchestrator test would acquire a real GBP dependency.
-    // Both are one-line changes in files this pass does not own. Until they land,
-    // `needsGbp: false` below stays a deliberate lockout rather than an oversight.
-    //
-    // The station itself is now safe to import here: as of the same date it has no static
-    // value import of lib/connectors/gbp, so it no longer drags `next/headers` into this
-    // module's graph and break scripts/audit-dry-run.ts at load.
-    gbp: report('gbp', {
-      state: 'unavailable',
-      reason:
-        'no GBP station exists in this pipeline: lib/stations/gbp.ts is not wired in, because clients.gbp_location_group is absent from ToolContext.client and an unscoped GBP read is refused by design; LOCAL-003 and LOCAL-016 read not_run',
-    }),
+    gbp: report('gbp'),
     robots: report('robots'),
   }
 
@@ -148,12 +117,15 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
       ctx = await buildContext({
         clientId: options.clientId ?? null,
         invoker: { kind: 'orchestrator' },
-        // A POSITIVE LOCKOUT, not an omission. No GBP station is wired here, so a run
-        // must not be able to acquire the GBP identity at all. Deleting this line would
-        // silently re-enable it — and, until ToolContext.client carries
-        // gbp_location_group, would buy an extra token read for a station that would
-        // refuse anyway. See the gbp station report above.
-        needsGbp: false,
+        // STILL EXPLICIT, and still the thing to check first when a run costs more than
+        // it should. Business Profile is a SEPARATE Google identity from GA4/GSC
+        // (matt@ vs analytics@), so resolving it is an extra admin-token read — worth
+        // paying for only when the GBP station is actually going to run. Passing the
+        // literal rather than leaving it off keeps the two callers of this seam saying
+        // what they mean: `false` here is now "the caller skipped gbp", not "no station
+        // exists". buildToolContext already swallows a GBP token failure into
+        // `gbpAuth: null`, so a true here cannot cost the run its other stations.
+        needsGbp: !skip.has('gbp'),
       })
     } catch (err) {
       notes.push(
@@ -182,11 +154,13 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
   // client_id — see lib/orchestrator/recorder.ts for why that column stays null.
   const attribution = { auditClientId: options.clientId ?? null }
 
-  // ── crawl and gsc, concurrently ──────────────────────────────────────────────
+  // ── crawl, gsc and gbp, concurrently ─────────────────────────────────────────
   const gscTarget = options.gscSiteUrl ?? ctx?.client?.gsc_site_url ?? null
   const gscDays = options.gscDays ?? DEFAULT_GSC_DAYS
+  const gbpAccount = ctx?.client?.gbp_account_id ?? null
+  const gbpGroup = locationGroupOf(ctx)
 
-  progress('running the crawl and GSC stations')
+  progress('running the crawl, GSC and GBP stations')
 
   let coverage: SitebulbCoverage | null = null
 
@@ -271,14 +245,95 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
     }
   })()
 
-  const [crawlResult, gscResult] = await Promise.all([crawlTask, gscTask])
+  /**
+   * The GBP station.
+   *
+   * WHAT AN AUDIT NOW COSTS GOOGLE. Three requests for the ordinary single-location
+   * client: one Business Information v1 accounts.locations.list (100 locations per page),
+   * then — concurrently, inside the station — one My Business v4 media.list (100 items per
+   * page, capped at 10 pages) and one v4 reviews.list (50 reviews per page, capped at 20).
+   * A profile with more than 100 photos or more than 50 reviews pages, so the per-audit
+   * ceiling is ceil(locations/100) + 10 + 20 requests. That is against 250,000/day and
+   * 600/min granted on mybusiness.googleapis.com, so quota is not the constraint; LATENCY
+   * is, which is why this runs concurrently with crawl and gsc rather than after them.
+   * Nothing here retries, and one audit reads one profile.
+   *
+   * TWO CONFIGURATION GAPS, NEITHER OF THEM A FAILURE. A client with no gbp_account_id and
+   * a portal with no connected Business Profile identity are both `unconfigured` — the
+   * same call the GSC station's missing gsc_site_url gets, and for the same reason: an
+   * admin can fix either from a settings screen, and rendering "we chose not to look" as
+   * "we looked and it broke" is exactly what StationState exists to prevent. `failed` is
+   * kept for a read that reached Google and went wrong.
+   *
+   * The station owns everything after that, including the fail-closed scope rule and the
+   * refusal to build a record out of a partial read — a failed media or reviews fetch
+   * comes back as a ToolErr, which lands here as `failed` and reaches LOCAL-003 and
+   * LOCAL-016 as not_run carrying the reader's own sentence.
+   */
+  const gbpTask = (async () => {
+    if (skip.has('gbp')) {
+      stationStatus.gbp = report('gbp', {
+        state: 'skipped',
+        reason: 'the caller skipped the GBP station; the checks that read it report not_run',
+      })
+      return null
+    }
+    if (gbpAccount === null || gbpAccount.trim().length === 0) {
+      stationStatus.gbp = report('gbp', {
+        state: 'unconfigured',
+        reason: 'no Business Profile account is configured for this client',
+      })
+      return null
+    }
+    const gbpAuth = ctx?.gbpAuth ?? null
+    if (gbpAuth === null) {
+      stationStatus.gbp = report('gbp', {
+        state: 'unconfigured',
+        reason:
+          'the Business Profile identity is not connected, so there was nothing to read the profile with',
+      })
+      return null
+    }
+    const startedStation = now()
+    try {
+      const { result, runId } = await recorder.record(
+        SLUGS.gbp,
+        { ...attribution, account: gbpAccount, locationGroup: gbpGroup },
+        () => runGbp({ accountName: gbpAccount, locationGroup: gbpGroup, auth: gbpAuth }),
+      )
+      if (runId !== null) recording.recorded.push(SLUGS.gbp)
+      stationStatus.gbp = report('gbp', {
+        state: stateOf(result),
+        reason: result.ok ? undefined : result.error,
+        sources: result.sources,
+        notes: result.ok ? (result.notes ?? []) : [],
+        durationMs: now() - startedStation,
+        runId,
+      })
+      return result
+    } catch (err) {
+      stationStatus.gbp = report('gbp', {
+        state: 'failed',
+        reason: message(err),
+        durationMs: now() - startedStation,
+      })
+      return null
+    }
+  })()
+
+  const [crawlResult, gscResult, gbpResult] = await Promise.all([crawlTask, gscTask, gbpTask])
 
   // A skipped station is ABSENT from the bundle rather than an empty ok. The engine
   // says "not provided" for an absent slot and "returned no data — cannot distinguish
   // clean from unseen" for an empty one, and those are different sentences: the strip
   // and the finding have to agree about which happened.
+  //
+  // A ToolErr is a RESULT and goes in, for all three: the engine turns a failed station
+  // into not_run carrying that station's own error, which says more than "not provided".
+  // Only a station that never ran at all returns null above.
   if (crawlResult !== null) stations.crawl = crawlResult
   if (gscResult !== null) stations.gsc = gscResult
+  if (gbpResult !== null) stations.gbp = gbpResult
 
   // ── site files, after the crawl ──────────────────────────────────────────────
   // After, because the origin can come from the crawled pages when nothing else
@@ -373,9 +428,15 @@ export async function runAudit(options: AuditRunOptions): Promise<AuditRunResult
  *
  * `failed` keys off the crawl station rather than off a thrown error: with no crawl every
  * registered check reports `not_run`, so a run that produced no knowledge is a failed run
- * even though nothing threw. `gbp` is excluded from the calculation entirely — it is
- * `unavailable` for as long as no station is wired to it, so counting it would make
- * `complete` unreachable for every run in the meantime.
+ * even though nothing threw.
+ *
+ * `gbp` IS STILL EXCLUDED, FOR A NEW REASON — the old one expired when the station was
+ * wired. lib/stations/gbp.ts caps every SUCCESSFUL run at `degraded` on purpose, because
+ * GbpProfileRecord does not model the services and attributes LOCAL-003's rubric row also
+ * lists. So gbp can never be `ok`, and counting it would make `complete` unreachable for
+ * every client — a status nothing can attain reports nothing. What gbp did is not hidden
+ * by this: the station strip carries its real state and LOCAL-003/LOCAL-016 carry the
+ * reason, which is where a reader looks for it.
  */
 function runStatus(
   stationStatus: Record<StationSlot, StationReport>,
@@ -412,6 +473,22 @@ function resolveOrigin(
     }
   }
   return null
+}
+
+/**
+ * `clients.gbp_location_group` off the resolved client row.
+ *
+ * A local read with a narrow cast rather than a field on `ToolContext['client']`, because
+ * that interface lives in lib/tools/contract.ts and this pass does not own it. The value
+ * is genuinely there: CLIENT_COLUMNS in lib/tools/context.ts selects the column, and
+ * app/actions/dashboard-gbp.ts reads it off a client row the same way. Only the DECLARED
+ * shape is behind, so widening the interface is a follow-up that changes no behaviour.
+ *
+ * Null is a real answer, not a fallback: decideGBPScope refuses a null group by design,
+ * and the station's ToolErr names the column and what to set it to.
+ */
+function locationGroupOf(ctx: ToolContext | null): string | null {
+  return ctx?.client?.gbp_location_group ?? null
 }
 
 function message(err: unknown): string {

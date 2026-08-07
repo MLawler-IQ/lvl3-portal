@@ -7,8 +7,8 @@
 // workaround.
 //
 // The assertions that carry the most weight are the negative ones: a station failing must
-// not abort the run, a skipped station must be ABSENT rather than an empty ok, `needsGbp`
-// must be false at the call site, and no station run may carry a real client_id.
+// not abort the run, a skipped station must be ABSENT rather than an empty ok, an offline
+// run must never reach for the GBP identity, and no station run may carry a real client_id.
 
 import { describe, expect, it, vi } from 'vitest'
 import { join } from 'node:path'
@@ -22,6 +22,7 @@ import type { CheckDefinition, Finding } from '@/lib/findings/types'
 import { toolErr, toolOk, type ToolContext } from '@/lib/tools/contract'
 import type { GSCRow } from '@/lib/tools-gsc'
 import type { RobotsStationData } from '@/lib/stations/robots'
+import type { GbpProfileRecord } from '@/lib/tools/crawl-record'
 
 const MINI = join(__dirname, '..', '..', 'fixtures', 'ingest', 'sitebulb-mini')
 
@@ -179,32 +180,137 @@ describe('a skipped station is absent, not empty', () => {
   })
 })
 
-describe('the GBP lockout', () => {
-  it('calls buildToolContext with needsGbp false, literally', async () => {
-    const buildContext = vi.fn<NonNullable<AuditRunDeps['buildContext']>>(async () => fakeContext())
-    await runAudit(options({ clientId: 'client-1', record: false }, { buildContext }))
-    expect(buildContext).toHaveBeenCalledTimes(1)
-    // Asserted as a PRESENT LITERAL, not as a falsy default: `needsGbp` left off would
-    // also read as false here, and deleting the line is exactly the regression this
-    // guards — it would silently re-enable the GBP identity.
-    const arg = buildContext.mock.calls[0][0]
-    expect(Object.prototype.hasOwnProperty.call(arg, 'needsGbp')).toBe(true)
-    expect(arg.needsGbp).toBe(false)
+describe('the GBP station', () => {
+  it('runs the injected station and puts its record in the bundle', async () => {
+    // The lockout this replaces pinned the slot to `unavailable` and passed
+    // `needsGbp: false`, so LOCAL-003 and LOCAL-016 could only ever read not_run.
+    const runGbp = vi.fn<NonNullable<AuditRunDeps['runGbp']>>(async () =>
+      toolOk(gbpRecord(), { sources: ['gbp'], degraded: true }),
+    )
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false }, { buildContext: async () => gbpContext(), runGbp }),
+    )
+
+    expect(runGbp).toHaveBeenCalledTimes(1)
+    // The account and the location group both come off the client row, and the group is
+    // the whole reason the lockout existed: decideGBPScope refuses a null one by design,
+    // so a run that could not carry it could only ever produce a new flavour of not_run.
+    expect(runGbp.mock.calls[0][0]).toEqual({
+      accountName: 'accounts/123',
+      locationGroup: '*',
+      auth: GBP_AUTH,
+    })
+    expect(result.stations.gbp?.ok).toBe(true)
+    // Never `ok`: lib/stations/gbp.ts caps a successful run at degraded because
+    // GbpProfileRecord does not model the services and attributes LOCAL-003 also covers.
+    expect(result.stationStatus.gbp.state).toBe('degraded')
+    // The point of the whole exercise — a check that ran instead of reporting not_run.
+    expect(findingFor(result.findings, 'LOCAL-003').status).toBe('degraded')
   })
 
-  it('never puts a gbp slot in the bundle, and reports it as unavailable', async () => {
-    const result = await runAudit(options())
+  it('asks for the GBP identity only when the station is going to run', async () => {
+    // Business Profile is a separate Google account from GA4/GSC, so `needsGbp` is an
+    // extra admin-token read. Asserted as a PRESENT LITERAL in both directions: left off,
+    // the flag would read as false and a skipped run would look correct by accident.
+    const buildContext = vi.fn<NonNullable<AuditRunDeps['buildContext']>>(async () => fakeContext())
+    await runAudit(options({ clientId: 'client-1', record: false }, { buildContext }))
+    const wanted = buildContext.mock.calls[0][0]
+    expect(Object.prototype.hasOwnProperty.call(wanted, 'needsGbp')).toBe(true)
+    expect(wanted.needsGbp).toBe(true)
+
+    const skipped = vi.fn<NonNullable<AuditRunDeps['buildContext']>>(async () => fakeContext())
+    await runAudit(
+      options({ clientId: 'client-1', record: false, skip: ['gsc', 'gbp'] }, {
+        buildContext: skipped,
+      }),
+    )
+    expect(skipped.mock.calls[0][0].needsGbp).toBe(false)
+  })
+
+  it('is unconfigured, not failed, for a client with no gbp_account_id', async () => {
+    // Exactly what the GSC station gets for a missing gsc_site_url. A `failed` here would
+    // render "nobody filled this in" as "we read Google and it broke", and a pass would be
+    // the fabrication the station exists to prevent.
+    const runGbp = vi.fn<NonNullable<AuditRunDeps['runGbp']>>(async () =>
+      toolOk(gbpRecord(), { sources: ['gbp'], degraded: true }),
+    )
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false }, {
+        buildContext: async () => gbpContext({ gbp_account_id: null }),
+        runGbp,
+      }),
+    )
+    expect(result.stationStatus.gbp.state).toBe('unconfigured')
+    expect(result.stationStatus.gbp.reason).toMatch(/no Business Profile account is configured/)
+    expect(runGbp).not.toHaveBeenCalled()
     expect(result.stations.gbp).toBeUndefined()
-    expect(result.stationStatus.gbp.state).toBe('unavailable')
-    expect(result.stationStatus.gbp.reason).toMatch(/no GBP station exists/)
-    // Both GBP-backed checks read not_run with a named reason, which is the correct
-    // answer and needs no code beyond the engine.
     expect(findingFor(result.findings, 'LOCAL-003').status).toBe('not_run')
     expect(findingFor(result.findings, 'LOCAL-016').status).toBe('not_run')
   })
 
-  it('leaves the run reportable as complete despite gbp being permanently unavailable', async () => {
-    // If `unavailable` counted against the run, `complete` would be unreachable forever.
+  it('is unconfigured, not failed, when the Business Profile identity is not connected', async () => {
+    const runGbp = vi.fn<NonNullable<AuditRunDeps['runGbp']>>(async () =>
+      toolOk(gbpRecord(), { sources: ['gbp'], degraded: true }),
+    )
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false }, {
+        buildContext: async () => ({ ...gbpContext(), gbpAuth: null }),
+        runGbp,
+      }),
+    )
+    expect(result.stationStatus.gbp.state).toBe('unconfigured')
+    expect(result.stationStatus.gbp.reason).toMatch(/identity is not connected/)
+    expect(runGbp).not.toHaveBeenCalled()
+  })
+
+  it('keeps every other station intact when the GBP station returns a ToolErr', async () => {
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false, skip: [], gscSiteUrl: GSC_PROPERTY }, {
+        buildContext: async () => gbpContext(),
+        runGsc: () => Promise.resolve(toolOk<GSCRow[]>([gscRow()], { sources: ['gsc'] })),
+        runGbp: async () =>
+          toolErr<GbpProfileRecord>(
+            'could not read media for accounts/123/locations/456: HTTP 403',
+            { sources: ['gbp'] },
+          ),
+      }),
+    )
+    expect(result.stationStatus.gbp.state).toBe('failed')
+    // A GBP failure is one station's failure and nothing else's.
+    expect(result.status).not.toBe('failed')
+    expect(result.stationStatus.crawl.state).toBe('ok')
+    expect(result.stationStatus.gsc.state).toBe('ok')
+    expect(findingFor(result.findings, 'ONPAGE-003').status).toBe('fail')
+    expect(findingFor(result.findings, 'ONPAGE-006').status).not.toBe('not_run')
+    // The failure reaches both GBP checks as not_run carrying the reader's own sentence —
+    // never as a record with an invented photo count.
+    for (const id of ['LOCAL-003', 'LOCAL-016']) {
+      expect(findingFor(result.findings, id).status).toBe('not_run')
+      expect(findingFor(result.findings, id).reason).toMatch(/gbp station failed/)
+      expect(findingFor(result.findings, id).reason).toMatch(/HTTP 403/)
+      expect(findingFor(result.findings, id).evidence.affectedUrls).toBeUndefined()
+    }
+  })
+
+  it('resolves rather than rejecting when the GBP station throws outright', async () => {
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false }, {
+        buildContext: async () => gbpContext(),
+        runGbp: () => {
+          throw new Error('the Business Profile token expired mid-run')
+        },
+      }),
+    )
+    expect(result.stationStatus.gbp.state).toBe('failed')
+    expect(result.stationStatus.gbp.reason).toMatch(/token expired mid-run/)
+    expect(result.findings).toHaveLength(8)
+    expect(findingFor(result.findings, 'ONPAGE-003').status).toBe('fail')
+  })
+
+  it('never lets gbp cost the run its `complete` status', async () => {
+    // The station caps itself at `degraded` on every successful run, so counting it would
+    // make `complete` unreachable for every client that has GBP configured — and a status
+    // nothing can attain reports nothing. What gbp did is on the station strip instead.
     const result = await runAudit(
       options({ skip: [], gscSiteUrl: GSC_PROPERTY, robots: true }, {
         runGsc: () => Promise.resolve(toolOk<GSCRow[]>([gscRow()], { sources: ['gsc'] })),
@@ -223,8 +329,40 @@ describe('the GBP lockout', () => {
           ),
       }),
     )
-    expect(result.stationStatus.gbp.state).toBe('unavailable')
+    expect(result.stationStatus.gbp.state).toBe('unconfigured')
     expect(result.status).toBe('complete')
+  })
+
+  it('the offline path never constructs a GBP dependency', async () => {
+    // scripts/audit-dry-run.ts --offline is the only way a human runs an audit today, and
+    // it has no Supabase, no Google token and no network. Nothing on that path may reach
+    // for the Business Profile identity — not the context build, not the station.
+    const buildContext = vi.fn<NonNullable<AuditRunDeps['buildContext']>>(async () => fakeContext())
+    const runGbp = vi.fn<NonNullable<AuditRunDeps['runGbp']>>(async () =>
+      toolOk(gbpRecord(), { sources: ['gbp'], degraded: true }),
+    )
+    const result = await runAudit(
+      options({ record: false, clientId: null, robots: false }, { buildContext, runGbp }),
+    )
+    expect(buildContext).not.toHaveBeenCalled()
+    expect(runGbp).not.toHaveBeenCalled()
+    expect(result.stationStatus.gbp.state).toBe('unconfigured')
+    expect(result.stations.gbp).toBeUndefined()
+  })
+
+  it('reports a skipped gbp station as skipped, not as unconfigured', async () => {
+    const runGbp = vi.fn<NonNullable<AuditRunDeps['runGbp']>>(async () =>
+      toolOk(gbpRecord(), { sources: ['gbp'], degraded: true }),
+    )
+    const result = await runAudit(
+      options({ clientId: 'client-1', record: false, skip: ['gsc', 'gbp'] }, {
+        buildContext: async () => gbpContext(),
+        runGbp,
+      }),
+    )
+    expect(result.stationStatus.gbp.state).toBe('skipped')
+    expect(result.stationStatus.gbp.reason).toMatch(/the caller skipped the GBP station/)
+    expect(runGbp).not.toHaveBeenCalled()
   })
 })
 
@@ -376,6 +514,59 @@ function fakeContext(): ToolContext {
     gbpAuth: null,
     service: {} as ToolContext['service'],
     invoker: { kind: 'orchestrator' },
+  }
+}
+
+/** A stand-in identity: the orchestrator only ever passes it through to the station. */
+const GBP_AUTH = {} as NonNullable<ToolContext['gbpAuth']>
+
+/**
+ * A context whose client row carries what the GBP station needs.
+ *
+ * `gbp_location_group` is cast in because ToolContext['client'] does not declare it —
+ * lib/tools/context.ts now SELECTS the column, so the value is there at runtime and only
+ * the interface is behind. lib/orchestrator/run.ts reads it through the same narrow cast,
+ * which is the seam this pins: drop the column from CLIENT_COLUMNS and the station starts
+ * refusing every client for an unconfigured scope.
+ */
+function gbpContext(over: Record<string, unknown> = {}): ToolContext {
+  return {
+    ...fakeContext(),
+    client: {
+      id: 'client-1',
+      name: 'Tornado HVAC',
+      slug: 'tornado',
+      gsc_site_url: null,
+      ga4_property_id: null,
+      gbp_account_id: 'accounts/123',
+      gbp_location_group: '*',
+      website_url: null,
+      brand_terms: null,
+      brand_match_mode: null,
+      competitors: null,
+      ...over,
+    } as unknown as ToolContext['client'],
+    gbpAuth: GBP_AUTH,
+  }
+}
+
+/** Every field present and plausible — nothing here is a placeholder. */
+function gbpRecord(over: Partial<GbpProfileRecord> = {}): GbpProfileRecord {
+  return {
+    name: 'Tornado HVAC',
+    primaryCategory: 'HVAC contractor',
+    isServiceAreaBusiness: false,
+    storefrontAddress: '15115 Califa St, Sherman Oaks, CA, 91411',
+    businessCity: 'Sherman Oaks, CA',
+    serviceAreas: [],
+    hoursComplete: true,
+    phone: '+1-818-555-0100',
+    websiteUri: 'https://tornadohvacca.com',
+    description: 'Heating, cooling and duct cleaning across the San Fernando Valley.',
+    photoCount: 22,
+    rating: 4.8,
+    reviewCount: 129,
+    ...over,
   }
 }
 
