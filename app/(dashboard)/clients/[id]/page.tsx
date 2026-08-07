@@ -4,7 +4,13 @@ import { ChevronLeft } from 'lucide-react'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getClientUsers } from '@/app/actions/clients'
-import { getActiveSession, addClientContext } from '@/app/actions/onboarding'
+import {
+  getActiveSession,
+  addClientContext,
+  listContextItems,
+  setContextItemPinned,
+  deleteContextItem,
+} from '@/app/actions/onboarding'
 import { computeCompleteness } from '@/lib/onboarding/completeness'
 import { SLOTS } from '@/lib/onboarding/schema'
 import ClientUsersTable from '@/components/clients/client-users-table'
@@ -12,6 +18,7 @@ import ClientSettingsForm from '@/components/clients/ClientSettingsForm'
 import OnboardingWorkspace from '@/components/onboarding/OnboardingWorkspace'
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton'
 import ContextPaste from '@/components/onboarding/ContextPaste'
+import ContextItemsList from '@/components/onboarding/ContextItemsList'
 import type { Answers } from '@/lib/onboarding/schema'
 import type { Targets } from '@/lib/dashboard/types'
 
@@ -43,6 +50,7 @@ export default async function ClientDetailPage({ params }: Props) {
 
   const users = await getClientUsers(id)
   const { session, messages } = await getActiveSession(id)
+  const contextItems = await listContextItems(id)
 
   // Slot metadata is static; pass it down rather than round-tripping an action.
   const slots = SLOTS.map((s) => ({
@@ -142,6 +150,11 @@ export default async function ClientDetailPage({ params }: Props) {
         {/* ContextPaste renders its own heading and explanation. */}
         <div className="mt-6 rounded-sm border border-surface-800 bg-surface-900 p-5">
           <ContextPaste clientId={id} onSubmit={addClientContext} />
+          <ContextItemsList
+            items={contextItems}
+            onSetPinned={setContextItemPinned}
+            onDelete={deleteContextItem}
+          />
         </div>
       </section>
 

@@ -381,6 +381,110 @@ export async function addClientContext(input: {
   }
 }
 
+/** One stored context item, as the setup surface lists it. */
+export interface ContextItemSummary {
+  id: string
+  kind: ContextItemKind
+  title: string | null
+  occurred_at: string | null
+  created_at: string
+  pinned: boolean
+  /** First ~200 chars, so a list render never ships a whole transcript. */
+  preview: string
+}
+
+/**
+ * The context stored for a client, newest first.
+ *
+ * Only a preview of the body is returned. These rows hold transcripts and email
+ * verbatim, and a list view has no need for the full text — sending it would put
+ * the entire confidential payload into the page for every client, every render.
+ */
+export async function listContextItems(clientId: string): Promise<ContextItemSummary[]> {
+  await requireAdmin()
+  const service = await createServiceClient()
+
+  const { data, error } = await service
+    .from('client_context_items')
+    .select('id, kind, title, body, occurred_at, created_at, pinned')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  // The table may not exist yet in an environment where the migration has not
+  // been applied. That is a missing feature, not a broken client page.
+  if (error) return []
+
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    kind: r.kind as ContextItemKind,
+    title: (r.title as string | null) ?? null,
+    occurred_at: (r.occurred_at as string | null) ?? null,
+    created_at: r.created_at as string,
+    pinned: !!r.pinned,
+    preview: String(r.body ?? '').slice(0, 200),
+  }))
+}
+
+/**
+ * Mark an item important, or release it.
+ *
+ * Pinned items are exempt from the 60-day purge and kept for the life of the
+ * client. Deliberately an explicit act: the alternative is inferring importance
+ * from `kind`, which means guessing about what to delete.
+ */
+export async function setContextItemPinned(
+  itemId: string,
+  pinned: boolean,
+): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+
+    const { data, error } = await service
+      .from('client_context_items')
+      .update({ pinned })
+      .eq('id', itemId)
+      .select('client_id')
+      .single()
+
+    if (error) return { error: error.message }
+    if (data?.client_id) revalidatePath(`/clients/${data.client_id}`)
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to update' }
+  }
+}
+
+/**
+ * Delete a context item now, ahead of its expiry.
+ *
+ * The deletion path a confidentiality question needs an answer to: a client asks
+ * for a transcript to be removed, and the answer must not be "in up to 60 days".
+ * Extracted answers are unaffected — they live on clients.service_context with
+ * their own quoted evidence, so removing the source does not silently rewrite
+ * the client's configuration.
+ */
+export async function deleteContextItem(itemId: string): Promise<{ error?: string }> {
+  try {
+    await requireAdmin()
+    const service = await createServiceClient()
+
+    const { data, error } = await service
+      .from('client_context_items')
+      .delete()
+      .eq('id', itemId)
+      .select('client_id')
+      .single()
+
+    if (error) return { error: error.message }
+    if (data?.client_id) revalidatePath(`/clients/${data.client_id}`)
+    return {}
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Failed to delete' }
+  }
+}
+
 /** Slot metadata for the review form. Server-side so the client bundle stays small. */
 export async function getSlotMeta() {
   await requireAdmin()
