@@ -139,12 +139,8 @@ export default async function ClientDetailPage({ params }: Props) {
           </div>
         )}
 
+        {/* ContextPaste renders its own heading and explanation. */}
         <div className="mt-6 rounded-sm border border-surface-800 bg-surface-900 p-5">
-          <h3 className="text-surface-100 text-sm font-medium mb-1">Paste context</h3>
-          <p className="text-surface-400 text-xs mb-4 max-w-2xl leading-relaxed">
-            A kickoff transcript, an email thread, a note. Anything read out of it is a
-            suggestion to confirm, never an answer.
-          </p>
           <ContextPaste clientId={id} onSubmit={addClientContext} />
         </div>
       </section>

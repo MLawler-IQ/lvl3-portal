@@ -11,6 +11,7 @@ import { TARGET_METRIC_IDS } from '@/lib/dashboard/pacing'
 // One slug implementation. The modal derives the slug as the admin types and
 // this action falls back to the same function, so the two cannot disagree.
 import { slugify } from '@/lib/slug'
+import { SLOTS } from '@/lib/onboarding/schema'
 import { startSession } from './onboarding'
 import { runDiscovery } from './onboarding-discover'
 import { logError } from '@/lib/logging'
@@ -82,6 +83,81 @@ async function requireAdmin() {
     .single()
   if (profile?.role !== 'admin') throw new Error('Unauthorized')
   return user
+}
+
+/**
+ * The nine columns that both this form and setup can write, paired with the slot
+ * each promotes from. Derived from SLOTS rather than hand-listed so the two
+ * cannot drift: a slot that gains or loses a `promotesTo` shows up here on its
+ * own. This overlap, arbitrated by nobody, is the defect the setup rebuild
+ * exists to fix.
+ */
+const SHARED_SLOTS: ReadonlyArray<{ slotId: string; column: string }> = SLOTS.filter(
+  (s) => !!s.promotesTo,
+).map((s) => ({ slotId: s.id, column: s.promotesTo! }))
+
+const SHARED_COLUMNS = SHARED_SLOTS.map((s) => s.column)
+
+/** Order-insensitive for lists; the list fields are sets, not sequences. */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) || Array.isArray(b)) {
+    const norm = (v: unknown) =>
+      (Array.isArray(v) ? v : [])
+        .map((s) => String(s).trim())
+        .filter(Boolean)
+        .sort()
+    const [x, y] = [norm(a), norm(b)]
+    return x.length === y.length && x.every((v, i) => v === y[i])
+  }
+  const norm = (v: unknown) => (v === null || v === undefined ? '' : String(v).trim())
+  return norm(a) === norm(b)
+}
+
+/**
+ * Record a hand edit to a shared field as an explicit manual override.
+ *
+ * Only fields whose submitted value actually DIFFERS from the stored one are
+ * touched. That distinction is the whole design: saving this form without
+ * touching GA4 must not convert an interview answer into a manual override, or
+ * the first save would freeze every field and setup could never update anything
+ * again. An override is something you did, not something you failed to undo.
+ *
+ * Blanking a field writes the same envelope with an empty value rather than
+ * deleting the key. lib/onboarding/promote.ts only treats a FILLED manual entry
+ * as sticky, so an emptied one is a released override — the only way an admin
+ * can hand a field back to setup — and keeping the key records that the release
+ * was deliberate.
+ *
+ * Merges, never replaces: gaps, completenessPct, approvedAt, sessionId and every
+ * untouched slot are setup's record and must survive a settings save. Returns
+ * null when nothing changed, so the update simply omits the column.
+ */
+function recordManualOverrides(
+  before: unknown,
+  submitted: Record<string, unknown>,
+): Record<string, unknown> | null {
+  if (!before || typeof before !== 'object') return null
+  const row = before as Record<string, unknown>
+  const context = (row.service_context ?? {}) as Record<string, unknown>
+  const answers = { ...((context.answers ?? {}) as Record<string, unknown>) }
+
+  let changed = false
+  for (const { slotId, column } of SHARED_SLOTS) {
+    if (!(column in submitted)) continue
+    if (sameValue(submitted[column], row[column])) continue
+
+    answers[slotId] = {
+      value: (submitted[column] ?? null) as never,
+      unknown: false,
+      source: 'manual',
+      confidence: 'high',
+      evidence: 'Set by hand in client settings',
+      recordedAt: new Date().toISOString(),
+    }
+    changed = true
+  }
+
+  return changed ? { ...context, answers } : null
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
@@ -182,6 +258,27 @@ export async function updateClient(clientId: string, formData: FormData) {
     ? { website_url: (formData.get('website_url') as string | null)?.trim() || null }
     : {}
 
+  // The nine columns setup also writes. Editing one here is what makes it a
+  // recorded override, so the current values have to be read before the write to
+  // see which of them actually changed.
+  const { data: before } = await service
+    .from('clients')
+    .select(`service_context, ${SHARED_COLUMNS.join(', ')}`)
+    .eq('id', clientId)
+    .single()
+
+  const service_context = recordManualOverrides(before, {
+    client_type,
+    ga4_property_id,
+    gsc_site_url,
+    gbp_account_id,
+    gbp_location_group,
+    google_sheet_id,
+    competitors,
+    brand_terms,
+    key_event_names,
+  })
+
   const { error } = await service
     .from('clients')
     .update({
@@ -205,6 +302,7 @@ export async function updateClient(clientId: string, formData: FormData) {
       brand_terms,
       brand_match_mode,
       targets,
+      ...(service_context ? { service_context } : {}),
     })
     .eq('id', clientId)
 

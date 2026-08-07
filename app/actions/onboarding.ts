@@ -12,7 +12,13 @@ import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { computeCompleteness, type Completeness } from '@/lib/onboarding/completeness'
-import { SLOTS, answersSchema, isFilled, type Answers } from '@/lib/onboarding/schema'
+import {
+  SLOTS,
+  answersSchema,
+  isFilled,
+  sanitizeSessionAnswers,
+  type Answers,
+} from '@/lib/onboarding/schema'
 import { buildClientUpdate } from '@/lib/onboarding/promote'
 import { CONTEXT_ITEM_KINDS, type ContextItemKind } from '@/lib/onboarding/context-items'
 import { createAnthropicExtractor, extractSlotValues } from '@/lib/onboarding/extract'
@@ -125,7 +131,10 @@ export async function saveAnswerEdits(
     if (!parsed.success) {
       return { error: `Invalid answers: ${parsed.error.issues[0]?.message ?? 'malformed'}` }
     }
-    const answers = parsed.data
+    // answersSchema alone accepts any string key and does not enforce choice
+    // membership, so an edit could persist an invented slot id or an off-list
+    // choice into the draft and from there into clients.service_context.
+    const answers = sanitizeSessionAnswers(parsed.data)
     const completeness = computeCompleteness(answers)
 
     const { data: updated, error } = await service
@@ -168,7 +177,10 @@ export async function approveOnboardingSession(
     if (!parsed.success) {
       return { error: `Invalid answers: ${parsed.error.issues[0]?.message ?? 'malformed'}` }
     }
-    const answers = parsed.data
+    // Same hardening as saveAnswerEdits, and it matters more here: this payload
+    // is one step from clients.service_context, which is where a 'manual'
+    // override would become permanent.
+    const answers = sanitizeSessionAnswers(parsed.data)
 
     const { data: session } = await service
       .from('client_onboarding_sessions')
@@ -278,7 +290,12 @@ export async function addClientContext(input: {
   title: string | null
   body: string
   occurredAt: string | null
-}): Promise<{ error?: string; suggestedSlotIds?: string[]; nothingExtracted?: boolean }> {
+}): Promise<{
+  error?: string
+  suggestedSlotIds?: string[]
+  nothingExtracted?: boolean
+  noActiveSession?: boolean
+}> {
   try {
     const { user } = await requireAdmin()
     const service = await createServiceClient()
@@ -315,11 +332,11 @@ export async function addClientContext(input: {
       .limit(1)
       .maybeSingle()
 
-    if (!sessionRow) return {}
+    if (!sessionRow) return { noActiveSession: true }
 
     const existing = answersSchema.safeParse(sessionRow.answers).data ?? {}
     const open = SLOTS.filter((s) => !isFilled(existing[s.id])).map((s) => s.id)
-    if (open.length === 0) return {}
+    if (open.length === 0) return { nothingExtracted: true }
 
     let result
     try {

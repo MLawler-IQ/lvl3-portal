@@ -47,6 +47,13 @@ export interface ContextPasteResult {
   suggestedSlotIds?: string[]
   /** True when the model replied but nothing survived validation. */
   nothingExtracted?: boolean
+  /**
+   * True when the context was stored but there was no open setup session to
+   * attach suggestions to. Distinct from nothingExtracted: nothing was read
+   * because there was nothing to read FOR, which is not the same as reading it
+   * and finding nothing.
+   */
+  noActiveSession?: boolean
 }
 
 export interface ContextPasteProps {
@@ -220,9 +227,11 @@ export default function ContextPaste({ clientId, onSubmit }: ContextPasteProps) 
           ) : (
             <p className="text-[11px] leading-relaxed text-surface-400">
               Context saved.{' '}
-              {result.nothingExtracted
-                ? 'Nothing in it could be tied to an open question with a direct quote, so no suggestions were made.'
-                : 'No suggestions were made from it.'}
+              {result.noActiveSession
+                ? 'There is no setup session open, so nothing was read from it yet — start one above and it will be used.'
+                : result.nothingExtracted
+                  ? 'Nothing in it could be tied to an open question with a direct quote, so no suggestions were made.'
+                  : 'No suggestions were made from it.'}
             </p>
           )}
         </div>

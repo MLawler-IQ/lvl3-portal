@@ -115,8 +115,9 @@ function ProvenanceNote({ value }: { value: SlotValue | undefined }) {
         <TriangleAlert size={11} className="mt-0.5 shrink-0" />
         <span>
           <span className="font-medium uppercase tracking-wide">Unconfirmed suggestion</span>
-          {' — inferred from notes, not confirmed by anyone. This does not count as answered; '}
-          {'save it here to make it a real setting.'}
+          {' — inferred from notes, not confirmed by anyone. It does not count as answered '}
+          {'and has not been written to this field. Confirm it in setup above, or type the '}
+          {'value here yourself.'}
           {evidence && <span className="block mt-0.5 text-surface-400">“{evidence}”</span>}
         </span>
       </div>

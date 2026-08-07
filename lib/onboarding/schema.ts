@@ -316,6 +316,34 @@ export function sanitizeAnswerPatch(patch: unknown): Answers {
 }
 
 /**
+ * Sanitize a patch that is about to be written to a SESSION draft.
+ *
+ * Same validation as sanitizeAnswerPatch, plus one rule it cannot express: a
+ * session draft may never contain `source: 'manual'`. Manual means "an admin
+ * typed this into client settings", it lives on clients.service_context, and it
+ * is the one source that outranks an interview re-run. If a value could acquire
+ * it by arriving in a payload, anything that can write a session — the interview
+ * model included — could mint a permanent override for itself.
+ *
+ * The provenance of everything else is preserved, because an admin correcting a
+ * typo in the review pane must not silently relabel a high-confidence GA4 match
+ * as something a human said. `forceSource` is for the model's own tool call,
+ * where the value genuinely did come from the conversation.
+ */
+export function sanitizeSessionAnswers(
+  patch: unknown,
+  opts?: { forceSource?: 'interview' },
+): Answers {
+  const clean = sanitizeAnswerPatch(patch)
+  const out: Answers = {}
+  for (const [slotId, v] of Object.entries(clean)) {
+    const source = opts?.forceSource ?? (v.source === 'manual' ? undefined : v.source)
+    out[slotId] = source ? { ...v, source } : { ...v, source: undefined }
+  }
+  return out
+}
+
+/**
  * Is a slot recorded as an explicit gap? Requires a reason — an `unknown` with
  * no reason is a gap nobody can interpret three months later, which defeats the
  * point of recording it instead of guessing.

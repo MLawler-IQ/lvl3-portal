@@ -10,7 +10,7 @@
 // returns a string and never throws for an expected failure.
 
 import type Anthropic from '@anthropic-ai/sdk'
-import { SLOTS, sanitizeAnswerPatch, type Answers } from './schema'
+import { SLOTS, sanitizeSessionAnswers, type Answers } from './schema'
 
 export const RECORD_ANSWERS_TOOL: Anthropic.Tool = {
   name: 'record_answers',
@@ -90,7 +90,10 @@ export function applyRecordAnswers(input: Record<string, unknown>, current: Answ
       ? Object.keys(raw as Record<string, unknown>)
       : []
 
-  const patch = sanitizeAnswerPatch(raw)
+  // The model is reporting what the client said, so the source is not the
+  // model's to choose. Forcing it here stops the interview labelling its own
+  // output 'manual' — the one source that outranks a re-run.
+  const patch = sanitizeSessionAnswers(raw, { forceSource: 'interview' })
   const appliedIds = Object.keys(patch)
   const rejected = requested.filter((id) => !appliedIds.includes(id))
 
