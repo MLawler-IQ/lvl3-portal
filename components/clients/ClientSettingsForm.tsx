@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { RefreshCw, Wand2 } from 'lucide-react'
+import { Check, MessagesSquare, PenLine, RefreshCw, Sparkles, TriangleAlert, Wand2 } from 'lucide-react'
 import { updateClient } from '@/app/actions/clients'
 import {
   fetchLogoUrl,
@@ -20,6 +20,23 @@ import { createClient as createSupabaseClient } from '@/lib/supabase/client'
 import { CLIENT_TYPES, CLIENT_TYPE_LABELS, type ClientType, type Targets } from '@/lib/dashboard/types'
 import { inferClientType } from '@/lib/dashboard/registry'
 import { TARGET_METRIC_IDS, TARGET_METRIC_LABELS } from '@/lib/dashboard/pacing'
+import type { Answers, SlotValue } from '@/lib/onboarding/schema'
+
+/**
+ * The nine columns this form and the onboarding interview both write. They are
+ * the only fields with a provenance badge, because they are the only ones where
+ * "who set this, and how sure were they" is a question anyone can ask.
+ */
+type SharedSlotId =
+  | 'client_type'
+  | 'ga4_property_id'
+  | 'gsc_site_url'
+  | 'gbp_account_id'
+  | 'gbp_location_group'
+  | 'competitors'
+  | 'brand_terms'
+  | 'key_event_names'
+  | 'google_sheet_id'
 
 interface ClientData {
   id: string
@@ -42,10 +59,115 @@ interface ClientData {
   brand_terms: string[] | null
   brand_match_mode: string | null
   targets: Targets | null
+  /**
+   * The clients.service_context blob written by lib/onboarding/promote.ts. It
+   * already carries every slot's { value, source, confidence, evidence }, so
+   * provenance needs no migration and no join — it rides on the row this page
+   * already loads.
+   *
+   * INTEGRATION POINT: optional because app/(dashboard)/clients/[id]/page.tsx is
+   * not this lane's file. That page must add one line to the prop object it
+   * builds:  service_context: (client.service_context as ServiceContext | null) ?? null
+   * Until it does, every field simply renders without a badge — which is the
+   * same as a client who has never been interviewed, so nothing misreports.
+   */
+  service_context?: { answers?: Answers } | null
 }
 
 interface Props {
   client: ClientData
+}
+
+/**
+ * One field's provenance, read straight off clients.service_context.answers.
+ *
+ * The four sources are four different epistemic situations and are deliberately
+ * NOT rendered alike:
+ *   interview — a human told us. Settled.
+ *   manual    — an admin typed it here. Settled, AND it outranks a re-run.
+ *   auto      — matched against Google's own APIs. A fact at high/medium
+ *               confidence; at low confidence it is downgraded to a guess,
+ *               because isFilled() does not count it either.
+ *   context   — a model inferred it from notes or a transcript. NEVER a settled
+ *               answer at any confidence (see isFilled in lib/onboarding/schema).
+ *               It gets a bordered warning block rather than a one-line note, so
+ *               it cannot be skimmed as though it were an answer. That is the
+ *               whole rule this display exists to protect.
+ */
+function ProvenanceNote({ value }: { value: SlotValue | undefined }) {
+  if (!value || value.source === undefined) return null
+
+  const confidence = value.confidence
+  const evidence = value.evidence?.trim()
+
+  if (value.source === 'context') {
+    return (
+      <div
+        className="mt-1.5 flex items-start gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] leading-relaxed"
+        style={{
+          color: 'var(--color-warning)',
+          backgroundColor: 'color-mix(in srgb, var(--color-warning) 8%, transparent)',
+          borderWidth: 1,
+          borderStyle: 'solid',
+          borderColor: 'color-mix(in srgb, var(--color-warning) 25%, transparent)',
+        }}
+      >
+        <TriangleAlert size={11} className="mt-0.5 shrink-0" />
+        <span>
+          <span className="font-medium uppercase tracking-wide">Unconfirmed suggestion</span>
+          {' — inferred from notes, not confirmed by anyone. This does not count as answered; '}
+          {'save it here to make it a real setting.'}
+          {evidence && <span className="block mt-0.5 text-surface-400">“{evidence}”</span>}
+        </span>
+      </div>
+    )
+  }
+
+  const lowAuto = value.source === 'auto' && confidence === 'low'
+
+  const { Icon, label, detail } =
+    value.source === 'manual'
+      ? {
+          Icon: PenLine,
+          label: 'Manual override',
+          detail: 'set here in settings — an onboarding re-run will not overwrite it.',
+        }
+      : value.source === 'interview'
+        ? {
+            Icon: MessagesSquare,
+            label: 'From the onboarding interview',
+            detail: 'answered by the client.',
+          }
+        : lowAuto
+          ? {
+              Icon: Sparkles,
+              label: 'Auto-detected, low confidence',
+              detail: 'treated as a best guess, not an answer — confirm it.',
+            }
+          : {
+              Icon: Check,
+              label: `Auto-detected${confidence === 'medium' ? ' (medium confidence)' : ''}`,
+              detail: 'matched against the connected Google account.',
+            }
+
+  return (
+    <p
+      className={`mt-1.5 flex items-start gap-1.5 text-[11px] leading-relaxed ${
+        lowAuto ? '' : 'text-surface-400'
+      }`}
+      style={lowAuto ? { color: 'var(--color-warning)' } : undefined}
+    >
+      <Icon
+        size={11}
+        className={`mt-0.5 shrink-0 ${lowAuto ? '' : 'text-brand-400'}`}
+      />
+      <span>
+        <span className={`font-medium ${lowAuto ? '' : 'text-surface-300'}`}>{label}</span>
+        {` — ${detail}`}
+        {evidence && <span className="block mt-0.5">“{evidence}”</span>}
+      </span>
+    </p>
+  )
 }
 
 const COLUMN_FIELDS = [
@@ -62,6 +184,14 @@ type ColumnField = (typeof COLUMN_FIELDS)[number]['key']
 export default function ClientSettingsForm({ client }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+
+  // Read-only provenance for the nine shared fields. Absent for a client that
+  // was never interviewed, in which case every field renders bare rather than
+  // wearing an empty badge.
+  const provenance: Answers = client.service_context?.answers ?? {}
+  function Prov({ id }: { id: SharedSlotId }) {
+    return <ProvenanceNote value={provenance[id]} />
+  }
 
   // Basic info
   const [name, setName] = useState(client.name)
@@ -334,6 +464,36 @@ export default function ClientSettingsForm({ client }: Props) {
         for (const metricId of TARGET_METRIC_IDS) {
           fd.set(`target_${metricId}`, targets[metricId] ?? '')
         }
+
+        // INTEGRATION POINT — recording the manual override.
+        //
+        // Provenance above is read-only: this form can show that a value was
+        // hand-typed, but it cannot yet record that it was, because the write
+        // lives in updateClient (app/actions/clients.ts), which this lane does
+        // not own. Saving today therefore changes the column without changing
+        // service_context, so promote.ts still sees the old provenance and a
+        // re-run would overwrite the edit.
+        //
+        // The shape needed, applied inside updateClient after the column write:
+        // for each of the nine shared fields whose submitted value differs from
+        // the value currently on the row, merge into clients.service_context —
+        //
+        //   service_context.answers[slotId] = {
+        //     value:      <the submitted value; string[] for the list fields>,
+        //     unknown:    false,
+        //     source:     'manual',
+        //     confidence: 'high',
+        //     evidence:   `Set in client settings by ${user.email}`,
+        //     recordedAt: new Date().toISOString(),
+        //   }
+        //
+        // Merge, never replace: the rest of service_context (gaps,
+        // completenessPct, approvedAt, sessionId, and the untouched slots) is
+        // the interview's record and must survive a settings save. Blanking a
+        // field should write the same envelope with an empty value rather than
+        // deleting the key — lib/onboarding/promote.ts treats a blank manual
+        // entry as a released override, which is the only way an admin can hand
+        // a field back to onboarding.
         await updateClient(client.id, fd)
         router.refresh()
       } catch (err) {
@@ -503,6 +663,7 @@ export default function ClientSettingsForm({ client }: Props) {
             </label>
           ))}
         </div>
+        <Prov id="client_type" />
         {detectHint && <p className="text-brand-400 text-xs">{detectHint}</p>}
       </div>
 
@@ -537,6 +698,7 @@ export default function ClientSettingsForm({ client }: Props) {
           <p className="text-surface-400 text-xs mt-1.5">
             Paste the full URL or just the Sheet ID — both work.
           </p>
+          <Prov id="google_sheet_id" />
         </div>
 
         <div>
@@ -667,6 +829,7 @@ export default function ClientSettingsForm({ client }: Props) {
             </button>
           </div>
           {ga4LoadError && <p className="text-error text-xs mt-1.5">{ga4LoadError}</p>}
+          <Prov id="ga4_property_id" />
         </div>
 
         <div>
@@ -697,6 +860,7 @@ export default function ClientSettingsForm({ client }: Props) {
               {gscOptionsLoading ? 'Loading…' : 'Load'}
             </button>
           </div>
+          <Prov id="gsc_site_url" />
         </div>
 
         <div className="pt-1">
@@ -764,6 +928,7 @@ export default function ClientSettingsForm({ client }: Props) {
             placeholder="accounts/123456"
             className="w-full mt-2 bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder-surface-400 font-mono"
           />
+          <Prov id="gbp_account_id" />
         </div>
 
         <div>
@@ -775,6 +940,7 @@ export default function ClientSettingsForm({ client }: Props) {
             placeholder="Group / label that scopes which locations belong to this client"
             className="w-full bg-surface-800 border border-surface-600 text-surface-100 text-sm rounded-lg px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 placeholder-surface-400"
           />
+          <Prov id="gbp_location_group" />
         </div>
       </div>
 
@@ -800,6 +966,7 @@ export default function ClientSettingsForm({ client }: Props) {
             {recHints.brand ||
               'Case-insensitive matchers. Comma-separated. Blank = auto-derive from the domain.'}
           </p>
+          <Prov id="brand_terms" />
           <div className="mt-2.5 flex items-center gap-2">
             <span className="text-surface-400 text-xs">Match mode:</span>
             <div className="inline-flex rounded-lg border border-surface-600 overflow-hidden">
@@ -842,6 +1009,7 @@ export default function ClientSettingsForm({ client }: Props) {
             {recHints.keyEvents ||
               'GA4 key-event (conversion) names that count as this client’s north-star leads. Comma-separated.'}
           </p>
+          <Prov id="key_event_names" />
         </div>
 
         <div>
@@ -860,6 +1028,7 @@ export default function ClientSettingsForm({ client }: Props) {
             {recHints.competitors ||
               'Competitor domains tracked in the competitive module. Comma-separated.'}
           </p>
+          <Prov id="competitors" />
         </div>
       </div>
 
