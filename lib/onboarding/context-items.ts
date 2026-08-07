@@ -19,12 +19,45 @@
 
 export const CONTEXT_ITEM_KINDS = [
   'meeting_transcript',
+  'meeting_summary',
   'email',
   'note',
   'web_page',
 ] as const
 
 export type ContextItemKind = (typeof CONTEXT_ITEM_KINDS)[number]
+
+/**
+ * Kinds whose text is a PARAPHRASE of something rather than a record of it.
+ *
+ * `meeting_summary` is the case this was added for: a Zoom AI Companion summary
+ * is third-person prose written by a note-taker model, so a quote from it is a
+ * literal span of the summary but NOT anybody's actual words. Before this kind
+ * existed those rows were stored as `meeting_transcript`, which told the
+ * extractor — and the admin reading a suggestion in the review pane — that a
+ * machine's paraphrase was testimony.
+ *
+ * This does not weaken the evidence check anywhere (see extract.ts); it only
+ * caps how strongly a summary-sourced suggestion may present itself.
+ */
+export const PARAPHRASE_CONTEXT_ITEM_KINDS: readonly ContextItemKind[] = ['meeting_summary']
+
+export function isParaphraseKind(kind: ContextItemKind): boolean {
+  return PARAPHRASE_CONTEXT_ITEM_KINDS.includes(kind)
+}
+
+/**
+ * Display names, kept here so the two surfaces that render a kind cannot drift
+ * apart — and so adding a kind is one edit rather than a hunt for every
+ * `Record<ContextItemKind, string>` in the component tree.
+ */
+export const CONTEXT_ITEM_KIND_LABELS: Record<ContextItemKind, string> = {
+  meeting_transcript: 'Meeting transcript',
+  meeting_summary: 'Meeting summary (AI)',
+  email: 'Email',
+  note: 'Note',
+  web_page: 'Web page',
+}
 
 /** One row of public.client_context_items, as the extractor needs it. */
 export interface ContextItem {

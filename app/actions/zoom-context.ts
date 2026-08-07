@@ -18,7 +18,13 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { logError } from '@/lib/logging'
 import { normalizeDomain } from '@/lib/normalize-domain'
 import { SLOTS, answersSchema, isFilled, type Answers } from '@/lib/onboarding/schema'
-import { createAnthropicExtractor, extractSlotValues } from '@/lib/onboarding/extract'
+import {
+  createAnthropicExtractor,
+  extractSlotValues,
+  summarizeExtraction,
+  type ExtractionOutcome,
+  type ExtractionResult,
+} from '@/lib/onboarding/extract'
 import {
   fetchCallText,
   findCallsFor,
@@ -26,6 +32,48 @@ import {
   zoomToken,
   type ZoomCall,
 } from '@/lib/connectors/zoom'
+import type { ContextItem, ContextItemKind } from '@/lib/onboarding/context-items'
+
+/**
+ * The "nothing left to ask" case, which returns before extractSlotValues is
+ * called and so has no ExtractionResult to describe itself with.
+ *
+ * Routed through summarizeExtraction rather than hand-written, because the whole
+ * point of centralising the wording is that the paste path and the Zoom path say
+ * the same thing. A second sentence written here is how they drift.
+ */
+function nothingLeftToAsk(items: ContextItem[]) {
+  return {
+    outcome: 'not_attempted' as const,
+    summary: summarizeExtraction({
+      outcome: 'not_attempted',
+      proposed: 0,
+      acceptedCount: 0,
+      rejectedByReason: [],
+      items,
+      openSlotCount: 0,
+    }),
+    proposed: 0,
+    accepted: 0,
+    rejectedByReason: [],
+  }
+}
+
+/** The self-describing half of an extraction, flattened for the client bundle. */
+function explain(result: ExtractionResult) {
+  return {
+    outcome: result.outcome,
+    summary: result.summary,
+    proposed: result.proposed,
+    accepted: result.accepted.length,
+    rejectedByReason: result.rejectedByReason.map((g) => ({
+      reason: String(g.reason),
+      count: g.count,
+      slotIds: g.slotIds,
+      phrase: g.phrase,
+    })),
+  }
+}
 
 export interface ZoomSearchResult {
   error?: string
@@ -93,6 +141,20 @@ export interface ZoomImportResult {
   suggestedSlotIds?: string[]
   nothingExtracted?: boolean
   noActiveSession?: boolean
+  /**
+   * Why nothing (or little) came back, rendered by lib/onboarding/extract.ts so
+   * the paste path and the Zoom path cannot word it differently. The old
+   * "nothing could be tied to an open question" told an admin nothing: a thin
+   * source and a broken extractor read identically, and a real import of an
+   * intro call was indistinguishable from a bug.
+   */
+  extraction?: {
+    outcome: ExtractionOutcome
+    summary: string
+    proposed: number
+    accepted: number
+    rejectedByReason: { reason: string; count: number; slotIds: string[]; phrase: string }[]
+  }
 }
 
 /**
@@ -124,12 +186,20 @@ export async function importClientCalls(
 
     let imported = 0
     let skipped = 0
-    const items: { id: string; kind: 'meeting_transcript'; title: string | null; body: string; occurredAt: string | null }[] = []
+    const items: ContextItem[] = []
+
+    // A Zoom "recording" carries a verbatim transcript; a "summary" is an AI
+    // Companion paraphrase written in the third person. Storing both as
+    // meeting_transcript told the extractor that a note-taker model's prose was
+    // testimony, and the extraction prompt's own instruction to trust summaries
+    // less could never fire because nothing downstream could tell them apart.
+    const kindFor = (call: ZoomCall): ContextItemKind =>
+      call.kind === 'summary' ? 'meeting_summary' : 'meeting_transcript'
 
     for (const call of calls.slice(0, 10)) {
       const { data: existing } = await service
         .from('client_context_items')
-        .select('id, body, title, occurred_at')
+        .select('id, kind, body, title, occurred_at')
         .eq('client_id', clientId)
         .eq('source_ref', call.uuid)
         .maybeSingle()
@@ -137,8 +207,10 @@ export async function importClientCalls(
       if (existing) {
         skipped++
         items.push({
+          // Trust what was stored, not what this search happens to report — the
+          // row may predate the kind existing, and the row is the record.
           id: existing.id as string,
-          kind: 'meeting_transcript',
+          kind: ((existing.kind as ContextItemKind) ?? kindFor(call)),
           title: (existing.title as string | null) ?? call.topic,
           body: existing.body as string,
           occurredAt: (existing.occurred_at as string | null) ?? null,
@@ -153,7 +225,7 @@ export async function importClientCalls(
         .from('client_context_items')
         .insert({
           client_id: clientId,
-          kind: 'meeting_transcript',
+          kind: kindFor(call),
           source_ref: call.uuid,
           title: call.topic,
           body: text,
@@ -167,7 +239,7 @@ export async function importClientCalls(
       imported++
       items.push({
         id: row.id as string,
-        kind: 'meeting_transcript',
+        kind: kindFor(call),
         title: call.topic,
         body: text,
         occurredAt: call.start || null,
@@ -177,7 +249,10 @@ export async function importClientCalls(
     revalidatePath(`/clients/${clientId}`)
 
     if (items.length === 0) {
-      return { error: 'None of those calls had readable content. Zoom only keeps transcripts for cloud-recorded calls.' }
+      return {
+        error:
+          'None of those calls had readable content. Zoom keeps a transcript only for cloud-recorded calls, and an AI Companion summary only where that was switched on.',
+      }
     }
 
     const { data: sessionRow } = await service
@@ -193,7 +268,9 @@ export async function importClientCalls(
 
     const existing = answersSchema.safeParse(sessionRow.answers).data ?? {}
     const open = SLOTS.filter((s) => !isFilled(existing[s.id])).map((s) => s.id)
-    if (open.length === 0) return { imported, skipped, nothingExtracted: true }
+    if (open.length === 0) {
+      return { imported, skipped, nothingExtracted: true, extraction: nothingLeftToAsk(items) }
+    }
 
     let result
     try {
@@ -207,7 +284,9 @@ export async function importClientCalls(
     }
 
     const suggested = Object.keys(result.answers)
-    if (suggested.length === 0) return { imported, skipped, nothingExtracted: true }
+    if (suggested.length === 0) {
+      return { imported, skipped, nothingExtracted: true, extraction: explain(result) }
+    }
 
     // A suggestion never displaces an answer.
     const merged: Answers = { ...existing }
@@ -226,7 +305,7 @@ export async function importClientCalls(
     }
 
     revalidatePath(`/clients/${clientId}`)
-    return { imported, skipped, suggestedSlotIds: suggested }
+    return { imported, skipped, suggestedSlotIds: suggested, extraction: explain(result) }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Import failed' }
   }

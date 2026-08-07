@@ -18,6 +18,22 @@ import { useState, useTransition } from 'react'
 import { Pin, PinOff, Trash2, Loader2 } from 'lucide-react'
 import type { ContextItemKind } from '@/lib/onboarding/context-items'
 
+/**
+ * Deliberately shorter than CONTEXT_ITEM_KIND_LABELS. These sit in a badge beside
+ * a title in a narrow list, where "Meeting transcript" wraps; the shared labels
+ * are for the paste picker, which has room for the full phrase.
+ *
+ * The type annotation is the safeguard: it is Record<ContextItemKind, string>, so
+ * adding a kind fails the build here rather than rendering `undefined`.
+ */
+const BADGE_LABELS: Record<ContextItemKind, string> = {
+  meeting_transcript: 'Transcript',
+  meeting_summary: 'Summary (AI)',
+  email: 'Email',
+  note: 'Note',
+  web_page: 'Web page',
+}
+
 export interface ContextItemRow {
   id: string
   kind: ContextItemKind
@@ -26,13 +42,6 @@ export interface ContextItemRow {
   created_at: string
   pinned: boolean
   preview: string
-}
-
-const KIND_LABELS: Record<ContextItemKind, string> = {
-  meeting_transcript: 'Transcript',
-  email: 'Email',
-  note: 'Note',
-  web_page: 'Web page',
 }
 
 function addedOn(createdAt: string): string {
@@ -86,7 +95,7 @@ export default function ContextItemsList({ items, onSetPinned, onDelete }: Props
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="rounded-sm bg-surface-800 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-surface-300">
-                    {KIND_LABELS[item.kind]}
+                    {BADGE_LABELS[item.kind]}
                   </span>
                   <span className="truncate text-xs text-surface-100">
                     {item.title || 'Untitled'}

@@ -55,7 +55,7 @@ export async function runDiscovery(sessionId: string): Promise<DiscoveryOutcome>
 
     const { data: client } = await service
       .from('clients')
-      .select('website_url, gsc_site_url, name')
+      .select('website_url, gsc_site_url, name, slug')
       .eq('id', session.client_id)
       .single()
 
@@ -85,7 +85,12 @@ export async function runDiscovery(sessionId: string): Promise<DiscoveryOutcome>
       listGbpAccounts: async (a) =>
         (await listGBPAccounts(a)).map((x) => ({ name: x.name, accountName: x.accountName })),
       listGbpLocations: listGBPLocations,
-    })
+    },
+    // Name and slug feed brand-term derivation. Without them the terms come from
+    // the domain alone, which still works but loses the variants a client is
+    // actually searched by — the spaced name, and the run-together form.
+    { name: client?.name ?? null, slug: client?.slug ?? null },
+    )
 
     const existing = answersSchema.safeParse(session.answers).data ?? {}
     const patch = seedFromDiscovery(discovery, existing)

@@ -41,6 +41,14 @@ export interface ZoomImportResponse {
   suggestedSlotIds?: string[]
   nothingExtracted?: boolean
   noActiveSession?: boolean
+  /** Rendered by lib/onboarding/extract.ts so both intake paths word it alike. */
+  extraction?: {
+    outcome: string
+    summary: string
+    proposed: number
+    accepted: number
+    rejectedByReason: { reason: string; count: number; slotIds: string[]; phrase: string }[]
+  }
 }
 
 interface Props {
@@ -239,7 +247,8 @@ export default function ZoomCallFinder({
                 <p className="mt-1 text-[11px] leading-relaxed text-surface-400">
                   {imported.noActiveSession
                     ? 'There is no setup session open, so nothing was read from them yet — start one above and they will be used.'
-                    : 'Nothing in them could be tied to an open question with a direct quote, so no suggestions were made.'}
+                    : (imported.extraction?.summary ??
+                      'No suggestions were made from them.')}
                 </p>
               )}
             </>

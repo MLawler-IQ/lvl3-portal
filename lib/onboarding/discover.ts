@@ -1,5 +1,8 @@
 // Auto-discovery: given a client's website, find the GA4 property, Search
-// Console property and GBP account the agency already has access to.
+// Console property and GBP account the agency already has access to — plus the
+// two slots that are derivable rather than lookup-able: a Semrush competitor
+// list, and the brand terms both the AI-visibility tool and the GSC branded
+// split were previously re-guessing at read time and throwing away.
 //
 // Why this exists: the interview was asking a strategist to type ids the portal
 // can already see. Typing live pipeline config by hand is slow and a source of
@@ -29,6 +32,12 @@ import { normalizeDomain, siteMatchesDomain } from '@/lib/normalize-domain'
 import { inferClientType, type InferenceSignals } from '@/lib/dashboard/registry'
 import type { ClientType } from '@/lib/dashboard/types'
 import type { GBPLocation } from '@/lib/connectors/gbp'
+import {
+  fetchSemrushOrganicCompetitors,
+  type SemrushOrganicCompetitor,
+} from '@/lib/connectors/semrush-portal'
+import { connectorErr, type ConnectorResult } from '@/lib/connectors/types'
+import { deriveBrandTerms, type BrandTermsDerivation } from './brand-terms'
 
 /** 12h. The index only changes when a property or data stream is added. */
 const GA4_INDEX_TTL_SECONDS = 12 * 3600
@@ -46,6 +55,17 @@ const MAX_PROPERTIES = 400
  * half of them failing means the connection is broken, not the properties.
  */
 const DEGRADED_INDEX_THRESHOLD = 0.5
+
+/**
+ * How many Semrush rows to ask for, and how many to actually propose.
+ *
+ * Semrush charges API units per call, and this runs once per onboarding session
+ * (plus any re-runs), so the request is small. Only the top few are proposed:
+ * the tail of an organic-competitor report is noise, and a long list is a list
+ * nobody prunes.
+ */
+const SEMRUSH_COMPETITOR_LIMIT = 10
+const MAX_SEEDED_COMPETITORS = 5
 
 export type SourceStatus = 'ok' | 'no_match' | 'failed'
 export type MatchConfidence = 'high' | 'low'
@@ -82,11 +102,37 @@ export interface GbpMatch {
   evidence: string
 }
 
+export interface CompetitorMatch {
+  /** Normalized domains, most relevant first. */
+  domains: string[]
+  /**
+   * Always 'low', typed as the literal. Semrush organic competitors are domains
+   * that rank for overlapping keywords — which is a different question from "who
+   * do you lose jobs to", and reliably includes directories (yelp, angi) that no
+   * strategist would call a competitor. It is a starting list to prune, so it
+   * must not count as an answered slot.
+   */
+  confidence: 'low'
+  evidence: string
+}
+
 export interface Discovery {
   domain: string
   ga4: SourceResult<Ga4Match>
   gsc: SourceResult<GscMatch>
   gbp: SourceResult<GbpMatch>
+  /**
+   * Optional: a Discovery built before this source existed (or by a caller that
+   * has no Semrush key) is still a valid Discovery. Absent means "not looked
+   * for"; a present `failed` means "looked for and could not read", which is the
+   * distinction the rest of this module is built on.
+   */
+  competitors?: SourceResult<CompetitorMatch>
+  /**
+   * Derived locally from the client's name/slug/domain — no I/O, so it has no
+   * SourceResult and cannot fail. Optional for the same back-compat reason.
+   */
+  brandTerms?: BrandTermsDerivation
   clientType: { value: ClientType; evidence: string } | null
   completedAt: string
 }
@@ -282,6 +328,31 @@ export async function buildGa4DomainIndex(auth: OAuth2Client): Promise<Ga4IndexE
 }
 
 /**
+ * Default competitor lookup: Semrush organic competitors.
+ *
+ * Unlike GA4/GSC/GBP this needs no OAuth client, only an env key, so it has a
+ * usable default and the action layer does not have to inject anything. A
+ * missing key is reported as a FAILURE rather than an empty list — "we never
+ * asked Semrush" and "Semrush knows of no competitors" are different facts, and
+ * only one of them should ever look like a finished lookup.
+ *
+ * fetchSemrushOrganicCompetitors already converts throws (network, quota, bad
+ * key, `ERROR ::` bodies) into `{ ok: false }`, so this returns rather than
+ * throws in every normal failure mode; `timed()` catches the rest.
+ */
+export async function fetchOrganicCompetitors(
+  domain: string,
+): Promise<ConnectorResult<SemrushOrganicCompetitor[]>> {
+  const apiKey = process.env.SEMRUSH_API_KEY
+  if (!apiKey) {
+    return connectorErr<SemrushOrganicCompetitor[]>(
+      new Error('SEMRUSH_API_KEY is not configured, so competitors were not looked up.'),
+    )
+  }
+  return fetchSemrushOrganicCompetitors(domain, apiKey, 'us', SEMRUSH_COMPETITOR_LIMIT)
+}
+
+/**
  * Discover everything we can for a domain.
  *
  * Never throws. Each source reports its own status so a partial result is
@@ -296,7 +367,18 @@ export async function discoverClientConfig(
     listGscSites: () => Promise<string[]>
     listGbpAccounts: (auth: OAuth2Client) => Promise<{ name: string; accountName: string }[]>
     listGbpLocations: (accountName: string, auth: OAuth2Client) => Promise<GBPLocation[]>
+    /**
+     * Optional so existing callers keep compiling, and so tests never touch
+     * Semrush. Defaults to fetchOrganicCompetitors, which needs only the env key.
+     */
+    fetchCompetitors?: (domain: string) => Promise<ConnectorResult<SemrushOrganicCompetitor[]>>
   },
+  /**
+   * Client identity for brand-term derivation. Not a dependency — no I/O — so it
+   * is a separate optional argument rather than another field on `deps`. Absent
+   * means brand terms come from the domain alone, which is still worth having.
+   */
+  client?: { name?: string | null; slug?: string | null },
 ): Promise<Discovery> {
   const domain = normalizeDomain(websiteOrDomain)
 
@@ -315,7 +397,7 @@ export async function discoverClientConfig(
     }
   }
 
-  const [ga4, gsc, gbp] = await Promise.all([
+  const [ga4, gsc, gbp, competitors] = await Promise.all([
     timed<Ga4Match>(async () => {
       const index = await deps.buildGa4Index()
       const match = matchGa4(index, domain)
@@ -399,6 +481,58 @@ export async function discoverClientConfig(
         durationMs: 0,
       }
     }),
+
+    // Competitors. Best-effort by construction: a Semrush outage, a quota wall,
+    // a missing key or an empty report each produce their own status here and
+    // cost nothing else — same independence rule as the three Google sources.
+    timed<CompetitorMatch>(async () => {
+      const fetcher = deps.fetchCompetitors ?? fetchOrganicCompetitors
+      const res = await fetcher(domain)
+      if (!res.ok) {
+        return {
+          status: 'failed',
+          message: `Semrush competitor lookup failed: ${res.error}`,
+          data: null,
+          durationMs: 0,
+        }
+      }
+
+      const seen = new Set<string>()
+      const domains: string[] = []
+      for (const row of res.data) {
+        const d = normalizeDomain(row.domain ?? '')
+        // Semrush sometimes returns the subject domain in its own competitor
+        // report; a client is not their own competitor.
+        if (!d || d === domain || seen.has(d)) continue
+        seen.add(d)
+        domains.push(d)
+        if (domains.length >= MAX_SEEDED_COMPETITORS) break
+      }
+
+      if (domains.length === 0) {
+        return {
+          status: 'no_match',
+          message: `Semrush knows of no organic competitors for ${domain}.`,
+          data: null,
+          durationMs: 0,
+        }
+      }
+
+      return {
+        status: 'ok',
+        data: {
+          domains,
+          confidence: 'low',
+          // Sliced because slotValueSchema caps evidence at 300 chars and an
+          // over-long string makes sanitizeAnswerPatch drop the whole answer.
+          evidence: `Semrush organic competitors for ${domain} — ranked by keyword overlap, not by who the client loses jobs to. Prune or replace before this is used as the competitor set.`.slice(
+            0,
+            300,
+          ),
+        },
+        durationMs: 0,
+      }
+    }),
   ])
 
   // Only infer a type when GBP actually answered. A failed GBP lookup must not
@@ -408,5 +542,23 @@ export async function discoverClientConfig(
       ? null
       : inferTypeFromDiscovery({ gbpLocationCount: gbp.data?.locationCount ?? 0 })
 
-  return { domain, ga4, gsc, gbp, clientType, completedAt: new Date().toISOString() }
+  // Pure derivation from data we already hold, so it runs unconditionally —
+  // even a client with no name on file still yields the domain-based terms,
+  // which is what both existing read-time heuristics were computing anyway.
+  const brandTerms = deriveBrandTerms({
+    name: client?.name,
+    slug: client?.slug,
+    websiteUrl: websiteOrDomain,
+  })
+
+  return {
+    domain,
+    ga4,
+    gsc,
+    gbp,
+    competitors,
+    brandTerms,
+    clientType,
+    completedAt: new Date().toISOString(),
+  }
 }

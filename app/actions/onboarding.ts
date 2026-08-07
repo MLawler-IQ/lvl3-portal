@@ -20,8 +20,18 @@ import {
   type Answers,
 } from '@/lib/onboarding/schema'
 import { buildClientUpdate } from '@/lib/onboarding/promote'
-import { CONTEXT_ITEM_KINDS, type ContextItemKind } from '@/lib/onboarding/context-items'
-import { createAnthropicExtractor, extractSlotValues } from '@/lib/onboarding/extract'
+import {
+  CONTEXT_ITEM_KINDS,
+  type ContextItem,
+  type ContextItemKind,
+} from '@/lib/onboarding/context-items'
+import {
+  createAnthropicExtractor,
+  extractSlotValues,
+  summarizeExtraction,
+  type ExtractionOutcome,
+  type ExtractionResult,
+} from '@/lib/onboarding/extract'
 import { logError } from '@/lib/logging'
 
 export interface OnboardingSession {
@@ -295,6 +305,20 @@ export async function addClientContext(input: {
   suggestedSlotIds?: string[]
   nothingExtracted?: boolean
   noActiveSession?: boolean
+  /**
+   * Why nothing (or little) came back, rendered by lib/onboarding/extract.ts so
+   * the paste path and the Zoom path cannot word it differently. The old
+   * "nothing could be tied to an open question" told an admin nothing: a thin
+   * source and a broken extractor read identically, and a real import of an
+   * intro call was indistinguishable from a bug.
+   */
+  extraction?: {
+    outcome: ExtractionOutcome
+    summary: string
+    proposed: number
+    accepted: number
+    rejectedByReason: { reason: string; count: number; slotIds: string[]; phrase: string }[]
+  }
 }> {
   try {
     const { user } = await requireAdmin()
@@ -336,15 +360,24 @@ export async function addClientContext(input: {
 
     const existing = answersSchema.safeParse(sessionRow.answers).data ?? {}
     const open = SLOTS.filter((s) => !isFilled(existing[s.id])).map((s) => s.id)
-    if (open.length === 0) return { nothingExtracted: true }
+    // Hoisted so the "nothing left to ask" message counts the same item the
+    // extractor would have read, rather than a second description of it.
+    const items: ContextItem[] = [
+      {
+        id: item.id as string,
+        kind: input.kind,
+        title: input.title,
+        body,
+        occurredAt: input.occurredAt,
+      },
+    ]
+    if (open.length === 0) {
+      return { nothingExtracted: true, extraction: nothingLeftToAsk(items) }
+    }
 
     let result
     try {
-      result = await extractSlotValues(
-        [{ id: item.id as string, kind: input.kind, title: input.title, body, occurredAt: input.occurredAt }],
-        open,
-        { callModel: createAnthropicExtractor() },
-      )
+      result = await extractSlotValues(items, open, { callModel: createAnthropicExtractor() })
     } catch (err) {
       // The paste succeeded; only the reading of it failed. Report that honestly
       // rather than implying the context was lost.
@@ -356,7 +389,7 @@ export async function addClientContext(input: {
     }
 
     const suggested = Object.keys(result.answers)
-    if (suggested.length === 0) return { nothingExtracted: true }
+    if (suggested.length === 0) return { nothingExtracted: true, extraction: explain(result) }
 
     // Suggestions never displace an answer, and never overwrite an earlier
     // suggestion silently either — last read wins only for slots still open.
@@ -375,13 +408,54 @@ export async function addClientContext(input: {
       return { error: `Context saved, but the suggestions could not be attached: ${sessionErr.message}` }
     }
 
-    return { suggestedSlotIds: suggested }
+    return { suggestedSlotIds: suggested, extraction: explain(result) }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to add context' }
   }
 }
 
 /** One stored context item, as the setup surface lists it. */
+/**
+ * The "nothing left to ask" case, which returns before extractSlotValues is
+ * called and so has no ExtractionResult to describe itself with.
+ *
+ * Routed through summarizeExtraction rather than hand-written, because the whole
+ * point of centralising the wording is that the paste path and the Zoom path say
+ * the same thing. A second sentence written here is how they drift.
+ */
+function nothingLeftToAsk(items: ContextItem[]) {
+  return {
+    outcome: 'not_attempted' as const,
+    summary: summarizeExtraction({
+      outcome: 'not_attempted',
+      proposed: 0,
+      acceptedCount: 0,
+      rejectedByReason: [],
+      items,
+      openSlotCount: 0,
+    }),
+    proposed: 0,
+    accepted: 0,
+    rejectedByReason: [],
+  }
+}
+
+/** The self-describing half of an extraction, flattened for the client bundle. */
+function explain(result: ExtractionResult) {
+  return {
+    outcome: result.outcome,
+    summary: result.summary,
+    proposed: result.proposed,
+    accepted: result.accepted.length,
+    rejectedByReason: result.rejectedByReason.map((g) => ({
+      reason: String(g.reason),
+      count: g.count,
+      slotIds: g.slotIds,
+      phrase: g.phrase,
+    })),
+  }
+}
+
 export interface ContextItemSummary {
   id: string
   kind: ContextItemKind

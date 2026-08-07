@@ -23,6 +23,17 @@
 //      evidence is checked against the body of the item it claims to come from,
 //      and anything that does not appear there is dropped.
 //
+//   3. A DROP MUST BE EXPLAINABLE. Rules 1 and 2 throw work away silently, which
+//      is right for the batch and wrong for the person watching. In production a
+//      strategist imported a Zoom call, got "no suggestions were made", and could
+//      not tell a broken feature from an empty call — the source was a 964-char
+//      AI summary of an introductions call, so the extractor was correct, but it
+//      had no way to say so. The result therefore carries its own account of
+//      what happened: how many candidates the model proposed, how many survived,
+//      why the rest did not, and a sentence a UI can render verbatim. That
+//      sentence is built HERE rather than in the components, so the paste path
+//      and the Zoom path cannot describe the same outcome two different ways.
+//
 // This lives in lib/, so no 'use server'. Model access is SERVER-SIDE ONLY: the
 // Anthropic client is constructed behind createAnthropicExtractor(), which reads
 // process.env.ANTHROPIC_API_KEY. An earlier version of this tool shipped an API
@@ -43,13 +54,18 @@ import {
   type Answers,
   type Slot,
 } from './schema'
-import { CONTEXT_ITEM_KINDS, type ContextItem, type ContextItemKind } from './context-items'
+import {
+  CONTEXT_ITEM_KINDS,
+  isParaphraseKind,
+  type ContextItem,
+  type ContextItemKind,
+} from './context-items'
 
 // Re-exported so server-side callers keep a single import site.
 export { CONTEXT_ITEM_KINDS }
 export type { ContextItem, ContextItemKind }
 
-/** Why a proposed value was thrown away. Surfaced for debugging, not to users. */
+/** Why a proposed value was thrown away. The raw reason code, not user copy. */
 export type RejectionReason =
   | 'unknown_slot'
   | 'already_answered'
@@ -67,14 +83,74 @@ export interface Rejection {
   detail?: string
 }
 
+/** One reason, with everything a caller needs to say "3 of these, because X". */
+export interface RejectionGroup {
+  reason: RejectionReason
+  count: number
+  /** The slots that hit this reason, in rejection order. Repeats are kept. */
+  slotIds: string[]
+  /**
+   * The group as a ready-to-print phrase WITH the count already in it — "2
+   * quoted words that are not in the source". Count-inclusive because the
+   * singular and plural forms differ ("1 was not readable" / "3 were not
+   * readable"), and a component stitching a number onto a fixed string is
+   * exactly the kind of local copy logic that let the two intake paths drift.
+   */
+  phrase: string
+}
+
+/**
+ * What happened, at the granularity a person actually needs.
+ *
+ * The whole point of this union is that the three ways to get zero suggestions
+ * are NOT the same event and must not share a sentence:
+ *
+ *   nothing_proposed — the model read the material and proposed nothing. The
+ *                      source genuinely does not answer the open questions.
+ *   all_rejected     — the model proposed values and every one failed a check.
+ *                      We know precisely why, and the user should be told.
+ *   unparseable      — we could not read the model's reply. Our fault, retryable.
+ *
+ * `not_attempted` is the fourth zero: the model was never called, because there
+ * was no readable text or nothing left to ask about.
+ */
+export type ExtractionOutcome =
+  | 'suggested'
+  | 'nothing_proposed'
+  | 'all_rejected'
+  | 'unparseable'
+  | 'not_attempted'
+
 export interface ExtractionResult {
   /** Slot map, every entry `source: 'context'`. Merge as suggestions only. */
   answers: Answers
   /** Slot ids that produced a surviving suggestion. */
   accepted: string[]
+  /**
+   * Every dropped candidate, with its reason and offending detail. Kept
+   * alongside the grouped view because a prompt regression is diagnosed from
+   * the detail, not from the counts.
+   */
   rejected: Rejection[]
   /** True when the model returned something this module could not parse at all. */
   unparseable: boolean
+  /**
+   * How many candidates the model proposed.
+   *
+   * Counted where the list is read rather than derived from accepted + rejected,
+   * because those two do not have to add up: if the model proposes the same slot
+   * twice and both pass, the second overwrites the first and one candidate
+   * vanishes from both tallies. `proposed` is what the model actually said.
+   */
+  proposed: number
+  /** `rejected` collapsed by reason, most common first. */
+  rejectedByReason: RejectionGroup[]
+  outcome: ExtractionOutcome
+  /**
+   * One or two sentences describing this result, safe to render as-is. Built
+   * here so every caller tells the user the same story.
+   */
+  summary: string
 }
 
 /**
@@ -91,6 +167,152 @@ const MAX_EVIDENCE_CHARS = 300
 
 const CONFIDENCES = ['high', 'medium', 'low'] as const
 type Confidence = (typeof CONFIDENCES)[number]
+
+/**
+ * The strongest confidence a suggestion may carry when its quote came from a
+ * paraphrase kind (today: an AI meeting summary).
+ *
+ * The quote is real — it is a literal span of the summary — but the summary is
+ * itself a machine's retelling of a call, so the value is second-hand however
+ * cleanly it reads. Capping here rather than trusting the prompt is the same
+ * precedent as everything else in this file: the prompt asks, the code enforces.
+ */
+const PARAPHRASE_MAX_CONFIDENCE: Confidence = 'medium'
+
+// ── Reporting ─────────────────────────────────────────────────────────────────
+
+/**
+ * Each reason as a clause that completes "N proposed values ...".
+ *
+ * Written for the strategist who pasted the thing, not for us: "quoted words
+ * that are not in the source" tells them the model made something up, where
+ * `evidence_not_in_source` tells them nothing and looks like a crash. Both
+ * numbers are spelled out because several of these do not survive a naive
+ * pluralisation — "3 was not readable as a suggestion".
+ */
+const REASON_LABELS: Record<RejectionReason, { one: string; many: string }> = {
+  unknown_slot: {
+    one: 'named a question that does not exist',
+    many: 'named questions that do not exist',
+  },
+  already_answered: {
+    one: 'answered a question that is already filled in',
+    many: 'answered questions that are already filled in',
+  },
+  unknown_source_item: {
+    one: 'cited a source that was not sent to it',
+    many: 'cited sources that were not sent to it',
+  },
+  missing_evidence: {
+    one: 'came with no quote at all',
+    many: 'came with no quote at all',
+  },
+  evidence_not_in_source: {
+    one: 'quoted words that are not in the source',
+    many: 'quoted words that are not in the source',
+  },
+  wrong_type: {
+    one: 'gave the wrong kind of value for the question',
+    many: 'gave the wrong kind of value for their question',
+  },
+  invalid_choice: {
+    one: 'picked an option the question does not offer',
+    many: 'picked options their question does not offer',
+  },
+  malformed: {
+    one: 'was not readable as a suggestion',
+    many: 'were not readable as suggestions',
+  },
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+/** Collapse rejections by reason, most common first, ties broken by name. */
+export function groupRejections(rejected: readonly Rejection[]): RejectionGroup[] {
+  const byReason = new Map<RejectionReason, string[]>()
+  for (const r of rejected) {
+    const slotIds = byReason.get(r.reason)
+    if (slotIds) slotIds.push(r.slotId)
+    else byReason.set(r.reason, [r.slotId])
+  }
+
+  return Array.from(byReason.entries())
+    .map(([reason, slotIds]) => ({
+      reason,
+      count: slotIds.length,
+      slotIds,
+      phrase: plural(slotIds.length, REASON_LABELS[reason].one, REASON_LABELS[reason].many),
+    }))
+    .sort((a, b) => b.count - a.count || a.reason.localeCompare(b.reason))
+}
+
+/** "2 quoted words that are not in the source, 1 was not readable…" */
+function listReasons(groups: readonly RejectionGroup[]): string {
+  return groups.map((g) => g.phrase).join(', ')
+}
+
+/**
+ * The note that would have saved the production incident: the import succeeded,
+ * the extractor was right, and the material was an AI summary of an
+ * introductions call. Only added when EVERY item read was a paraphrase kind —
+ * with a real transcript in the batch this would be blaming the wrong source.
+ */
+function paraphraseNote(items: readonly ContextItem[]): string {
+  if (items.length === 0 || !items.every((i) => isParaphraseKind(i.kind))) return ''
+  return items.length === 1
+    ? ' This was an AI meeting summary rather than a transcript, and a summary usually records what a call was about rather than the specific facts these questions ask for.'
+    : ' These were AI meeting summaries rather than transcripts, and a summary usually records what a call was about rather than the specific facts these questions ask for.'
+}
+
+/**
+ * The sentence the UI shows. Lives here, not in the components, so the paste
+ * path and the Zoom path cannot drift into describing the same outcome
+ * differently — the drift that made the original failure unreadable.
+ */
+export function summarizeExtraction(input: {
+  outcome: ExtractionOutcome
+  proposed: number
+  acceptedCount: number
+  rejectedByReason: readonly RejectionGroup[]
+  items: readonly ContextItem[]
+  openSlotCount: number
+}): string {
+  const { outcome, proposed, acceptedCount, rejectedByReason, items, openSlotCount } = input
+  const read = plural(items.length, 'item', 'items')
+  const open = plural(openSlotCount, 'open question', 'open questions')
+
+  switch (outcome) {
+    case 'not_attempted':
+      // Two different nothings, and the difference is the whole message.
+      return items.length === 0
+        ? 'There was no readable text here, so nothing was read.'
+        : `Every question is already answered, so there was nothing left to look for in ${read}.`
+
+    case 'unparseable':
+      return 'The model replied with something this tool could not read as suggestions, so nothing was added. That is a fault on our side rather than a problem with the material — retry the extraction.'
+
+    case 'nothing_proposed':
+      return (
+        `Read ${read} against ${open} and the model proposed nothing at all — ` +
+        `it found no statement here that answers any of them.` +
+        paraphraseNote(items)
+      )
+
+    case 'all_rejected':
+      return (
+        `The model proposed ${plural(proposed, 'value', 'values')} from ${read}, ` +
+        `and every one failed a check, so nothing was added: ${listReasons(rejectedByReason)}.` +
+        paraphraseNote(items)
+      )
+
+    case 'suggested': {
+      const kept = `The model proposed ${plural(proposed, 'value', 'values')} from ${read}; ${acceptedCount} became ${acceptedCount === 1 ? 'a suggestion' : 'suggestions'} to confirm.`
+      return rejectedByReason.length === 0
+        ? kept
+        : `${kept} Dropped: ${listReasons(rejectedByReason)}.`
+    }
+  }
+}
 
 // ── Pure validation (where the bugs would be, so it is all directly testable) ──
 
@@ -170,7 +392,7 @@ export function validateExtractions(
       ? ((raw as { extractions: unknown[] }).extractions)
       : []
 
-  const bodiesById = new Map(items.map((i) => [i.id, i.body]))
+  const itemsById = new Map(items.map((i) => [i.id, i]))
   const allowed = new Set(allowedSlotIds)
 
   // Build a patch keyed by slot id, then hand it to the existing sanitizer for
@@ -215,13 +437,23 @@ export function validateExtractions(
     // that does not exist cannot be checked, and an unverifiable quote is
     // treated exactly like a false one.
     const sourceItemId = typeof e.sourceItemId === 'string' ? e.sourceItemId.trim() : ''
-    const body = bodiesById.get(sourceItemId)
-    if (body === undefined) {
+    const sourceItem = itemsById.get(sourceItemId)
+    if (sourceItem === undefined) {
       rejected.push({ slotId, reason: 'unknown_source_item', detail: sourceItemId })
       continue
     }
 
-    if (!evidenceQuotesSource(evidence, body)) {
+    // NOTE ON SUMMARIES. This check is NOT relaxed for a paraphrase kind, and
+    // the reason is worth stating because relaxing it looks reasonable: an AI
+    // summary is paraphrase, so demanding a verbatim quote sounds unfair. It is
+    // not. The quote is checked against THIS ITEM'S STORED TEXT — for a summary
+    // that text is the summary, a document like any other, and any span of it
+    // can be copied exactly. Nothing about a summary makes verbatim quotation
+    // hard; what a summary changes is how much the quote proves, which is a
+    // question of confidence (capped below), not of admissibility. A looser
+    // match here would accept an invented citation against precisely the class
+    // of source whose facts are already second-hand.
+    if (!evidenceQuotesSource(evidence, sourceItem.body)) {
       rejected.push({
         slotId,
         reason: 'evidence_not_in_source',
@@ -235,9 +467,17 @@ export function validateExtractions(
       continue
     }
 
-    const confidence: Confidence = CONFIDENCES.includes(e.confidence as Confidence)
+    const claimed: Confidence = CONFIDENCES.includes(e.confidence as Confidence)
       ? (e.confidence as Confidence)
       : 'low'
+
+    // A genuine quote out of a machine's retelling of a call is still
+    // second-hand, so it may not present itself as strongly as a quote of what
+    // someone actually said. Downgrade only — a summary never raises confidence.
+    const confidence: Confidence =
+      isParaphraseKind(sourceItem.kind) && claimed === 'high'
+        ? PARAPHRASE_MAX_CONFIDENCE
+        : claimed
 
     patch[slotId] = {
       value: e.value,
@@ -267,7 +507,31 @@ export function validateExtractions(
     }
   }
 
-  return { answers, accepted: Object.keys(answers), rejected }
+  const accepted = Object.keys(answers)
+  const rejectedByReason = groupRejections(rejected)
+
+  // The distinction the production incident turned on: an empty list from the
+  // model means the material had nothing in it, while a list that was entirely
+  // rejected means the model tried and we caught it. Same zero, different fact.
+  const outcome: ExtractionOutcome =
+    accepted.length > 0 ? 'suggested' : list.length === 0 ? 'nothing_proposed' : 'all_rejected'
+
+  return {
+    answers,
+    accepted,
+    rejected,
+    proposed: list.length,
+    rejectedByReason,
+    outcome,
+    summary: summarizeExtraction({
+      outcome,
+      proposed: list.length,
+      acceptedCount: accepted.length,
+      rejectedByReason,
+      items,
+      openSlotCount: allowedSlotIds.length,
+    }),
+  }
 }
 
 // ── Prompting ─────────────────────────────────────────────────────────────────
@@ -281,10 +545,33 @@ function describeSlotsForPrompt(slotIds: readonly string[]): string {
     .join('\n')
 }
 
+/**
+ * What a quote out of each kind actually proves.
+ *
+ * `meeting_summary` exists as a separate kind because of this paragraph: until
+ * it did, Zoom AI Companion summaries were stored as `meeting_transcript`, so
+ * the model was told a note-taker's third-person prose was a record of what
+ * people said, and had no way to weigh it differently. Note what this does NOT
+ * say: it does not excuse a summary from verbatim quotation. The quote is
+ * checked against the summary text itself, which can always be copied exactly.
+ */
+const KIND_GUIDANCE: Record<ContextItemKind, string> = {
+  meeting_transcript:
+    'a verbatim record of a call. A quote is what someone actually said, so it can carry "high".',
+  meeting_summary:
+    'an AI-written summary of a call — third-person paraphrase, not anyone\'s words. Quote it verbatim ANYWAY (your evidence must be a literal span of the summary text, and that is checked), but treat what it asserts as second-hand: use "medium" at best, and never fill in a detail the summary does not state.',
+  email: 'written by a person. Quote it as-is.',
+  note: 'written by a colleague, often shorthand. Quote it as-is.',
+  web_page: "scraped page text. It is the client's marketing copy, not their testimony.",
+}
+
 export function buildExtractionPrompts(
   items: ContextItem[],
   slotIds: readonly string[],
 ): { system: string; user: string } {
+  // Only describe the kinds actually present, so the model is not reasoning
+  // about email rules while reading a transcript.
+  const kindsPresent = CONTEXT_ITEM_KINDS.filter((k) => items.some((i) => i.kind === k))
   const system = `You are reading raw client context for an SEO agency and pulling out facts that answer specific questions. You are NOT having a conversation and you are NOT summarising.
 
 Return ONLY JSON, in exactly this shape:
@@ -300,6 +587,9 @@ Rules, all enforced in code — a violation means the item is discarded, not cor
 
 Everything you return is shown to a human as a SUGGESTION to confirm. It never counts as an answer on its own, so a missing suggestion costs almost nothing and a fabricated one costs a lot.
 
+What each kind of source is, and what a quote from it proves:
+${kindsPresent.map((k) => `- ${k}: ${KIND_GUIDANCE[k]}`).join('\n')}
+
 Questions still open:
 ${describeSlotsForPrompt(slotIds)}`
 
@@ -308,6 +598,7 @@ ${describeSlotsForPrompt(slotIds)}`
       const header = [
         `id: ${item.id}`,
         `kind: ${item.kind}`,
+        `about this kind: ${KIND_GUIDANCE[item.kind]}`,
         item.title ? `title: ${item.title}` : null,
         item.occurredAt ? `occurred_at: ${item.occurredAt}` : null,
       ]
@@ -355,17 +646,48 @@ export async function extractSlotValues(
   const slotIds = unansweredSlotIds.filter((id) => SLOTS_BY_ID.has(id))
 
   if (usable.length === 0 || slotIds.length === 0) {
-    return { answers: {}, accepted: [], rejected: [], unparseable: false }
+    return emptyResult('not_attempted', usable, slotIds)
   }
 
   const { system, user } = buildExtractionPrompts(usable, slotIds)
   const text = await deps.callModel({ system, user })
   const raw = parseModelJson(text)
   if (raw === null) {
-    return { answers: {}, accepted: [], rejected: [], unparseable: true }
+    return emptyResult('unparseable', usable, slotIds)
   }
 
   return { ...validateExtractions(raw, usable, slotIds), unparseable: false }
+}
+
+/**
+ * A result with no suggestions in it, still able to explain itself.
+ *
+ * `unparseable` stays a plain boolean alongside `outcome` because it is the one
+ * outcome that means "we failed", not "the material was thin" — callers that
+ * only branch on failure should not have to know the whole union.
+ */
+function emptyResult(
+  outcome: Extract<ExtractionOutcome, 'not_attempted' | 'unparseable'>,
+  items: readonly ContextItem[],
+  slotIds: readonly string[],
+): ExtractionResult {
+  return {
+    answers: {},
+    accepted: [],
+    rejected: [],
+    unparseable: outcome === 'unparseable',
+    proposed: 0,
+    rejectedByReason: [],
+    outcome,
+    summary: summarizeExtraction({
+      outcome,
+      proposed: 0,
+      acceptedCount: 0,
+      rejectedByReason: [],
+      items,
+      openSlotCount: slotIds.length,
+    }),
+  }
 }
 
 /**

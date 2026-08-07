@@ -21,7 +21,11 @@ import { useState } from 'react'
 import { FileText, Info, Loader2 } from 'lucide-react'
 // Deliberately NOT from '@/lib/onboarding/extract' — that module imports the
 // Anthropic SDK at module scope, and this is a client component.
-import { CONTEXT_ITEM_KINDS, type ContextItemKind } from '@/lib/onboarding/context-items'
+import {
+  CONTEXT_ITEM_KINDS,
+  CONTEXT_ITEM_KIND_LABELS,
+  type ContextItemKind,
+} from '@/lib/onboarding/context-items'
 import { SLOTS_BY_ID } from '@/lib/onboarding/schema'
 
 /** What the integrating server action receives. */
@@ -47,6 +51,14 @@ export interface ContextPasteResult {
   suggestedSlotIds?: string[]
   /** True when the model replied but nothing survived validation. */
   nothingExtracted?: boolean
+  /** Rendered by lib/onboarding/extract.ts so both intake paths word it alike. */
+  extraction?: {
+    outcome: string
+    summary: string
+    proposed: number
+    accepted: number
+    rejectedByReason: { reason: string; count: number; slotIds: string[]; phrase: string }[]
+  }
   /**
    * True when the context was stored but there was no open setup session to
    * attach suggestions to. Distinct from nothingExtracted: nothing was read
@@ -59,13 +71,6 @@ export interface ContextPasteResult {
 export interface ContextPasteProps {
   clientId: string
   onSubmit: (input: ContextPasteInput) => Promise<ContextPasteResult>
-}
-
-const KIND_LABELS: Record<ContextItemKind, string> = {
-  meeting_transcript: 'Meeting transcript',
-  email: 'Email',
-  note: 'Note',
-  web_page: 'Web page',
 }
 
 const inputClass =
@@ -134,7 +139,7 @@ export default function ContextPaste({ clientId, onSubmit }: ContextPasteProps) 
           >
             {CONTEXT_ITEM_KINDS.map((k) => (
               <option key={k} value={k}>
-                {KIND_LABELS[k]}
+                {CONTEXT_ITEM_KIND_LABELS[k]}
               </option>
             ))}
           </select>
@@ -229,9 +234,8 @@ export default function ContextPaste({ clientId, onSubmit }: ContextPasteProps) 
               Context saved.{' '}
               {result.noActiveSession
                 ? 'There is no setup session open, so nothing was read from it yet — start one above and it will be used.'
-                : result.nothingExtracted
-                  ? 'Nothing in it could be tied to an open question with a direct quote, so no suggestions were made.'
-                  : 'No suggestions were made from it.'}
+                : (result.extraction?.summary ??
+                  'No suggestions were made from it.')}
             </p>
           )}
         </div>
