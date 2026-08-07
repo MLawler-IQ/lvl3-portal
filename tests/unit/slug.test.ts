@@ -116,3 +116,26 @@ describe('uniqueSlug', () => {
     }
   })
 })
+
+describe('archived clients still hold their slug', () => {
+  // The production bug: archiving hides a client from every list in the app, but
+  // the slug unique index does not care. The modal derived its collision list
+  // from the visible clients, proposed "tornado-hvac" while an archived client
+  // held it, and creation died on the constraint with an error Next redacted.
+  //
+  // The fix is that the caller passes ALL slugs, archived included. This pins the
+  // behaviour uniqueSlug must have when it is given them.
+  it('suffixes around a slug held by an archived client', () => {
+    const allSlugs = ['tornado', 'tornado-hvac'] // both archived, both still taken
+    expect(uniqueSlug('Tornado HVAC', allSlugs)).toBe('tornado-hvac-2')
+    expect(uniqueSlug('Tornado', allSlugs)).toBe('tornado-2')
+  })
+
+  it('would have collided had archived slugs been filtered out', () => {
+    // The old, broken input: active clients only.
+    const visibleOnly: string[] = []
+    expect(uniqueSlug('Tornado HVAC', visibleOnly)).toBe('tornado-hvac')
+    // ...which is exactly the value the unique index rejects.
+    expect(uniqueSlug('Tornado HVAC', ['tornado-hvac'])).not.toBe('tornado-hvac')
+  })
+})

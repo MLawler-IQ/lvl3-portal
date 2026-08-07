@@ -179,7 +179,9 @@ function recordManualOverrides(
  * Returns the id rather than void so the modal can route into setup. Still
  * throws on a genuine creation failure; the modal catches and renders it.
  */
-export async function createClient(formData: FormData): Promise<{ id: string }> {
+export async function createClient(
+  formData: FormData,
+): Promise<{ id?: string; error?: string }> {
   await requireAdmin()
   const service = await createServiceClient()
 
@@ -192,14 +194,44 @@ export async function createClient(formData: FormData): Promise<{ id: string }> 
   // the match key for onboarding auto-discovery, so it is now persisted.
   const website_url = (formData.get('website') as string | null)?.trim() || null
 
+  // The slug unique index covers EVERY row, archived included, so this check has
+  // to as well. The modal's live collision check reads the visible client list,
+  // which now excludes archived clients — meaning an archived client silently
+  // holds its slug and the modal would happily propose it. Checking here is also
+  // the only check that is authoritative: the modal's list is a snapshot that
+  // goes stale the moment anyone else creates a client.
+  const { data: clash } = await service
+    .from('clients')
+    .select('name, archived_at')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (clash) {
+    return {
+      error: clash.archived_at
+        ? `The slug “${slug}” belongs to “${clash.name}”, which is archived. Archived clients keep their slug — restore it, delete it permanently, or pick a different slug.`
+        : `The slug “${slug}” is already used by “${clash.name}”. Pick a different one.`,
+    }
+  }
+
   const { data, error } = await service
     .from('clients')
     .insert({ name, slug, logo_url, website_url })
     .select('id')
     .single()
 
-  if (error) throw new Error(error.message)
-  if (!data?.id) throw new Error('Client was created but no id came back')
+  // Two admins creating the same slug at once still lose the race to the unique
+  // index. Translate it rather than letting a Postgres string reach the UI —
+  // where Next redacts it in production anyway, leaving the admin with nothing.
+  if (error) {
+    return {
+      error:
+        error.code === '23505'
+          ? `The slug “${slug}” was taken a moment ago. Pick a different one.`
+          : error.message,
+    }
+  }
+  if (!data?.id) return { error: 'Client was created but no id came back.' }
 
   const clientId = data.id as string
 
@@ -733,4 +765,18 @@ export async function getArchivedClients(): Promise<
     .order('archived_at', { ascending: false })
 
   return (data ?? []) as { id: string; name: string; slug: string; archived_at: string }[]
+}
+
+/**
+ * Every slug in use, archived clients included.
+ *
+ * Feeds the new-client modal's live collision check. It must NOT filter archived
+ * clients: the unique index does not, so a slug held by an archived client is
+ * unavailable even though the client is invisible everywhere else.
+ */
+export async function getAllClientSlugs(): Promise<string[]> {
+  await requireAdmin()
+  const service = await createServiceClient()
+  const { data } = await service.from('clients').select('slug')
+  return (data ?? []).map((r) => (r as { slug: string }).slug).filter(Boolean)
 }

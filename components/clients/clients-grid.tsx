@@ -8,9 +8,15 @@ import NewClientModal from './new-client-modal'
 
 interface ClientsGridProps {
   clients: ClientWithStats[]
+  /**
+   * Every slug in use, archived clients INCLUDED. The grid only renders active
+   * clients, but an archived client still holds its slug in the unique index, so
+   * the collision check cannot be derived from `clients`.
+   */
+  allSlugs: string[]
 }
 
-export default function ClientsGrid({ clients }: ClientsGridProps) {
+export default function ClientsGrid({ clients, allSlugs }: ClientsGridProps) {
   const [newOpen, setNewOpen] = useState(false)
 
   return (
@@ -88,16 +94,8 @@ export default function ClientsGrid({ clients }: ClientsGridProps) {
         </div>
       )}
 
-      {/*
-        The grid already holds every client, so the slug collision check costs
-        nothing extra here. Without it the modal would happily propose a slug
-        that is already taken and only fail at the insert.
-      */}
       {newOpen && (
-        <NewClientModal
-          onClose={() => setNewOpen(false)}
-          existingSlugs={clients.map((c) => c.slug)}
-        />
+        <NewClientModal onClose={() => setNewOpen(false)} existingSlugs={allSlugs} />
       )}
     </>
   )

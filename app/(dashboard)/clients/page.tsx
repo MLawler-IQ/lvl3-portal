@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth'
-import { getClientsWithStats, getArchivedClients } from '@/app/actions/clients'
+import {
+  getClientsWithStats,
+  getArchivedClients,
+  getAllClientSlugs,
+} from '@/app/actions/clients'
 import ClientsGrid from '@/components/clients/clients-grid'
 
 /**
@@ -18,10 +22,12 @@ export default async function ClientsPage() {
 
   const clients = await getClientsWithStats()
   const archived = await getArchivedClients()
+  // Includes archived slugs — they still occupy the unique index.
+  const allSlugs = await getAllClientSlugs()
 
   return (
     <div className="p-8">
-      <ClientsGrid clients={clients} />
+      <ClientsGrid clients={clients} allSlugs={allSlugs} />
 
       {/*
         Archived clients are hidden everywhere else by design, so this is the one

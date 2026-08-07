@@ -11,10 +11,12 @@ interface NewClientModalProps {
   onClose: () => void
   /**
    * Slugs already in use, so the derived slug never lands on a taken one.
-   * TODO(integration): pass this from components/clients/clients-grid.tsx —
-   * it already holds the full client list (`clients.map((c) => c.slug)`) and is
-   * the only render site. Until it does, the default below means the modal
-   * derives an unsuffixed slug and a duplicate is caught server-side instead.
+   *
+   * Must include ARCHIVED clients. They are hidden from every list in the app,
+   * but they keep their slug in the unique index — deriving this from the
+   * visible client list is what let "Tornado HVAC" be proposed while an archived
+   * client already held `tornado-hvac`. The server checks again regardless: this
+   * list is a snapshot, and it is stale the moment anyone else creates a client.
    */
   existingSlugs?: string[]
 }
@@ -99,7 +101,16 @@ export default function NewClientModal({ onClose, existingSlugs = [] }: NewClien
       fd.set('logo_url', logoUrl)
       // Persisted now, and used as the match key for auto-discovery.
       fd.set('website', website)
-      const { id } = await createClient(fd)
+      const res = await createClient(fd)
+      // createClient returns its errors rather than throwing: Next redacts
+      // thrown server-action errors in production, which turned a plain "that
+      // slug is taken" into an unreadable digest.
+      if (res.error || !res.id) {
+        setError(res.error ?? 'Something went wrong')
+        setLoading(false)
+        return
+      }
+      const id = res.id
       onClose()
       // Creation captures only name/website/slug/logo. Everything else — GA4, GSC, GBP,
       // client type, competitors — is captured by the onboarding interview, so
