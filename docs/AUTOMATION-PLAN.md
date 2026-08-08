@@ -1,5 +1,14 @@
 # Automation wrap-up plan
 
+> **Superseded by [AUDIT-REDESIGN-PLAN.md](AUDIT-REDESIGN-PLAN.md) (2026-08-07).**
+> Slices 1–4 below shipped (in amended form) and their reasoning remains the record of
+> why the pipeline is shaped the way it is. Slices 5–7 should NOT be built as written —
+> the redesign plan reshapes coverage (per-question, not N-of-80), demotes the detector
+> batch to last, and changes what synthesis narrates (diagnoses, not findings). Where
+> the two files disagree, the redesign plan wins. Retained per the do-not-throw-anything-
+> away rule and because its verified-facts and deliberately-not-building sections are
+> still cited.
+
 The working document for finishing the pipeline described in
 [AUTOMATION-CONTEXT.md](AUTOMATION-CONTEXT.md). That file is the *context* — the goal, the
 rubric, the architecture, the failure modes. This file is the *plan*: what gets built, in
@@ -16,11 +25,11 @@ decision. Where they disagreed the synthesis picked and said why.
 |---|---|---|
 | 1 · GBP reads fail closed | ✅ **DONE** | `fa08ce6` |
 | 2 · Source seam + stations + orchestrator | ✅ **DONE** | `fed359a`…`f115cf3` |
-| 3 · Upload + admin screen | not started | |
-| 4 · Persistence | not started | |
-| 5 · Coverage report + criterion declaration | not started | |
-| 6 · Detector batch (8) | not started | |
-| 7 · Synthesis + review gate | not started | |
+| 3 · Upload + admin screen | ✅ **DONE** (amended: signed-URL upload to a private `audit-exports` bucket, not in-request zip — see SESSION-2026-08-07.md) | 2026-08-07 session |
+| 4 · Persistence | ✅ **DONE** (amended: one `audit_runs` table with findings in the `result` jsonb, not the two-table schema below — the migration records the deferral) | `20260807050000` |
+| 5 · Coverage report + criterion declaration | superseded — per-question coverage in AUDIT-REDESIGN-PLAN.md slice 1 | |
+| 6 · Detector batch (8) | superseded — demoted to last in AUDIT-REDESIGN-PLAN.md | |
+| 7 · Synthesis + review gate | superseded — reshaped as AUDIT-REDESIGN-PLAN.md slice 8 (narrates diagnoses) | |
 
 ### What slice 2 learned, worth carrying into slice 3
 

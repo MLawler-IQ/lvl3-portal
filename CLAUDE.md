@@ -155,7 +155,9 @@ Specs in `design-system/DESIGN.md`.
 - `.claude/CLAUDE-seo-tools.md` — SEO tools, Ask LVL3, dashboard date range
 - `.claude/CLAUDE-infra.md` — Hosting, DNS (Cloudflare), Vercel, Supabase, OAuth, domain-cutover state
 - `docs/AUTOMATION-CONTEXT.md` — SEO audit automation: goal, rubric, target architecture, failure modes
-- `docs/AUTOMATION-PLAN.md` — the slice-by-slice build plan for that pipeline. Supersedes AUTOMATION-CONTEXT §14's ordering; one slice per session
+- `docs/AUTOMATION-PLAN.md` — the original slice plan (slices 1–4 shipped). Superseded by AUDIT-REDESIGN-PLAN.md; retained for its verified facts and shipped-slice rationale
+- `docs/AUDIT-REDESIGN-PLAN.md` — **the working audit plan** (2026-08-07): four layers (observations→assertions→diagnoses→recommendations), seven questions, keyword/demand layer, geo-grid + competitor stations, question-gated client report. One slice per session
+- `docs/research/` — the two research reports the redesign is grounded in (audit critique + keyword decision system)
 
 ---
 
