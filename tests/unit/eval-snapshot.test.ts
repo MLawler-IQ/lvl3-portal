@@ -34,6 +34,36 @@ import { healthyStations } from '../../fixtures/eval/healthy/stations'
 const ROOT = join(__dirname, '..', '..')
 const FIXTURES_DIR = join(ROOT, 'fixtures', 'eval')
 
+/**
+ * The gate that guards the gate.
+ *
+ * With EVAL_SNAPSHOT_UPDATE=1 exported in a shell, every case test below writes its
+ * snapshot and returns early, and the byte-exact test then compares the file against the
+ * bytes that were just written to it. The whole comparison layer silently becomes a rubber
+ * stamp — and nothing complained, because the existing guard tests pass env literals
+ * (`{EVAL_SNAPSHOT_UPDATE:'0'}`) rather than reading `process.env`. A stale export from an
+ * earlier re-baseline would have carried on approving whatever the code produced.
+ *
+ * So this test fails whenever the variable is set, INCLUDING during a deliberate
+ * re-baseline. That is the design, not an oversight: one red test naming what happened is
+ * how re-baseline mode announces itself. The re-baseline is still a two-step ritual —
+ * write, then unset and confirm green — and this makes the second step unskippable.
+ *
+ * docs/AUTOMATION-PLAN.md asked for exactly this ("A test fails if EVAL_SNAPSHOT_UPDATE is
+ * set during a normal run") and it was never built.
+ */
+describe('the snapshot gate cannot be silently disabled', () => {
+  it('fails while EVAL_SNAPSHOT_UPDATE is set, so a stale export cannot rubber-stamp a run', () => {
+    expect(
+      process.env.EVAL_SNAPSHOT_UPDATE ?? '(unset)',
+      'EVAL_SNAPSHOT_UPDATE is set, so the snapshot cases above WROTE their fixtures instead ' +
+        'of comparing against them. If you just re-baselined: read `git diff fixtures/eval/`, ' +
+        'then unset the variable and re-run to confirm the suite is green against the new ' +
+        'bytes. If you did not: a stale export has been approving every scoring change.',
+    ).not.toBe('1')
+  })
+})
+
 const CASES: Record<string, () => StationBundle> = {
   healthy: healthyStations,
   tornado: tornadoStations,

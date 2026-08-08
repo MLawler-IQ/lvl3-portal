@@ -150,7 +150,7 @@ export interface QuestionCoverageReport {
    * inflated by data nobody can read.
    */
   unreadableStatuses: readonly string[]
-  /** Sum of every question's `total`. 80 today, 70 once slice 2 retires ten rows. */
+  /** Sum of every question's `total`. 70 since the 2026-08-07 re-cut retired ten rows. */
   activeRows: number
   /** Rows marked `retired: true`. They are in no question's denominator. */
   retiredRows: number

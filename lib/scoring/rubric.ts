@@ -3,7 +3,9 @@
 // Two rules this module exists to enforce:
 //
 //   1. EFFORT IS NEVER INVENTED. The rubric ships an `effort` tier for all 80
-//      checks; the scorer reads it and has no fallback. A finding for a check the
+//      rows — 70 active plus 10 retired, and this index deliberately holds BOTH, so
+//      a stored run scored against a criterion the rubric no longer asks can still
+//      be explained. The scorer reads the tier and has no fallback. A finding for a check the
 //      rubric does not know is an error, not a default-to-medium — defaulting
 //      would let a typo'd check id score as an ordinary medium-effort item and
 //      quietly change everyone's priority order.
@@ -72,8 +74,13 @@ export function rubricEntry(checkId: string): RubricEntry {
   return entry
 }
 
-/** Check ids the rubric marks critical. Nine of them, which is what makes the
- *  snapshot gate's "every critical fail is in the top-K" rule cheap to hold. */
+/** Check ids the rubric marks critical. TWELVE since the 2026-08-07 re-cut raised
+ *  LOCAL-007/008/010, and the count is NOT what makes the snapshot gate's "every
+ *  critical fail is in the top-K" rule cheap to hold — only three of the twelve have
+ *  a detector, so at most three can ever be scored against a topK of 5. Registering a
+ *  fourth critical detector is the event that needs re-checking; tests/unit/scoring.test.ts
+ *  pins the reachable set so that event turns a test red rather than an audit wrong.
+ *  Retired rows are included, like everything else in this index — none is critical today. */
 export function criticalCheckIds(): Set<string> {
   const out = new Set<string>()
   for (const entry of Array.from(INDEX.values())) {

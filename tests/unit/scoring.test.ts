@@ -434,6 +434,16 @@ describe('scoring the tornado fixture', () => {
     // And the H1 recommendation loses its earning-URL bonus, visibly.
     const h1 = plan.items.find((i) => i.checkId === 'ONPAGE-003')!
     expect(h1.inputs.terms.earningUrlBonus).toBe(1)
+
+    // NEW SINCE THE 2026-08-07 RE-CUT, and worth pinning because it is a real behaviour
+    // change nobody asked for: at severity `high` this check was P1 with the bonus (85.95)
+    // and P1 without it (57.3). At `low` it is P1 with (14.325) and **P2 without**
+    // (191 x 1 x 1 x 0.05 = 9.55, against a p1 floor of 10). So the H1 template fix now
+    // changes band depending on whether GSC answered — a 0.45-point margin. That is not
+    // wrong, but it is fragile, and a future tweak to earningUrlBonus or bandThresholds
+    // that silently demotes the site-wide H1 gap should turn this red.
+    expect(h1.impact).toBeCloseTo(9.55, 6)
+    expect(h1.band).toBe('P2')
   })
 })
 

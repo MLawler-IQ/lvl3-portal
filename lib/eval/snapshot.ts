@@ -14,7 +14,13 @@
 //      set is the assertion; the severity weighting is how the failure message
 //      conveys whether what fell out was a critical or a nice-to-have.
 //   2. EVERY CRITICAL-SEVERITY FINDING IN STATE `fail` MUST BE IN THE TOP-K SET.
-//      Only 9 of the rubric's 80 checks are critical, so this is cheap to hold,
+//      Twelve of the rubric's 70 active checks are critical, but only THREE of the
+//      twelve have a detector, so at most three can ever be scored against a topK
+//      of 5. That — not the count — is what makes this cheap to hold, and the day a
+//      fourth critical detector is registered the rule needs re-checking rather than
+//      re-baselining (tests/unit/scoring.test.ts pins the reachable set for exactly
+//      that reason). It is the rule that catches "the model reordered everything and
+//      buried the emergency" — the failure the set gate alone would miss.
 //      and it is the rule that catches "the model reordered everything and buried
 //      the emergency" — the failure the set gate alone would miss.
 //   3. IMPACT AND PRIORITY VALUE STABILITY inside a tolerance band, so halving
