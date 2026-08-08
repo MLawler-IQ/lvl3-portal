@@ -30,12 +30,13 @@ const RUBRIC = rubricJson as ReadonlyArray<Record<string, unknown>>
 /**
  * The active-row count, asserted as a literal.
  *
- * 80 today. Slice 2 of docs/AUDIT-REDESIGN-PLAN.md retires ten rows and this becomes 70 —
- * a deliberate one-line edit made while reading the retire list, which is the point. A test
- * that derived this number from the rubric would pass whether ten rows were retired on
- * purpose or one was deleted by accident.
+ * 80 at slice 1; **70 since slice 2** retired ten rows — TECH-014/017/018/019/020,
+ * ONPAGE-002, GEO-006/007, AUTH-004, MEAS-006. Editing this number was the deliberate act
+ * the literal exists to force: a test that derived it from the rubric would pass whether
+ * ten rows were retired on purpose or one was deleted by accident.
  */
-const ACTIVE_ROWS = 80
+const ACTIVE_ROWS = 70
+const RETIRED_ROWS = 10
 
 function finding(checkId: string, status: FindingStatus): Finding {
   return { checkId, status, evidence: { detail: `${checkId} ${status}` }, source: 'crawl' }
@@ -248,14 +249,58 @@ describe('questionCoverage', () => {
     expect(report.unreadableStatuses).toEqual([])
   })
 
-  it('has nothing to say about retired criteria until slice 2 creates one', () => {
-    // A finding for a retired row can go in no bucket without breaking the bucket-sum
-    // invariant, so it is named in `retiredWithFindings` rather than dropped. Today no row
-    // is retired, so the list is empty for every input — and this assertion is the reason
-    // slice 2 will find the path already built rather than discovering the drop.
-    expect(questionCoverage([]).retiredRows).toBe(0)
-    expect(questionCoverage([finding('ONPAGE-002', 'fail')]).retiredWithFindings).toEqual([])
-    expect(RUBRIC.filter((r) => r.retired === true)).toHaveLength(0)
+  it('names a finding for a retired criterion rather than dropping it', () => {
+    // A retired row is in no question's denominator, so its finding can go in no bucket
+    // without breaking the bucket-sum invariant — which leaves drop it or name it, and only
+    // one of those survives someone asking "where did ONPAGE-002 go?" a year from now. This
+    // is the path slice 1 built blind (nothing was retired yet) and slice 2 made reachable.
+    const report = questionCoverage([finding('ONPAGE-002', 'fail'), finding('MEAS-001', 'fail')])
+
+    expect(report.retiredRows).toBe(RETIRED_ROWS)
+    expect(report.retiredWithFindings).toEqual(['ONPAGE-002'])
+    expect(report.unknownCheckIds).toEqual([]) // it IS a rubric row, just not an active one
+
+    // And it inflates nothing: hygiene's buckets still sum to its own total.
+    const hygiene = report.questions.find((q) => q.key === 'hygiene')!
+    const all = [
+      ...hygiene.evaluated,
+      ...hygiene.dataMissing,
+      ...hygiene.notEvaluated,
+      ...hygiene.humanJudgement,
+    ]
+    expect(all).not.toContain('ONPAGE-002')
+    expect(all).toHaveLength(hygiene.total)
+  })
+
+  it('retires exactly the ten rows the plan names, and keeps their reason', () => {
+    // Retired, never deleted — the house rule. The reason is the load-bearing part: a row
+    // marked retired with no explanation is indistinguishable from a row someone lost.
+    const retired = RUBRIC.filter((r) => r.retired === true)
+    expect(retired.map((r) => String(r.id)).sort()).toEqual([
+      'AUTH-004', 'GEO-006', 'GEO-007', 'MEAS-006', 'ONPAGE-002',
+      'TECH-014', 'TECH-017', 'TECH-018', 'TECH-019', 'TECH-020',
+    ])
+    for (const row of retired) {
+      expect(String(row.retiredReason ?? ''), `${row.id} has no retiredReason`).not.toBe('')
+    }
+    // Their question tag survives, recording where they used to sit.
+    for (const row of retired) expect(questionOf(String(row.id))).not.toBeNull()
+  })
+
+  it('keeps the severity edits the re-cut made, so a later hand-edit cannot quietly undo them', () => {
+    const sev = (id: string) => String(RUBRIC.find((r) => r.id === id)?.severity)
+
+    // Lowered: multiple H1s are fine, NAP is one factor among many, and field CrUX is a
+    // lightweight tiebreaker rather than a ranking lever.
+    expect(sev('ONPAGE-003')).toBe('low')
+    expect(sev('LOCAL-005')).toBe('medium')
+    expect(sev('TECH-010')).toBe('medium')
+
+    // Raised: reviews are the strongest local lever after category and tap-to-call, and
+    // rating gates the click even when the pack position is won.
+    expect(sev('LOCAL-007')).toBe('critical')
+    expect(sev('LOCAL-008')).toBe('critical')
+    expect(sev('LOCAL-010')).toBe('critical')
   })
 
   it('tolerates a malformed findings array rather than blanking the screen', () => {

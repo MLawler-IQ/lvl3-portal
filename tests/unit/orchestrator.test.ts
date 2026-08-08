@@ -91,7 +91,11 @@ describe('the golden run over the committed fixture', () => {
     const result = await runAudit(options())
     expect(result.scoring.items).toHaveLength(2)
     expect(result.scoring.unscored).toHaveLength(6)
-    expect(result.configVersion).toBe('scoring-2026-08-06.1')
+    // A literal, not SCORING_CONFIG.version — reading the value back from the module it
+    // came from asserts nothing. Bumped by hand on 2026-08-07 with the rubric re-cut, which
+    // changed ONPAGE-003's severity and therefore its score, and the version string now
+    // covers rubric-sourced severity for exactly that reason.
+    expect(result.configVersion).toBe('scoring-2026-08-07.1')
     for (const item of result.scoring.items) {
       expect(item.inputs.formula.length).toBeGreaterThan(0)
     }

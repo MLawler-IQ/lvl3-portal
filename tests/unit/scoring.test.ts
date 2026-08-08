@@ -136,8 +136,22 @@ describe('effort and severity come from the rubric, never from the scorer', () =
     expect(() => rubricEntry('NOPE-999')).toThrow(/never invents/)
   })
 
-  it('the rubric has exactly 9 critical checks — what makes the top-K rule cheap', () => {
-    expect(criticalCheckIds().size).toBe(9)
+  it('the rubric has 12 critical checks, and only 3 can ever reach a plan', () => {
+    // Was 9. The 2026-08-07 rubric re-cut raised LOCAL-007/008/010 (review volume,
+    // velocity, rating) to critical, because Whitespark 2026 puts review signals at ~20%
+    // of local-pack weight and reading them absolutely rather than against the businesses
+    // in the pack is what made them look mid-tier.
+    expect(criticalCheckIds().size).toBe(12)
+
+    // The count is not what makes the top-K rule cheap — this is. Nine of the twelve have
+    // no detector, so they can never produce a finding, never be scored, and never compete
+    // for a top-K slot. Asserting the derived property rather than the count means
+    // registering a critical detector is what turns this red, which is exactly the moment
+    // someone should re-check that every critical fail still fits inside topK.
+    const registered = new Set(CHECKS.map((c) => c.id))
+    const reachable = Array.from(criticalCheckIds()).filter((id) => registered.has(id))
+    expect(reachable.sort()).toEqual(['MEAS-001', 'TECH-001', 'TECH-011'])
+    expect(reachable.length).toBeLessThanOrEqual(SCORING_CONFIG.topK)
   })
 })
 
@@ -311,27 +325,41 @@ describe('scoring the tornado fixture', () => {
     expect(
       plan.items.map((i) => [i.rank, i.checkId, i.impact, i.priorityScore, i.band]),
     ).toEqual([
-      [1, 'ONPAGE-003', 85.95, 85.95, 'P1'],
-      [2, 'MEAS-001', 100, 40, 'P1'],
-      [3, 'ONPAGE-006', 85.5, 34.2, 'P1'],
-      [4, 'TECH-011', 46, 18.4, 'P1'],
+      [1, 'MEAS-001', 100, 40, 'P1'],
+      [2, 'ONPAGE-006', 85.5, 34.2, 'P1'],
+      [3, 'TECH-011', 46, 18.4, 'P1'],
+      // RE-BASELINED 2026-08-07 by the rubric re-cut, and this row is the whole diff.
+      // ONPAGE-003 went severity high -> low (Google accepts multiple H1s), so its
+      // severityWeight went 6 -> 1 and every number derived from it divided by exactly six:
+      // 191 x 1 x 1.5 = 286.5 raw, x 0.05 basisWeight = 14.325 impact, and low effort
+      // (weight 1) leaves priorityScore equal to impact. It stays P1 because 14.325 still
+      // clears the p1 floor of 10. Rank 1 -> 4 is the only ordering consequence, and
+      // MEAS-001/ONPAGE-006/TECH-011 each moved up one slot with no number of their own
+      // changing. Nothing else in either fixture moved: the other five severity edits
+      // (LOCAL-005/007/008/010, TECH-010) are on checks with no detector, so they produce
+      // no finding and no scored item.
+      [4, 'ONPAGE-003', 14.325, 14.325, 'P1'],
       [5, 'LOCAL-016', 33.6, 13.44, 'P1'],
-      // ONPAGE-012 joined at rank 6 and lands P2 on its own merits: real impact
-      // (44.4, 148 template-dominated pages) divided by the rubric's `high` effort
-      // tier. Rewriting 148 pages of content is genuinely not a P1 next action,
-      // and §9's human plan does not list it among its five P1s either.
+      // ONPAGE-012 lands P2 on its own merits: real impact (44.4, 148 template-dominated
+      // pages) divided by the rubric's `high` effort tier. Rewriting 148 pages of content
+      // is genuinely not a P1 next action, and §9's human plan does not list it among its
+      // five P1s either.
       [6, 'ONPAGE-012', 44.4, 8.88, 'P2'],
     ])
   })
 
   it('ranks on impact / effort_weight, which is why the biggest impact is not always first', () => {
     const plan = tornadoPlan()
-    const meas = plan.items.find((i) => i.checkId === 'MEAS-001')!
+    // The pair that demonstrates this changed with the 2026-08-07 re-cut, and the new one is
+    // a sharper demonstration than the old MEAS-001-over-ONPAGE-003 pair (100 vs 85.95, a
+    // 1.16x spread). ONPAGE-012 carries THREE TIMES the impact of ONPAGE-003 and still ranks
+    // two slots below it, because rewriting 148 pages of content is `high` effort (weight 5)
+    // against a one-line template change at `low` (weight 1).
+    const template = plan.items.find((i) => i.checkId === 'ONPAGE-012')!
     const h1 = plan.items.find((i) => i.checkId === 'ONPAGE-003')!
-    // MEAS-001 carries the larger impact...
-    expect(meas.impact).toBeGreaterThan(h1.impact)
-    // ...and still ranks below it, because it is medium effort against low.
-    expect(meas.rank).toBeGreaterThan(h1.rank)
+    expect(template.impact).toBeGreaterThan(h1.impact)
+    expect(template.rank).toBeGreaterThan(h1.rank)
+    expect(template.effortWeight).toBeGreaterThan(h1.effortWeight)
     for (const item of plan.items) {
       expect(item.priorityScore).toBeCloseTo(item.impact / item.effortWeight, 3)
     }
@@ -375,7 +403,10 @@ describe('scoring the tornado fixture', () => {
     const h1 = tornadoPlan().items.find((i) => i.checkId === 'ONPAGE-003')!
     expect(h1.inputs.terms).toEqual({
       affectedUrlCount: 191,
-      severityWeight: 6,
+      // 6 until the 2026-08-07 re-cut moved ONPAGE-003 to `low`. This term is the entire
+      // mechanism by which a rubric severity edit reaches a client-facing number, which is
+      // why the version string now covers rubric-sourced severity as well as this file.
+      severityWeight: 1,
       earningUrlBonus: 1.5,
     })
     expect(h1.inputs.notes.join(' ')).toContain('at least one affected URL earns impressions')

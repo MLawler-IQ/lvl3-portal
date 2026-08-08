@@ -1,6 +1,6 @@
 {
   "case": "healthy",
-  "configVersion": "scoring-2026-08-06.1",
+  "configVersion": "scoring-2026-08-07.1",
   "topK": 5,
   "tolerancePct": 5,
   "totals": {

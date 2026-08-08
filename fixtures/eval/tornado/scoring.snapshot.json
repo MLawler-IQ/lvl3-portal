@@ -1,6 +1,6 @@
 {
   "case": "tornado",
-  "configVersion": "scoring-2026-08-06.1",
+  "configVersion": "scoring-2026-08-07.1",
   "topK": 5,
   "tolerancePct": 5,
   "totals": {
@@ -17,30 +17,6 @@
   "topKItems": [
     {
       "rank": 1,
-      "checkId": "ONPAGE-003",
-      "severity": "high",
-      "category": "onpage",
-      "effort": "low",
-      "effortWeight": 1,
-      "basis": "template_fix",
-      "rawImpact": 1719,
-      "impact": 85.95,
-      "priorityScore": 85.95,
-      "band": "P1",
-      "formula": "affected_url_count x severity_weight x earning_url_bonus",
-      "terms": {
-        "affectedUrlCount": 191,
-        "earningUrlBonus": 1.5,
-        "severityWeight": 6
-      },
-      "notes": [
-        "bonus applied: at least one affected URL earns impressions",
-        "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
-      ],
-      "detail": "191 of 206 pages do not have exactly one H1 with text."
-    },
-    {
-      "rank": 2,
       "checkId": "MEAS-001",
       "severity": "critical",
       "category": "measurement",
@@ -62,7 +38,7 @@
       "detail": "187 of 206 measured pages carry no GA4 or GTM tag — measurement is effectively off."
     },
     {
-      "rank": 3,
+      "rank": 2,
       "checkId": "ONPAGE-006",
       "severity": "medium",
       "category": "onpage",
@@ -98,7 +74,7 @@
       "detail": "7 queries have 2+ pages competing for the same intent (worst: 4 URLs on one query)."
     },
     {
-      "rank": 4,
+      "rank": 3,
       "checkId": "TECH-011",
       "severity": "critical",
       "category": "technical",
@@ -120,6 +96,30 @@
         "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
       ],
       "detail": "92 of 206 measured pages fail mobile viewport or tap-target sizing."
+    },
+    {
+      "rank": 4,
+      "checkId": "ONPAGE-003",
+      "severity": "low",
+      "category": "onpage",
+      "effort": "low",
+      "effortWeight": 1,
+      "basis": "template_fix",
+      "rawImpact": 286.5,
+      "impact": 14.325,
+      "priorityScore": 14.325,
+      "band": "P1",
+      "formula": "affected_url_count x severity_weight x earning_url_bonus",
+      "terms": {
+        "affectedUrlCount": 191,
+        "earningUrlBonus": 1.5,
+        "severityWeight": 1
+      },
+      "notes": [
+        "bonus applied: at least one affected URL earns impressions",
+        "earning-URL test used the 5 example URL(s) on the finding, not the full affected set — the bonus is a floor, not a ceiling"
+      ],
+      "detail": "191 of 206 pages do not have exactly one H1 with text."
     },
     {
       "rank": 5,

@@ -182,6 +182,14 @@ export interface ScoringConfig {
    * and the snapshot comparator treats a version change as a failure — which is
    * the point: it forces the deliberate re-baseline instead of letting numbers
    * drift under an unchanged snapshot.
+   *
+   * WIDENED 2026-08-07: it also covers the SEVERITY AND EFFORT TIERS the scorer
+   * reads out of docs/rubric/rubric.json. Those are scoring inputs this file does
+   * not contain, and the rubric re-cut moved ONPAGE-003 from `high` to `low`,
+   * dividing its impact by six. `audit_runs.config_version` exists so a stored
+   * number can be explained later; if the same version string can describe two
+   * different rubrics, it cannot do that. Scope is therefore "any input to a
+   * score", not "any value in this file".
    */
   version: string
   ctrCurve: readonly CtrCurvePoint[]
@@ -218,7 +226,7 @@ export interface ScoringConfig {
 }
 
 export const SCORING_CONFIG: ScoringConfig = Object.freeze({
-  version: 'scoring-2026-08-06.1',
+  version: 'scoring-2026-08-07.1',
   ctrCurve: LOCAL_CTR_CURVE,
   effortWeights: EFFORT_WEIGHTS,
   severityWeights: SEVERITY_WEIGHTS,

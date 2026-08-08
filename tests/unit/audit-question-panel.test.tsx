@@ -79,13 +79,18 @@ describe('AuditResultView question panel', () => {
   it('keeps every denominator on screen when the run evaluated nothing', () => {
     // The rule the whole panel exists for: an empty run does not get to look small.
     render(<AuditResultView summary={summary()} />)
-    expect(screen.getByText(/80 active criteria across 7 questions/)).toBeTruthy()
+    // 70 active plus 10 retired since the slice-2 re-cut; the retired ten are counted in no
+    // denominator and the sentence says so.
+    expect(
+      screen.getByText(/70 active criteria across 7 questions, plus 10 retired/),
+    ).toBeTruthy()
   })
 
   it('reports a fraction once something was evaluated, and only for that question', () => {
     render(<AuditResultView summary={summary([finding('MEAS-001', 'fail')])} />)
 
-    expect(screen.getByText('1 of 7 evaluated')).toBeTruthy()
+    // 'of 6', not 'of 7': MEAS-006 (GSC generative-AI monitoring) was retired by the re-cut.
+    expect(screen.getByText('1 of 6 evaluated')).toBeTruthy()
     expect(screen.getAllByText(/not measured/).length).toBe(QUESTIONS.length - 1)
   })
 
@@ -111,6 +116,6 @@ describe('AuditResultView question panel', () => {
     // audit_runs.result jsonb. A stored run written before this panel existed must still
     // render it, not throw.
     expect(() => render(<AuditResultView summary={{ status: 'partial' }} />)).not.toThrow()
-    expect(screen.getByText(/80 active criteria/)).toBeTruthy()
+    expect(screen.getByText(/70 active criteria/)).toBeTruthy()
   })
 })

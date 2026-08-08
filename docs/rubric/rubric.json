@@ -140,14 +140,14 @@
     "question": "hygiene",
     "check": "Core Web Vitals pass at 75th-percentile field data",
     "outcome": "rankings, booked calls",
-    "severity": "high",
+    "severity": "medium",
     "effort": "high",
     "automation": "auto",
     "dataSource": "pagespeed",
     "howToTest": "CrUX / PageSpeed Insights API + GSC CWV report",
     "multiLocation": false,
     "verticalCritical": true,
-    "notes": "LCP <=2.5s, INP <=200ms, CLS <=0.1. INP replaced FID Mar 2024"
+    "notes": "LCP <=2.5s, INP <=200ms, CLS <=0.1. INP replaced FID Mar 2024 · Severity lowered 2026-08-07 (was high) and the signal source corrected: field CrUX at the 75th percentile is the ranking input, not lab PageSpeed, and it is a lightweight tiebreaker that does not replace relevance. Use the CrUX API or BigQuery for portfolio scanning; reserve PageSpeed for per-page lab diagnostics. The conversion angle (CRO-005) is the more defensible one. (§10, §11, §13)"
   },
   {
     "id": "TECH-011",
@@ -192,12 +192,14 @@
     "howToTest": "Crawl JSON-LD + Rich Results Test, cross-check GBP API",
     "multiLocation": false,
     "verticalCritical": true,
-    "notes": "Use most specific subtype. No fabricated ratings"
+    "notes": "Use most specific subtype. No fabricated ratings · Now also absorbs TECH-014 (supported types only) and GEO-006 (extractability). Keep for rich-result eligibility and NAP consistency; it does NOT lift rankings or AI citations directly. (§11, §12)"
   },
   {
     "id": "TECH-014",
     "category": "technical",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Merged into TECH-013. An unsupported structured-data type simply produces no rich result, so no decision hangs on it. (docs/research/audit-critique-80-check-rubric.md §12)",
     "check": "Structured data uses only currently-supported types",
     "outcome": "rankings",
     "severity": "low",
@@ -243,6 +245,8 @@
     "id": "TECH-017",
     "category": "technical",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Keyword-descriptive URLs are not a ranking lever — Mueller: the SEO effect of keywords in the URL is minimal once the content is indexed. Fired false positives on perfectly good URLs. Survives at most as a readability note. (§11, §12)",
     "check": "Clean, static, keyword-descriptive URL structure",
     "outcome": "rankings",
     "severity": "low",
@@ -258,6 +262,8 @@
     "id": "TECH-018",
     "category": "technical",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Faceted and parameter URLs: home-services sites rarely have faceted navigation. Conditional, not a standing check. (§12)",
     "check": "Faceted and parameter URLs controlled to avoid crawl waste",
     "outcome": "rankings",
     "severity": "low",
@@ -273,6 +279,8 @@
     "id": "TECH-019",
     "category": "technical",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "hreflang almost never applies to US-only home services, and adding it to a single-locale site is folklore. Conditional, not a standing check. (§12)",
     "check": "hreflang used only where genuinely multi-language or multi-region, with return tags",
     "outcome": "rankings",
     "severity": "low",
@@ -288,6 +296,8 @@
     "id": "TECH-020",
     "category": "technical",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Custom 404 is real but trivial; folded into general hygiene rather than scored on its own. (§12)",
     "check": "Custom 404 returns a 404 status and links back to service or location pages",
     "outcome": "booked calls",
     "severity": "low",
@@ -318,6 +328,8 @@
     "id": "ONPAGE-002",
     "category": "onpage",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Meta descriptions are not a ranking factor and Google rewrites them most of the time. Demoted from a scored check to an attribute worth logging — the old row implied a causal link to booked calls that does not exist. (§11, §12)",
     "check": "Unique meta descriptions on money pages",
     "outcome": "booked calls",
     "severity": "low",
@@ -335,14 +347,14 @@
     "question": "hygiene",
     "check": "One H1 per page describing primary intent, logical heading hierarchy",
     "outcome": "rankings",
-    "severity": "high",
+    "severity": "low",
     "effort": "low",
     "automation": "auto",
     "dataSource": "sitebulb",
     "howToTest": "Rendered-DOM heading tree",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Severity raised above Sitebulb's Medium: template-level failures affect whole sites"
+    "notes": "Severity raised above Sitebulb's Medium: template-level failures affect whole sites · Severity lowered 2026-08-07 (was high): Google accepts multiple H1s, so the single-H1 requirement is outdated. Heading hierarchy retains minor value. (§11, §13)"
   },
   {
     "id": "ONPAGE-004",
@@ -417,7 +429,7 @@
     "howToTest": "Crawl img attributes + weights",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Accessibility and CWV impact"
+    "notes": "Accessibility and CWV impact · Retained for accessibility and image search; the ranking weight is dropped. Severity was already low. (§12)"
   },
   {
     "id": "ONPAGE-009",
@@ -545,14 +557,14 @@
     "question": "visibility",
     "check": "NAP consistency across GBP, website and major citations",
     "outcome": "local pack",
-    "severity": "high",
+    "severity": "medium",
     "effort": "medium",
     "automation": "assisted",
     "dataSource": "gbp",
     "howToTest": "GBP API + crawl + citation source",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Citation half currently has no data source"
+    "notes": "Citation half currently has no data source · Severity lowered 2026-08-07 (was high): NAP consistency is real but routinely overstated — one factor among many, and it must not rate above reviews. (§11, §13)"
   },
   {
     "id": "LOCAL-006",
@@ -575,14 +587,14 @@
     "question": "visibility",
     "check": "Review volume competitive versus local-pack competitors",
     "outcome": "local pack, booked calls",
-    "severity": "high",
+    "severity": "critical",
     "effort": "medium",
     "automation": "auto",
     "dataSource": "gbp",
     "howToTest": "GBP API + SERP competitor data",
     "multiLocation": false,
     "verticalCritical": true,
-    "notes": "Review signals are a major share of local-pack weight"
+    "notes": "Review signals are a major share of local-pack weight · Severity raised 2026-08-07 (was high): Whitespark 2026 puts review signals at ~20% of local-pack weight, up from ~16% in 2023. Review volume versus the businesses actually in the pack is the strongest local lever after primary category and tap-to-call, and reading it absolutely rather than competitively is what made it look mid-tier. (§13)"
   },
   {
     "id": "LOCAL-008",
@@ -590,14 +602,14 @@
     "question": "visibility",
     "check": "Review velocity and recency: steady flow of recent reviews",
     "outcome": "local pack, booked calls",
-    "severity": "high",
+    "severity": "critical",
     "effort": "medium",
     "automation": "auto",
     "dataSource": "gbp",
     "howToTest": "GBP API review timestamps",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Recency ranks among the most important local factors"
+    "notes": "Recency ranks among the most important local factors · Severity raised 2026-08-07 (was high): Sterling Sky’s 2025 study of 8,186 businesses found review velocity and recency beat total count — \"the number of reviews you’ve gotten this month matters more than your total\". (§13)"
   },
   {
     "id": "LOCAL-009",
@@ -620,14 +632,14 @@
     "question": "visibility",
     "check": "Average star rating meets consumer trust threshold",
     "outcome": "booked calls, local pack",
-    "severity": "high",
+    "severity": "critical",
     "effort": "medium",
     "automation": "auto",
     "dataSource": "gbp",
     "howToTest": "GBP API",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Target >=4.5"
+    "notes": "Target >=4.5 · Severity raised 2026-08-07 (was high): high numerical rating is a top-six local-pack factor in Whitespark 2026 and gates the click even when the pack position is won. (§13)"
   },
   {
     "id": "LOCAL-011",
@@ -747,7 +759,7 @@
     "howToTest": "Raw HTML vs rendered-DOM diff",
     "multiLocation": false,
     "verticalCritical": true,
-    "notes": "Sitebulb rates the underlying hints Low. Re-weight: this is the core GEO signal"
+    "notes": "Sitebulb rates the underlying hints Low. Re-weight: this is the core GEO signal · EXCEPTION: true for GPTBot, ClaudeBot and PerplexityBot (Vercel/MERJ, 500M+ fetches: zero evidence of JavaScript execution), but FALSE for Google’s Gemini crawler, which inherits Googlebot’s rendering. Stating it without the exception produces a confidently wrong recommendation for a client whose only AI concern is Google’s AI Overviews. (§5, §11)"
   },
   {
     "id": "GEO-003",
@@ -798,6 +810,8 @@
     "id": "GEO-006",
     "category": "geo",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "Duplicates TECH-013. Structured data drives rich-result eligibility, not AI citation: Google states no special schema.org markup is needed for generative features. (§11, §12)",
     "check": "Structured data present to aid extractability",
     "outcome": "ai citations, rankings",
     "severity": "low",
@@ -813,6 +827,8 @@
     "id": "GEO-007",
     "category": "geo",
     "question": "hygiene",
+    "retired": true,
+    "retiredReason": "llms.txt: Google states Search ignores it, and SE Ranking’s ~300,000-domain study found no correlation with LLM citation — removing the variable improved their model. Zero-cost auto-generation at most, never a line item. (§7, §12)",
     "check": "llms.txt presence check only, flagged experimental and unproven",
     "outcome": "none",
     "severity": "low",
@@ -1032,12 +1048,14 @@
     "howToTest": "Backlink API review + GSC manual actions report",
     "multiLocation": false,
     "verticalCritical": false,
-    "notes": "Disavow ONLY with a manual action or a known paid-link history"
+    "notes": "Disavow ONLY with a manual action or a known paid-link history · Now also carries the brand-mentions half merged in from AUTH-004: one off-site monitoring line covering linked and unlinked mentions. (§12)"
   },
   {
     "id": "AUTH-004",
     "category": "authority",
     "question": "competition",
+    "retired": true,
+    "retiredReason": "Merged into AUTH-003 as one off-site monitoring line. Brand mentions are monitoring, not an audit decision. (§12)",
     "check": "Brand mentions, linked and unlinked, across the web",
     "outcome": "rankings, ai citations",
     "severity": "low",
@@ -1122,7 +1140,7 @@
     "howToTest": "GA4 events + tracking-number / DNI config review",
     "multiLocation": false,
     "verticalCritical": true,
-    "notes": "NO VENDOR INTEGRATED. Majority of home-services conversions are phone calls"
+    "notes": "NO VENDOR INTEGRATED. Majority of home-services conversions are phone calls · DNI vs STATIC is the check, not presence: dynamic number insertion keeps the real number in the raw HTML and swaps the display in JavaScript, so crawlers still read the canonical NAP (Sterling Sky, CallRail both confirm). Only static replacement — on the GBP or in crawlable HTML — breaks NAP. (§11, §16)"
   },
   {
     "id": "MEAS-003",
@@ -1173,6 +1191,8 @@
     "id": "MEAS-006",
     "category": "measurement",
     "question": "measurement",
+    "retired": true,
+    "retiredReason": "GSC generative-AI performance is monitoring, not a scored check. Impressions-only with no clicks cannot carry a verdict. (§12)",
     "check": "GSC generative AI performance monitored for AI-surface visibility",
     "outcome": "ai citations",
     "severity": "low",
