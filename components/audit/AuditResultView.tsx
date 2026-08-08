@@ -34,6 +34,8 @@ import {
   HelpCircle,
   X,
 } from 'lucide-react'
+import { questionCoverage, summariseQuestion } from '@/lib/audit/questions'
+import type { QuestionCoverage } from '@/lib/audit/questions'
 import type { AuditExportAttribution } from '@/lib/audit/store'
 import type { Finding, FindingStatus } from '@/lib/findings/types'
 import type { SitebulbCoverage } from '@/lib/ingest/sitebulb/crawl'
@@ -69,9 +71,10 @@ export interface AuditSummary {
  * All four slots, in a fixed order, as a literal.
  *
  * Hand-listed rather than derived from the run's keys — deriving them lets a run that
- * dropped a station render a strip that simply omits it. `gbp` is on this list even
- * though no GBP station exists in the pipeline: its permanent `unavailable` state with a
- * reason is the honest statement, and an absent row is not.
+ * dropped a station render a strip that simply omits it, and "we chose not to look" would
+ * become indistinguishable from "we looked and it was fine". `gbp` stays on the list for
+ * runs where it is unconfigured or failed, and for stored runs written before the station
+ * was wired, which still carry its old `unavailable` state.
  */
 const STATION_ORDER: readonly StationSlot[] = ['crawl', 'gsc', 'gbp', 'robots']
 
@@ -203,6 +206,106 @@ function magnitude(finding: Finding): string | null {
   return null
 }
 
+/**
+ * What this run set out to answer, and how much of each question it reached.
+ *
+ * The browser half of report-text.ts's QUESTIONS block, and it is first on the screen for
+ * the same reason it is first in the text: a reader who meets the findings table first
+ * reads eight rows as the audit rather than as the sliver of it that could run. The count
+ * this replaces — "8 of 80 criteria" — was true, unactionable, and moved when cheap
+ * detectors were registered rather than when the answer improved.
+ *
+ * "Not measured" is rendered in the accent violet, never grey. Same reasoning as the
+ * not_run chip: grey reads as "inactive", which is one step from "fine", and the whole
+ * point is that nobody looked.
+ */
+function QuestionPanel({ findings }: { findings: readonly Finding[] }) {
+  const report = questionCoverage(findings)
+
+  return (
+    <Card>
+      <Eyebrow>What this run answers</Eyebrow>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-[13px]">
+          <thead>
+            <tr className="text-[11px] uppercase tracking-[0.08em] text-surface-400">
+              <th className="pb-2 pr-4 font-medium">Question</th>
+              <th className="pb-2 pr-3 text-right font-medium">Criteria</th>
+              <th className="pb-2 pr-3 text-right font-medium">Evaluated</th>
+              <th className="pb-2 pr-3 text-right font-medium">No data</th>
+              <th className="pb-2 pr-3 text-right font-medium">No check</th>
+              <th className="pb-2 pr-4 text-right font-medium">Human</th>
+              <th className="pb-2 font-medium">Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            {report.questions.map((q: QuestionCoverage) => {
+              const measured = q.evaluated.length > 0
+              return (
+                <tr key={q.key} className="border-t border-surface-800 align-top">
+                  <td className="py-2 pr-4 text-surface-100">
+                    <span className="tabular-nums text-surface-500">{q.order}</span>{' '}
+                    {q.question}
+                  </td>
+                  <td className="py-2 pr-3 text-right tabular-nums text-surface-100">
+                    {num(q.total)}
+                  </td>
+                  <td className="py-2 pr-3 text-right tabular-nums text-surface-300">
+                    {num(q.evaluated.length)}
+                  </td>
+                  <td className="py-2 pr-3 text-right tabular-nums text-surface-300">
+                    {num(q.dataMissing.length)}
+                  </td>
+                  <td className="py-2 pr-3 text-right tabular-nums text-surface-300">
+                    {num(q.notEvaluated.length)}
+                  </td>
+                  <td className="py-2 pr-4 text-right tabular-nums text-surface-300">
+                    {num(q.humanJudgement.length)}
+                  </td>
+                  <td
+                    className={`py-2 leading-relaxed ${measured ? 'text-surface-300' : 'text-brand-400'}`}
+                  >
+                    {summariseQuestion(q)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="mt-3 text-[11px] leading-relaxed text-surface-400">
+        {num(report.activeRows)} active criteria across {report.questions.length} questions
+        {report.retiredRows > 0
+          ? `, plus ${num(report.retiredRows)} retired and counted in no denominator`
+          : ''}
+        . Every active criterion sits in exactly one question whether or not anything can
+        evaluate it — a denominator that shrinks when a detector is missing is the same lie
+        as a check that passes when its station failed.
+      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-surface-400">
+        <span className="text-surface-300">Evaluated</span> a verdict was reached ·{' '}
+        <span className="text-surface-300">No data</span> a check ran and could not answer ·{' '}
+        <span className="text-surface-300">No check</span> nothing in this run evaluated it ·{' '}
+        <span className="text-surface-300">Human</span> needs a strategist, deliberately not
+        automated.
+      </p>
+
+      {/*
+        Never dropped: an id in no rubric row means the run and the rubric disagree about
+        what was checked. That is the reader's problem to know about, not ours to tidy away.
+      */}
+      {report.unknownCheckIds.length > 0 && (
+        <p className="mt-3 text-[11px] leading-relaxed" style={{ color: 'var(--color-warning)' }}>
+          {num(report.unknownCheckIds.length)} finding(s) cite a check id in no rubric row and
+          are in no question&apos;s counts:{' '}
+          <span className="font-mono">{report.unknownCheckIds.join(', ')}</span>.
+        </p>
+      )}
+    </Card>
+  )
+}
+
 export interface AuditResultViewProps {
   summary: AuditSummary
   /** Shown in the header when known. The run result carries no client name. */
@@ -317,6 +420,9 @@ export default function AuditResultView({
         )}
       </Card>
 
+      {/* ── what this run answers ────────────────────────────────────────────── */}
+      <QuestionPanel findings={findings} />
+
       {/* ── run degradation notes ────────────────────────────────────────────── */}
       <Card>
         <Eyebrow>Run degradations</Eyebrow>
@@ -381,10 +487,12 @@ export default function AuditResultView({
           </table>
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-surface-400">
-          Four slots, always. <span className="font-mono">gbp</span> is{' '}
-          <span className="text-surface-300">unavailable</span> in this pipeline rather than
-          skipped — no GBP station exists, so LOCAL-003 and LOCAL-016 read{' '}
-          <span className="font-mono">not_run</span> below by construction.
+          Four slots, always — a run that dropped a station reads{' '}
+          <span className="text-surface-300">not reported</span> here rather than going
+          missing. <span className="font-mono">gbp</span> reports{' '}
+          <span className="text-surface-300">degraded</span> on every successful run by
+          design: the profile record does not model the services and attributes LOCAL-003&apos;s
+          rubric row also lists, so a clean read is still an incomplete one.
         </p>
       </Card>
 

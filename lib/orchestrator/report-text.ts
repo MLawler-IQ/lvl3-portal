@@ -20,6 +20,8 @@
 // is quotable on a client call. Today's longest formula is ~57 characters, so the exception
 // costs nothing in practice.
 
+import { questionCoverage, summariseQuestion } from '@/lib/audit/questions'
+import type { QuestionCoverage } from '@/lib/audit/questions'
 import type { Finding } from '@/lib/findings/types'
 import type { ScoredRecommendation } from '@/lib/scoring/types'
 import type { AuditRunResult, StationReport, StationSlot } from '@/lib/orchestrator/types'
@@ -57,6 +59,10 @@ export interface ReportMeta {
 export function formatAuditRun(result: AuditRunResult, meta: ReportMeta = {}): string {
   const blocks = [
     formatHeader(result, meta),
+    // Before the stations, and before the findings: what the run set out to answer and how
+    // much of each question it reached. A reader who meets the findings table first reads
+    // eight rows as the audit, rather than as the sliver of it that could run.
+    formatQuestions(result),
     formatStations(result),
     formatCoverage(result),
     formatFindings(result),
@@ -86,6 +92,86 @@ export function formatHeader(result: AuditRunResult, meta: ReportMeta = {}): str
   lines.push(...kv('recording', describeRecording(result)))
 
   for (const note of result.notes) lines.push(...kv('note', note))
+
+  return lines.join('\n')
+}
+
+/**
+ * What the run set out to answer, and how much of each question it reached.
+ *
+ * This block exists because the count it replaces was honest and useless. "8 of 80
+ * criteria" tells a reader the instrument is mostly unbuilt without telling them which of
+ * their problems went unexamined, and it moves when cheap detectors are registered rather
+ * than when the answer improves. Per question, the same facts become actionable: a run can
+ * say "competition: not measured (9 criteria)" and mean it.
+ *
+ * FOUR BUCKETS, and the two on the right are the honest half. `no check` is "nothing in
+ * this run evaluated this auto-tier criterion"; `human` is "this criterion needs a
+ * strategist and should never have a detector". Collapsing them would report roughly
+ * thirty judgement calls as tooling debt. The rules live in lib/audit/questions.ts; this
+ * function only lays them out.
+ */
+export function formatQuestions(result: AuditRunResult): string {
+  const report = questionCoverage(result.findings ?? [])
+
+  const cols = [
+    { header: '#', width: 1 },
+    { header: 'question', width: 12 },
+    { header: 'criteria', width: 8 },
+    { header: 'evaluated', width: 9 },
+    { header: 'no data', width: 7 },
+    { header: 'no check', width: 8 },
+    { header: 'human', width: 5 },
+    { header: 'verdict', width: 0 },
+  ]
+
+  const rows = report.questions.map((q: QuestionCoverage) => [
+    String(q.order),
+    q.label.toLowerCase(),
+    numStr(q.total),
+    numStr(q.evaluated.length),
+    numStr(q.dataMissing.length),
+    numStr(q.notEvaluated.length),
+    numStr(q.humanJudgement.length),
+    summariseQuestion(q),
+  ])
+
+  const lines = ['QUESTIONS', '-'.repeat(RULE_WIDTH), ...renderTable(cols, rows), '']
+
+  // The questions in full, once. The short labels above are abbreviations of these, and an
+  // abbreviation that never appears next to what it abbreviates is how "risk" comes to mean
+  // whatever the reader assumed it meant.
+  for (const q of report.questions) lines.push(...wrapAt(0, `${q.order}  ${q.question}`, 3))
+
+  lines.push('')
+  lines.push(
+    ...wrapAt(
+      0,
+      `${numStr(report.activeRows)} active criteria across ${report.questions.length} questions` +
+        (report.retiredRows > 0
+          ? `, plus ${numStr(report.retiredRows)} retired and counted in no denominator.`
+          : '.') +
+        ' Every active criterion sits in exactly one question, whether or not anything can evaluate it — a denominator that shrinks when a detector is missing is the same lie as a check that passes when its station failed.',
+    ),
+  )
+  lines.push(
+    ...wrapAt(
+      2,
+      'evaluated = a verdict was reached · no data = a check ran and could not answer · no check = nothing in this run evaluated it · human = needs a strategist, deliberately not automated.',
+    ),
+  )
+
+  // Never dropped: an id in no rubric row means the run and the rubric disagree about what
+  // was checked, and that is the reader's problem to know about, not ours to tidy away.
+  if (report.unknownCheckIds.length > 0) {
+    lines.push('')
+    lines.push(
+      ...wrapAt(
+        0,
+        `${numStr(report.unknownCheckIds.length)} finding(s) cite a check id that is in no rubric row and are therefore in no question's counts: ${report.unknownCheckIds.join(', ')}.`,
+      ),
+    )
+  }
 
   return lines.join('\n')
 }

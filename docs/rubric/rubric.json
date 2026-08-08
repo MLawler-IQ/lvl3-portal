@@ -2,6 +2,7 @@
   {
     "id": "TECH-001",
     "category": "technical",
+    "question": "risk",
     "check": "robots.txt does not block Googlebot from important sections",
     "outcome": "rankings",
     "severity": "critical",
@@ -16,6 +17,7 @@
   {
     "id": "TECH-002",
     "category": "technical",
+    "question": "risk",
     "check": "Indexable money pages return 200 and are actually indexed",
     "outcome": "rankings, booked calls",
     "severity": "critical",
@@ -30,6 +32,7 @@
   {
     "id": "TECH-003",
     "category": "technical",
+    "question": "risk",
     "check": "No accidental noindex or nofollow on money pages",
     "outcome": "rankings",
     "severity": "critical",
@@ -44,6 +47,7 @@
   {
     "id": "TECH-004",
     "category": "technical",
+    "question": "risk",
     "check": "Main content and internal links present in raw HTML, not only rendered DOM",
     "outcome": "rankings, ai citations",
     "severity": "high",
@@ -58,6 +62,7 @@
   {
     "id": "TECH-005",
     "category": "technical",
+    "question": "hygiene",
     "check": "XML sitemap exists, referenced in robots.txt, lists only canonical 200 URLs",
     "outcome": "rankings",
     "severity": "high",
@@ -72,6 +77,7 @@
   {
     "id": "TECH-006",
     "category": "technical",
+    "question": "hygiene",
     "check": "Canonical tags self-referential and correctly consolidate duplicates",
     "outcome": "rankings",
     "severity": "high",
@@ -86,6 +92,7 @@
   {
     "id": "TECH-007",
     "category": "technical",
+    "question": "hygiene",
     "check": "301s for permanent moves, no redirect chains or loops",
     "outcome": "rankings",
     "severity": "medium",
@@ -100,6 +107,7 @@
   {
     "id": "TECH-008",
     "category": "technical",
+    "question": "hygiene",
     "check": "No orphan money pages, crawl depth of priority pages <= 3 clicks",
     "outcome": "rankings",
     "severity": "high",
@@ -114,6 +122,7 @@
   {
     "id": "TECH-009",
     "category": "technical",
+    "question": "hygiene",
     "check": "HTTPS enforced site-wide, valid certificate, no mixed content",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -128,6 +137,7 @@
   {
     "id": "TECH-010",
     "category": "technical",
+    "question": "hygiene",
     "check": "Core Web Vitals pass at 75th-percentile field data",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -142,6 +152,7 @@
   {
     "id": "TECH-011",
     "category": "technical",
+    "question": "conversion",
     "check": "Mobile-friendly rendering: viewport, tap targets, no horizontal scroll, legible fonts",
     "outcome": "rankings, booked calls",
     "severity": "critical",
@@ -156,6 +167,7 @@
   {
     "id": "TECH-012",
     "category": "technical",
+    "question": "risk",
     "check": "Mobile parity: content and links served to mobile match desktop",
     "outcome": "rankings",
     "severity": "high",
@@ -170,6 +182,7 @@
   {
     "id": "TECH-013",
     "category": "technical",
+    "question": "hygiene",
     "check": "Valid LocalBusiness / HVACBusiness structured data matching visible NAP",
     "outcome": "rankings, local pack, ai citations",
     "severity": "high",
@@ -184,6 +197,7 @@
   {
     "id": "TECH-014",
     "category": "technical",
+    "question": "hygiene",
     "check": "Structured data uses only currently-supported types",
     "outcome": "rankings",
     "severity": "low",
@@ -198,6 +212,7 @@
   {
     "id": "TECH-015",
     "category": "technical",
+    "question": "hygiene",
     "check": "Structured data matches on-page content, no markup for absent content",
     "outcome": "rankings",
     "severity": "medium",
@@ -212,6 +227,7 @@
   {
     "id": "TECH-016",
     "category": "technical",
+    "question": "hygiene",
     "check": "No soft 404s or 4xx/5xx on internally linked or ranking URLs",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -226,6 +242,7 @@
   {
     "id": "TECH-017",
     "category": "technical",
+    "question": "hygiene",
     "check": "Clean, static, keyword-descriptive URL structure",
     "outcome": "rankings",
     "severity": "low",
@@ -240,6 +257,7 @@
   {
     "id": "TECH-018",
     "category": "technical",
+    "question": "hygiene",
     "check": "Faceted and parameter URLs controlled to avoid crawl waste",
     "outcome": "rankings",
     "severity": "low",
@@ -254,6 +272,7 @@
   {
     "id": "TECH-019",
     "category": "technical",
+    "question": "hygiene",
     "check": "hreflang used only where genuinely multi-language or multi-region, with return tags",
     "outcome": "rankings",
     "severity": "low",
@@ -268,6 +287,7 @@
   {
     "id": "TECH-020",
     "category": "technical",
+    "question": "hygiene",
     "check": "Custom 404 returns a 404 status and links back to service or location pages",
     "outcome": "booked calls",
     "severity": "low",
@@ -282,6 +302,7 @@
   {
     "id": "ONPAGE-001",
     "category": "onpage",
+    "question": "demand",
     "check": "Every money page has a unique descriptive title reflecting service + geo intent",
     "outcome": "rankings",
     "severity": "high",
@@ -296,6 +317,7 @@
   {
     "id": "ONPAGE-002",
     "category": "onpage",
+    "question": "hygiene",
     "check": "Unique meta descriptions on money pages",
     "outcome": "booked calls",
     "severity": "low",
@@ -310,6 +332,7 @@
   {
     "id": "ONPAGE-003",
     "category": "onpage",
+    "question": "hygiene",
     "check": "One H1 per page describing primary intent, logical heading hierarchy",
     "outcome": "rankings",
     "severity": "high",
@@ -324,6 +347,7 @@
   {
     "id": "ONPAGE-004",
     "category": "onpage",
+    "question": "competition",
     "check": "Content demonstrates first-hand experience and is non-commodity",
     "outcome": "rankings, ai citations",
     "severity": "high",
@@ -338,6 +362,7 @@
   {
     "id": "ONPAGE-005",
     "category": "onpage",
+    "question": "demand",
     "check": "Keyword and intent match: page type matches dominant SERP intent",
     "outcome": "rankings, ai citations",
     "severity": "high",
@@ -352,6 +377,7 @@
   {
     "id": "ONPAGE-006",
     "category": "onpage",
+    "question": "demand",
     "check": "No keyword cannibalization: multiple pages competing for one query",
     "outcome": "rankings",
     "severity": "medium",
@@ -366,6 +392,7 @@
   {
     "id": "ONPAGE-007",
     "category": "onpage",
+    "question": "hygiene",
     "check": "Money pages receive descriptive keyword-relevant internal anchors",
     "outcome": "rankings",
     "severity": "high",
@@ -380,6 +407,7 @@
   {
     "id": "ONPAGE-008",
     "category": "onpage",
+    "question": "hygiene",
     "check": "Images have descriptive alt text and are compressed or next-gen",
     "outcome": "rankings, booked calls",
     "severity": "low",
@@ -394,6 +422,7 @@
   {
     "id": "ONPAGE-009",
     "category": "onpage",
+    "question": "demand",
     "check": "Answer-first structure: pages lead with a concise direct answer",
     "outcome": "ai citations",
     "severity": "medium",
@@ -408,6 +437,7 @@
   {
     "id": "ONPAGE-010",
     "category": "onpage",
+    "question": "demand",
     "check": "Content freshness: visible dates, seasonal pages refreshed pre-season",
     "outcome": "rankings, ai citations",
     "severity": "medium",
@@ -422,6 +452,7 @@
   {
     "id": "ONPAGE-011",
     "category": "onpage",
+    "question": "risk",
     "check": "No thin or duplicated doorway-style location pages",
     "outcome": "rankings",
     "severity": "high",
@@ -436,6 +467,7 @@
   {
     "id": "ONPAGE-012",
     "category": "onpage",
+    "question": "risk",
     "check": "Content-to-template ratio: page groups are not template-dominated",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -450,6 +482,7 @@
   {
     "id": "LOCAL-001",
     "category": "local",
+    "question": "visibility",
     "check": "GBP primary category is the most profit-aligned specific category",
     "outcome": "local pack",
     "severity": "critical",
@@ -464,6 +497,7 @@
   {
     "id": "LOCAL-002",
     "category": "local",
+    "question": "risk",
     "check": "GBP business name is the real-world name with no keyword stuffing",
     "outcome": "local pack",
     "severity": "critical",
@@ -478,6 +512,7 @@
   {
     "id": "LOCAL-003",
     "category": "local",
+    "question": "visibility",
     "check": "GBP completeness: hours, phone, website, services, attributes, description, photos",
     "outcome": "local pack, booked calls",
     "severity": "high",
@@ -492,6 +527,7 @@
   {
     "id": "LOCAL-004",
     "category": "local",
+    "question": "visibility",
     "check": "GBP hours accurate including emergency and 24/7, open-now status correct",
     "outcome": "local pack, booked calls",
     "severity": "high",
@@ -506,6 +542,7 @@
   {
     "id": "LOCAL-005",
     "category": "local",
+    "question": "visibility",
     "check": "NAP consistency across GBP, website and major citations",
     "outcome": "local pack",
     "severity": "high",
@@ -520,6 +557,7 @@
   {
     "id": "LOCAL-006",
     "category": "local",
+    "question": "visibility",
     "check": "Citation coverage on major aggregators and industry directories",
     "outcome": "local pack",
     "severity": "medium",
@@ -534,6 +572,7 @@
   {
     "id": "LOCAL-007",
     "category": "local",
+    "question": "visibility",
     "check": "Review volume competitive versus local-pack competitors",
     "outcome": "local pack, booked calls",
     "severity": "high",
@@ -548,6 +587,7 @@
   {
     "id": "LOCAL-008",
     "category": "local",
+    "question": "visibility",
     "check": "Review velocity and recency: steady flow of recent reviews",
     "outcome": "local pack, booked calls",
     "severity": "high",
@@ -562,6 +602,7 @@
   {
     "id": "LOCAL-009",
     "category": "local",
+    "question": "visibility",
     "check": "Review response rate: owner responds to reviews including negatives",
     "outcome": "local pack, booked calls",
     "severity": "medium",
@@ -576,6 +617,7 @@
   {
     "id": "LOCAL-010",
     "category": "local",
+    "question": "visibility",
     "check": "Average star rating meets consumer trust threshold",
     "outcome": "booked calls, local pack",
     "severity": "high",
@@ -590,6 +632,7 @@
   {
     "id": "LOCAL-011",
     "category": "local",
+    "question": "demand",
     "check": "Dedicated service page exists for each core service",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -604,6 +647,7 @@
   {
     "id": "LOCAL-012",
     "category": "local",
+    "question": "risk",
     "check": "Unique city or service-area page per genuinely served city with local proof",
     "outcome": "rankings, booked calls",
     "severity": "high",
@@ -618,6 +662,7 @@
   {
     "id": "LOCAL-013",
     "category": "local",
+    "question": "visibility",
     "check": "GBP services and products list populated with all offered services",
     "outcome": "local pack",
     "severity": "medium",
@@ -632,6 +677,7 @@
   {
     "id": "LOCAL-014",
     "category": "local",
+    "question": "visibility",
     "check": "GBP Q&A seeded with owner-verified answers to common questions",
     "outcome": "local pack, booked calls",
     "severity": "low",
@@ -646,6 +692,7 @@
   {
     "id": "LOCAL-015",
     "category": "local",
+    "question": "visibility",
     "check": "Each location has its own claimed GBP mapped to a unique landing page",
     "outcome": "local pack",
     "severity": "high",
@@ -660,6 +707,7 @@
   {
     "id": "LOCAL-016",
     "category": "local",
+    "question": "visibility",
     "check": "Service-area radius coherence: location pages target geography the profile can rank for",
     "outcome": "local pack, booked calls",
     "severity": "high",
@@ -674,6 +722,7 @@
   {
     "id": "GEO-001",
     "category": "geo",
+    "question": "risk",
     "check": "AI search and citation crawlers allowed in robots.txt",
     "outcome": "ai citations",
     "severity": "high",
@@ -688,6 +737,7 @@
   {
     "id": "GEO-002",
     "category": "geo",
+    "question": "risk",
     "check": "Content readable in raw HTML because AI crawlers do not execute JavaScript",
     "outcome": "ai citations",
     "severity": "high",
@@ -702,6 +752,7 @@
   {
     "id": "GEO-003",
     "category": "geo",
+    "question": "demand",
     "check": "Answer-first self-contained passages that fully answer likely fan-out questions",
     "outcome": "ai citations",
     "severity": "medium",
@@ -716,6 +767,7 @@
   {
     "id": "GEO-004",
     "category": "geo",
+    "question": "competition",
     "check": "Fact density: specific verifiable facts, pricing signals, response times, specifics",
     "outcome": "ai citations",
     "severity": "medium",
@@ -730,6 +782,7 @@
   {
     "id": "GEO-005",
     "category": "geo",
+    "question": "visibility",
     "check": "Brand presence and citation tracking across AI engines and AI Overviews",
     "outcome": "ai citations",
     "severity": "medium",
@@ -744,6 +797,7 @@
   {
     "id": "GEO-006",
     "category": "geo",
+    "question": "hygiene",
     "check": "Structured data present to aid extractability",
     "outcome": "ai citations, rankings",
     "severity": "low",
@@ -758,6 +812,7 @@
   {
     "id": "GEO-007",
     "category": "geo",
+    "question": "hygiene",
     "check": "llms.txt presence check only, flagged experimental and unproven",
     "outcome": "none",
     "severity": "low",
@@ -772,6 +827,7 @@
   {
     "id": "GEO-008",
     "category": "geo",
+    "question": "competition",
     "check": "Earned media and off-site brand mentions exist",
     "outcome": "ai citations",
     "severity": "medium",
@@ -786,6 +842,7 @@
   {
     "id": "GEO-009",
     "category": "geo",
+    "question": "risk",
     "check": "Site indexed and snippet-eligible for generative AI features",
     "outcome": "ai citations",
     "severity": "medium",
@@ -800,6 +857,7 @@
   {
     "id": "CRO-001",
     "category": "cro",
+    "question": "conversion",
     "check": "Tap-to-call number prominent and sticky on mobile above the fold on every page",
     "outcome": "booked calls",
     "severity": "critical",
@@ -814,6 +872,7 @@
   {
     "id": "CRO-002",
     "category": "cro",
+    "question": "conversion",
     "check": "Primary CTA clear, above the fold, action-oriented",
     "outcome": "booked calls",
     "severity": "high",
@@ -828,6 +887,7 @@
   {
     "id": "CRO-003",
     "category": "cro",
+    "question": "conversion",
     "check": "Lead-form friction minimized with few required fields",
     "outcome": "booked calls",
     "severity": "high",
@@ -842,6 +902,7 @@
   {
     "id": "CRO-004",
     "category": "cro",
+    "question": "conversion",
     "check": "Trust signals visible: license number, insured, review stars, guarantees, 24/7",
     "outcome": "booked calls",
     "severity": "high",
@@ -856,6 +917,7 @@
   {
     "id": "CRO-005",
     "category": "cro",
+    "question": "conversion",
     "check": "Page speed as a conversion factor on money pages",
     "outcome": "booked calls",
     "severity": "high",
@@ -870,6 +932,7 @@
   {
     "id": "CRO-006",
     "category": "cro",
+    "question": "conversion",
     "check": "Financing or upfront pricing signals present for high-ticket jobs",
     "outcome": "booked calls",
     "severity": "medium",
@@ -884,6 +947,7 @@
   {
     "id": "CRO-007",
     "category": "cro",
+    "question": "conversion",
     "check": "Local-intent conversion path: service+city pages route to call or book in few steps",
     "outcome": "booked calls",
     "severity": "high",
@@ -898,6 +962,7 @@
   {
     "id": "CRO-008",
     "category": "cro",
+    "question": "conversion",
     "check": "No intrusive interstitials or popups blocking mobile content on load",
     "outcome": "booked calls, rankings",
     "severity": "medium",
@@ -912,6 +977,7 @@
   {
     "id": "CRO-009",
     "category": "cro",
+    "question": "conversion",
     "check": "Emergency and 24/7 messaging prominent on urgent-intent pages",
     "outcome": "booked calls",
     "severity": "high",
@@ -926,6 +992,7 @@
   {
     "id": "AUTH-001",
     "category": "authority",
+    "question": "competition",
     "check": "Backlink profile has genuine relevant referring domains",
     "outcome": "rankings",
     "severity": "medium",
@@ -940,6 +1007,7 @@
   {
     "id": "AUTH-002",
     "category": "authority",
+    "question": "competition",
     "check": "Local and industry link presence: news, suppliers, associations, sponsorships",
     "outcome": "rankings, local pack",
     "severity": "medium",
@@ -954,6 +1022,7 @@
   {
     "id": "AUTH-003",
     "category": "authority",
+    "question": "competition",
     "check": "Toxic-link exposure: FLAG ONLY, do not disavow by default",
     "outcome": "none",
     "severity": "low",
@@ -968,6 +1037,7 @@
   {
     "id": "AUTH-004",
     "category": "authority",
+    "question": "competition",
     "check": "Brand mentions, linked and unlinked, across the web",
     "outcome": "rankings, ai citations",
     "severity": "low",
@@ -982,6 +1052,7 @@
   {
     "id": "AUTH-005",
     "category": "authority",
+    "question": "competition",
     "check": "E-E-A-T: named authors and principals with real verifiable credentials",
     "outcome": "rankings, ai citations",
     "severity": "medium",
@@ -996,6 +1067,7 @@
   {
     "id": "AUTH-006",
     "category": "authority",
+    "question": "competition",
     "check": "First-hand experience markers: real job photos, case studies, service-area proof",
     "outcome": "rankings, ai citations, booked calls",
     "severity": "medium",
@@ -1010,6 +1082,7 @@
   {
     "id": "AUTH-007",
     "category": "authority",
+    "question": "hygiene",
     "check": "Trust and transparency pages: About, Contact with NAP, license number, privacy",
     "outcome": "rankings, booked calls",
     "severity": "medium",
@@ -1024,6 +1097,7 @@
   {
     "id": "MEAS-001",
     "category": "measurement",
+    "question": "measurement",
     "check": "GA4 installed once, firing correctly, key events marked for calls and form submits",
     "outcome": "attribution",
     "severity": "critical",
@@ -1038,6 +1112,7 @@
   {
     "id": "MEAS-002",
     "category": "measurement",
+    "question": "measurement",
     "check": "Call tracking configured without breaking NAP consistency",
     "outcome": "booked calls",
     "severity": "critical",
@@ -1052,6 +1127,7 @@
   {
     "id": "MEAS-003",
     "category": "measurement",
+    "question": "measurement",
     "check": "GSC domain property configured, verified, sitemap submitted",
     "outcome": "attribution",
     "severity": "high",
@@ -1066,6 +1142,7 @@
   {
     "id": "MEAS-004",
     "category": "measurement",
+    "question": "measurement",
     "check": "GA4 linked to Google Ads and GBP insights where applicable",
     "outcome": "attribution",
     "severity": "medium",
@@ -1080,6 +1157,7 @@
   {
     "id": "MEAS-005",
     "category": "measurement",
+    "question": "measurement",
     "check": "Conversion attribution captures offline and phone conversions, not just forms",
     "outcome": "booked calls",
     "severity": "high",
@@ -1094,6 +1172,7 @@
   {
     "id": "MEAS-006",
     "category": "measurement",
+    "question": "measurement",
     "check": "GSC generative AI performance monitored for AI-surface visibility",
     "outcome": "ai citations",
     "severity": "low",
@@ -1108,6 +1187,7 @@
   {
     "id": "MEAS-007",
     "category": "measurement",
+    "question": "measurement",
     "check": "Per-location conversion tracking, calls and forms segmented by location",
     "outcome": "attribution",
     "severity": "medium",
