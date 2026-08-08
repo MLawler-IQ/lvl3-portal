@@ -21,8 +21,6 @@
 //      re-baselining (tests/unit/scoring.test.ts pins the reachable set for exactly
 //      that reason). It is the rule that catches "the model reordered everything and
 //      buried the emergency" — the failure the set gate alone would miss.
-//      and it is the rule that catches "the model reordered everything and buried
-//      the emergency" — the failure the set gate alone would miss.
 //   3. IMPACT AND PRIORITY VALUE STABILITY inside a tolerance band, so halving
 //      every number is caught even when the ordering survives untouched.
 //   4. NO SILENT SELF-HEALING. The comparator never writes. Re-baselining a

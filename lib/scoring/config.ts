@@ -183,13 +183,20 @@ export interface ScoringConfig {
    * the point: it forces the deliberate re-baseline instead of letting numbers
    * drift under an unchanged snapshot.
    *
-   * WIDENED 2026-08-07: it also covers the SEVERITY AND EFFORT TIERS the scorer
-   * reads out of docs/rubric/rubric.json. Those are scoring inputs this file does
-   * not contain, and the rubric re-cut moved ONPAGE-003 from `high` to `low`,
-   * dividing its impact by six. `audit_runs.config_version` exists so a stored
-   * number can be explained later; if the same version string can describe two
-   * different rubrics, it cannot do that. Scope is therefore "any input to a
-   * score", not "any value in this file".
+   * WIDENED 2026-08-07: it also covers the scoring inputs that live OUTSIDE this
+   * file — all of them, enumerated, because an enumeration is what people read and
+   * a short one invites the next author to assume their input is exempt:
+   *
+   *   - `severity` and `effort` per row in docs/rubric/rubric.json. The re-cut moved
+   *     ONPAGE-003 from `high` to `low` and divided its impact by six.
+   *   - `category` in the same file, which is the strongest of the three: it selects
+   *     the categoryWeight AND, with no explicit BASIS_RULES entry, `derivedRule()`
+   *     picks the impact BASIS from it — a different formula, not a different weight.
+   *   - `BASIS_RULES` in lib/scoring/score.ts, which maps check id to basis.
+   *
+   * `audit_runs.config_version` exists so a stored number can be explained later; if
+   * one version string can describe two different rubrics, it cannot do that. The
+   * rule is "any input to a score", and the list above is what that currently means.
    */
   version: string
   ctrCurve: readonly CtrCurvePoint[]
