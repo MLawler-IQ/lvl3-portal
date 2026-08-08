@@ -225,7 +225,44 @@ conversion 10 · risk 12 · hygiene 21. After slice 2's ten retirements: measure
 competition 8 · hygiene 13, everything else unchanged, 70 active — which lands measurement
 and hygiene almost exactly on the shape the critique's §15 argues for.
 
-## Carried debt
+## Open decision blocking slice 3: the distance threshold
+
+`docs/CONTEXT-LIBRARY.md` open decision 3 already records this as a rubric question
+("LOCAL-016 redesign — is distance-from-real-address the right test?"). Measured
+distance needs a number, no number exists anywhere in code, and the number decides
+whether a client's location pages are called doorway pages. **It is a rubric decision,
+not an implementation detail, and it is marked as ours at its definition** (the pattern
+`lib/scoring/config.ts` and `content-template-ratio.ts` both follow).
+
+What the committed fixtures bracket, by real haversine distance from each anchor:
+
+| Cohort | Range | Must be |
+|---|---|---|
+| Tornado `SERVED` (10 San Fernando Valley cities) | 2.5 – **11.1** mi | pass |
+| Tornado `NOT_SERVED` (8 Orange County cities) | **35.8** – 48.1 mi | fail (`affectedUrls: 8`) |
+| Healthy (3 Pasadena-area cities) | 0.0 – 3.0 mi | pass |
+| The fabricated-fail reproduction in `gbp-station.test.ts` | 6.3 – 9.7 mi | not a fail |
+
+So any threshold in **(11.1, 35.8)** preserves `affectedUrls: 8` and keeps the healthy
+fixture passing — a 24-mile window. **Recommended v1: 25 straight-line miles**, the most
+balanced point in it (2.25× the highest must-pass, 0.70× the lowest must-fail), with
+drive time deferred until a client case needs it. Google's own guidance is that a
+service-area profile should not extend beyond about two hours' drive; the research is
+that the practical rankable radius in home services is far tighter than the serviceable
+one, which argues for the low end of any defensible window rather than the high end.
+
+**And one thing the threshold breaks that must be decided with it.**
+`lib/eval/injectors/encodings.ts:328-334` registers a `geo-adjacent-county` defect
+encoding whose own note says these cities are "close enough that **a mileage heuristic
+would let them through**, but outside the declared service areas, so the profile cannot
+rank for them." Measured from Sherman Oaks its five cities are 20.7 / 22.3 / 26.4 / 34.0
+/ 41.8 mi — so at any threshold in the window the encoding *splits*, and its stated
+premise becomes false. It breaks no test today, but leaving it is how a generator-built
+fixture ends up asserting a magnitude its own linter recomputes differently. It must be
+re-labelled or re-scoped in the same slice. **This is the real content of the decision:**
+distance alone genuinely cannot separate "adjacent county the profile cannot rank for"
+from "far suburb it can", which is the honest limit of a measured radius and the reason
+slice 7's grid is the actual answer.
 
 Recorded when incurred rather than discovered later.
 
@@ -256,10 +293,45 @@ Everything not listed here is additive.
    read questions. The old four-bucket sketch (evaluated / data-missing / no-detector /
    assisted) survives *inside* each question.
 3. **Geography moves into the stations.** Stations are async; `evaluate` stays
-   synchronous and pure. The gbp station gains a geo block (geocoded business point,
-   declared areas, distances to targeted geographies via `lib/geo/distance.ts`); the
-   crawl station already carries per-page `targetGeo`. LOCAL-016 upgrades from
-   set-membership to measured distance.
+   synchronous and pure. LOCAL-016 upgrades from set-membership to measured distance.
+
+   **AMENDED 2026-08-07, before any code moved.** This said the gbp station gains
+   "distances to targeted geographies" — and it cannot. `lib/orchestrator/run.ts:324`
+   awaits crawl, gsc and gbp in one `Promise.all`, and running gbp concurrently rather
+   than after the crawl is an explicit latency decision recorded at `run.ts:255-258`.
+   `runGbpStation` therefore never sees `CrawlPageRecord.targetGeo`, so the per-target
+   half of the measurement cannot live in it. The work splits:
+   - **The anchor geocode stays in the station** — it needs only
+     `storefrontAddress ?? businessCity`, which the station already has, and it runs
+     concurrently with the two existing v4 review/media reads at no latency cost. It
+     must assign a defined `geo` value on every path, because `completeRecord` refuses
+     to emit *any* record when a `GBP_FIELD_SOURCES` field is `undefined` — a geocode
+     failure that took LOCAL-003 down with it would be a self-inflicted outage.
+   - **Per-target distances move to a new `withGeography(gbp, crawl, deps)`**, called
+     from `run.ts` after the `Promise.all`, exactly mirroring `withSiteFiles` at
+     `run.ts:371`. Concurrency preserved, no `StationBundle` widening (that stays
+     slice 7's), and the alternative — serializing gbp after crawl — would reverse a
+     documented decision to buy nothing.
+
+   The cost of the split, stated: the gbp slot is written twice, so the target field has
+   two writers. Mitigation is structural — the station can only ever produce the
+   `measured: false` state, `withGeography` is the only code that can produce
+   `measured: true`, and a test asserts that a bundle which never went through
+   `withGeography` yields `not_run` rather than `pass`. That closes the forgot-to-wire
+   hole that produced every stale comment this codebase has had to correct.
+
+   Two further corrections to the slice as written: **per-*declared-area* distances must
+   not enter the verdict** (the rubric row's own note says an SAB ranks by proximity to
+   its real address, not its declared areas, and the `serviceAreas` field ledger says
+   LOCAL-016 must not read it as a coverage boundary) — they are evidence, useful to
+   slice 4's proximity diagnosis. And the slice **does** need a snapshot re-baseline,
+   which its row omitted: LOCAL-016's `detail` string is frozen byte-for-byte because
+   the snapshot stores it. The magnitude does not move (see the threshold note below),
+   so that diff is one line.
+
+   **What slice 3 delivers is a *measured* radius, not a *rankable* one.** Only the
+   Local Falcon grid in slice 7 can establish rankability. The comment block slice 3
+   writes must say so, or slice 7 arrives at another comment claiming the job is done.
 4. **Scoring grows `winnability` and `confidence` axes** and takes the CTR curve as a
    per-client input with the config curve as labeled fallback. Rank becomes
    `impact × winnability × confidence-weight / effort`. Every axis persisted separately
