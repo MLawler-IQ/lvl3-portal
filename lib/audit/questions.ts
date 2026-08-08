@@ -130,6 +130,26 @@ export interface QuestionCoverageReport {
    * every count and the totals would still look tidy.
    */
   unknownCheckIds: readonly string[]
+  /**
+   * Findings for rows marked `retired: true`.
+   *
+   * Surfaced for the same reason as `unknownCheckIds`, and it is the same class of
+   * disagreement: a stored run was scored against a rubric that still asked this, and the
+   * rubric no longer does. A retired row is in no question's denominator, so its finding
+   * can go in no bucket without breaking the sum — which leaves exactly two options, drop
+   * it or name it. Naming it is the only one that survives someone asking "where did
+   * ONPAGE-002 go?" six months from now.
+   */
+  retiredWithFindings: readonly string[]
+  /**
+   * Findings whose `status` is not one of the four, rendered as `ID (status)`.
+   *
+   * FindingStatus makes this unreachable from live code; stored jsonb is not live code. The
+   * bucketing deliberately does not have an `else` that treats an unrecognised status as a
+   * verdict — that would be the one direction this module exists to prevent, a numerator
+   * inflated by data nobody can read.
+   */
+  unreadableStatuses: readonly string[]
   /** Sum of every question's `total`. 80 today, 70 once slice 2 retires ten rows. */
   activeRows: number
   /** Rows marked `retired: true`. They are in no question's denominator. */
@@ -193,6 +213,16 @@ function buildRows(): QuestionRow[] {
   })
 }
 
+/**
+ * The three statuses that count as a verdict.
+ *
+ * A Set rather than a `!== 'not_run'` test, so an unrecognised status falls through to
+ * being named instead of being counted as evaluated. `FindingStatus` makes that unreachable
+ * from live code; this module's declared input is a run out of `audit_runs.result` jsonb,
+ * which is not live code, and its own tests feed it deliberately malformed rows.
+ */
+const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['pass', 'fail', 'degraded'])
+
 const ROWS: readonly QuestionRow[] = buildRows()
 const BY_ID: ReadonlyMap<string, QuestionRow> = new Map(ROWS.map((r) => [r.id, r]))
 
@@ -234,19 +264,29 @@ export function questionCoverage(findings: readonly Finding[] = []): QuestionCov
   const terminal = new Set<string>()
   const notRun = new Set<string>()
   const unknown: string[] = []
+  const retiredSeen: string[] = []
+  const unreadable: string[] = []
 
   for (const finding of findings) {
     const id = finding?.checkId
     if (!id) continue
-    if (!BY_ID.has(id)) {
+
+    const row = BY_ID.get(id)
+    if (!row) {
       if (!unknown.includes(id)) unknown.push(id)
       continue
     }
-    // A retired row that still carries a finding is counted where its tag puts it, so the
-    // numbers stay explicable; it just is not in any denominator. That asymmetry is
-    // deliberate and only ever undercounts coverage, never inflates it.
+    if (row.retired) {
+      // In no denominator, so it can be in no bucket. Named rather than dropped — see
+      // `retiredWithFindings`.
+      if (!retiredSeen.includes(id)) retiredSeen.push(id)
+      continue
+    }
+
     if (finding.status === 'not_run') notRun.add(id)
-    else terminal.add(id)
+    else if (TERMINAL_STATUSES.has(finding.status)) terminal.add(id)
+    // No `else` that counts as a verdict. An unreadable status is named, never bucketed.
+    else unreadable.push(`${id} (${String(finding.status)})`)
   }
 
   const { active, retired } = partitionRubricByQuestion()
@@ -259,8 +299,12 @@ export function questionCoverage(findings: readonly Finding[] = []): QuestionCov
     const humanJudgement: string[] = []
 
     for (const id of ids) {
-      if (terminal.has(id)) evaluated.push(id)
-      else if (notRun.has(id)) dataMissing.push(id)
+      // `not_run` is tested FIRST, so one id carrying both a verdict and a not_run — which
+      // nothing emits today, and which would mean the run and itself disagree — resolves to
+      // the unflattering reading. A tie-break that favoured the verdict would inflate the
+      // numerator on exactly the input that says the run is confused.
+      if (notRun.has(id)) dataMissing.push(id)
+      else if (terminal.has(id)) evaluated.push(id)
       else if (BY_ID.get(id)?.automation === 'assisted') humanJudgement.push(id)
       else notEvaluated.push(id)
     }
@@ -271,6 +315,8 @@ export function questionCoverage(findings: readonly Finding[] = []): QuestionCov
   return {
     questions,
     unknownCheckIds: unknown,
+    retiredWithFindings: retiredSeen,
+    unreadableStatuses: unreadable,
     activeRows: questions.reduce((sum, q) => sum + q.total, 0),
     retiredRows: retired.length,
   }

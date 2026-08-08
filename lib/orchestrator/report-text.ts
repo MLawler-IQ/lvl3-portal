@@ -161,16 +161,28 @@ export function formatQuestions(result: AuditRunResult): string {
     ),
   )
 
-  // Never dropped: an id in no rubric row means the run and the rubric disagree about what
-  // was checked, and that is the reader's problem to know about, not ours to tidy away.
+  // Never dropped. All three mean the run and the rubric disagree about what was checked,
+  // and a disagreement that is tidied away leaves the totals looking correct while a
+  // criterion has gone missing from every count.
+  const anomalies: string[] = []
   if (report.unknownCheckIds.length > 0) {
-    lines.push('')
-    lines.push(
-      ...wrapAt(
-        0,
-        `${numStr(report.unknownCheckIds.length)} finding(s) cite a check id that is in no rubric row and are therefore in no question's counts: ${report.unknownCheckIds.join(', ')}.`,
-      ),
+    anomalies.push(
+      `${numStr(report.unknownCheckIds.length)} finding(s) cite a check id that is in no rubric row, so they are in no question's counts: ${report.unknownCheckIds.join(', ')}.`,
     )
+  }
+  if (report.retiredWithFindings.length > 0) {
+    anomalies.push(
+      `${numStr(report.retiredWithFindings.length)} finding(s) are for retired criteria, which sit in no denominator and therefore in no bucket: ${report.retiredWithFindings.join(', ')}.`,
+    )
+  }
+  if (report.unreadableStatuses.length > 0) {
+    anomalies.push(
+      `${numStr(report.unreadableStatuses.length)} finding(s) carry a status this report cannot read, and are counted as neither evaluated nor attempted: ${report.unreadableStatuses.join(', ')}.`,
+    )
+  }
+  if (anomalies.length > 0) {
+    lines.push('')
+    for (const line of anomalies) lines.push(...wrapAt(0, line))
   }
 
   return lines.join('\n')

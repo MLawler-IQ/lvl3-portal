@@ -20,7 +20,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import AuditResultView from '@/components/audit/AuditResultView'
 import type { AuditSummary } from '@/components/audit/AuditResultView'
 import type { Finding, FindingStatus } from '@/lib/findings/types'
-import { QUESTIONS } from '@/lib/audit/questions'
+import { QUESTIONS, questionCoverage } from '@/lib/audit/questions'
 
 afterEach(cleanup)
 
@@ -39,9 +39,23 @@ describe('AuditResultView question panel', () => {
     for (const q of QUESTIONS) {
       expect(screen.getByText(q.question), `question ${q.key} is not on the screen`).toBeTruthy()
     }
-    // The number this panel replaced. If it ever comes back it belongs to a different
-    // design, not to this one.
-    expect(document.body.textContent).not.toContain('of 80 rubric criteria')
+  })
+
+  it('gives every question its own denominator on its own row', () => {
+    // The regression this guards is the panel collapsing back to one global fraction. A
+    // single count cannot say "competition: 9 criteria, none evaluated" — and it is the
+    // per-question denominator, not the global one, that makes the gap actionable. Asserted
+    // per ROW rather than per document, because "9" appearing somewhere on the page would
+    // pass even if every denominator were replaced by one total.
+    const report = questionCoverage([])
+    render(<AuditResultView summary={summary()} />)
+
+    for (const q of report.questions) {
+      const row = screen.getByText(q.question).closest('tr')
+      expect(row, `no row for ${q.key}`).toBeTruthy()
+      const cells = Array.from(row!.querySelectorAll('td')).map((td) => td.textContent?.trim())
+      expect(cells, `${q.key} row does not carry its own total`).toContain(String(q.total))
+    }
   })
 
   it('leads with the questions, before the findings table', () => {

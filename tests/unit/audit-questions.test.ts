@@ -104,10 +104,11 @@ describe('the rubric partition', () => {
   })
 
   it('places the criteria the redesign plan calls out by name', () => {
-    // These six are the non-obvious placements docs/AUDIT-REDESIGN-PLAN.md documents. They
-    // are asserted because each one is a judgement someone will later be tempted to
-    // "correct" back to its old category, and the reasoning belongs next to the assertion.
+    // The first five are the non-obvious placements docs/AUDIT-REDESIGN-PLAN.md names; the
+    // last two are pinned here because they are the ones most likely to be "corrected" back
+    // to their old category, and the reasoning belongs next to the assertion.
     expect(questionOf('TECH-002')).toBe('risk') // indexability of money content, not hygiene
+    expect(questionOf('TECH-003')).toBe('risk') // accidental noindex on money pages
     expect(questionOf('TECH-004')).toBe('risk') // raw-HTML content: invisible to AI crawlers
     expect(questionOf('TECH-011')).toBe('conversion') // mobile rendering on a phone-driven business
     expect(questionOf('LOCAL-001')).toBe('visibility') // GBP primary category is the pack's #1 factor
@@ -203,6 +204,58 @@ describe('questionCoverage', () => {
     expect(
       risk.evaluated.length + risk.dataMissing.length + risk.notEvaluated.length + risk.humanJudgement.length,
     ).toBe(risk.total)
+  })
+
+  it('resolves one id carrying both a verdict and a not_run to the unflattering reading', () => {
+    // Nothing emits this today — one finding per registered check — so it means the run and
+    // itself disagree. A tie-break favouring the verdict would inflate the numerator on
+    // exactly the input that says the run is confused. Asserted in both orders, so the
+    // answer cannot depend on which finding happened to arrive first.
+    for (const pair of [
+      [finding('TECH-001', 'pass'), finding('TECH-001', 'not_run')],
+      [finding('TECH-001', 'not_run'), finding('TECH-001', 'pass')],
+    ]) {
+      const risk = questionCoverage(pair).questions.find((q) => q.key === 'risk')!
+      expect(risk.dataMissing).toContain('TECH-001')
+      expect(risk.evaluated).not.toContain('TECH-001')
+      expect(
+        risk.evaluated.length + risk.dataMissing.length + risk.notEvaluated.length + risk.humanJudgement.length,
+      ).toBe(risk.total)
+    }
+  })
+
+  it('names a status it cannot read instead of counting it as a verdict', () => {
+    // FindingStatus makes this unreachable from live code. The input domain is a run out of
+    // audit_runs.result jsonb, which is not live code, and an unrecognised status silently
+    // counted as evaluated is the one direction this module exists to prevent.
+    const bogus = [{ ...finding('TECH-001', 'fail'), status: 'skipped' }] as unknown as Finding[]
+    const report = questionCoverage(bogus)
+    const risk = report.questions.find((q) => q.key === 'risk')!
+
+    expect(report.unreadableStatuses).toEqual(['TECH-001 (skipped)'])
+    expect(risk.evaluated).not.toContain('TECH-001')
+    expect(risk.dataMissing).not.toContain('TECH-001')
+    // Still bucketed somewhere, because the criterion is still in the denominator.
+    expect(risk.notEvaluated).toContain('TECH-001')
+  })
+
+  it('reports no anomalies on a clean run', () => {
+    // The three anomaly lists must be empty on ordinary input, or the panel cries wolf on
+    // every run and operators learn to ignore it.
+    const report = questionCoverage([finding('TECH-001', 'pass'), finding('MEAS-001', 'fail')])
+    expect(report.unknownCheckIds).toEqual([])
+    expect(report.retiredWithFindings).toEqual([])
+    expect(report.unreadableStatuses).toEqual([])
+  })
+
+  it('has nothing to say about retired criteria until slice 2 creates one', () => {
+    // A finding for a retired row can go in no bucket without breaking the bucket-sum
+    // invariant, so it is named in `retiredWithFindings` rather than dropped. Today no row
+    // is retired, so the list is empty for every input — and this assertion is the reason
+    // slice 2 will find the path already built rather than discovering the drop.
+    expect(questionCoverage([]).retiredRows).toBe(0)
+    expect(questionCoverage([finding('ONPAGE-002', 'fail')]).retiredWithFindings).toEqual([])
+    expect(RUBRIC.filter((r) => r.retired === true)).toHaveLength(0)
   })
 
   it('tolerates a malformed findings array rather than blanking the screen', () => {

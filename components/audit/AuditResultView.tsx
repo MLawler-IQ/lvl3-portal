@@ -292,14 +292,29 @@ function QuestionPanel({ findings }: { findings: readonly Finding[] }) {
       </p>
 
       {/*
-        Never dropped: an id in no rubric row means the run and the rubric disagree about
-        what was checked. That is the reader's problem to know about, not ours to tidy away.
+        Never dropped. All three mean the run and the rubric disagree about what was
+        checked, and a disagreement that is tidied away leaves the totals looking correct
+        while a criterion has gone missing from every count.
       */}
       {report.unknownCheckIds.length > 0 && (
         <p className="mt-3 text-[11px] leading-relaxed" style={{ color: 'var(--color-warning)' }}>
           {num(report.unknownCheckIds.length)} finding(s) cite a check id in no rubric row and
           are in no question&apos;s counts:{' '}
           <span className="font-mono">{report.unknownCheckIds.join(', ')}</span>.
+        </p>
+      )}
+      {report.retiredWithFindings.length > 0 && (
+        <p className="mt-3 text-[11px] leading-relaxed" style={{ color: 'var(--color-warning)' }}>
+          {num(report.retiredWithFindings.length)} finding(s) are for retired criteria, which
+          sit in no denominator and therefore in no bucket:{' '}
+          <span className="font-mono">{report.retiredWithFindings.join(', ')}</span>.
+        </p>
+      )}
+      {report.unreadableStatuses.length > 0 && (
+        <p className="mt-3 text-[11px] leading-relaxed" style={{ color: 'var(--color-warning)' }}>
+          {num(report.unreadableStatuses.length)} finding(s) carry a status this view cannot
+          read, and are counted as neither evaluated nor attempted:{' '}
+          <span className="font-mono">{report.unreadableStatuses.join(', ')}</span>.
         </p>
       )}
     </Card>

@@ -19,7 +19,7 @@ tree on 2026-08-07, not inferred from earlier docs — several of which turned o
 | Slice | State | Commit |
 |---|---|---|
 | 0 · This document | ✅ **DONE** | `c659359` |
-| 1 · Question taxonomy + coverage-by-question | ✅ **DONE** | |
+| 1 · Question taxonomy + coverage-by-question | ✅ **DONE** | `38bb3ef` + verification fixes |
 | 2 · Rubric re-cut | not started | |
 | 3 · Geography at the station | not started | |
 | 4 · Diagnoses layer | not started | |
@@ -200,6 +200,47 @@ category rename. Examples of non-obvious placements: TECH-002/003/004 (indexabil
 rendering of money content) land in `risk`, not `hygiene`, per the critique's Tier 2;
 LOCAL-001 (primary category) lands in `visibility`; ONPAGE-005 (intent match) lands in
 `demand`.
+
+**The rule that decided the ambiguous rows, recorded so slice 2 does not re-litigate
+them.** A row is assigned by *the decision it drives*, not by the data its evaluation
+needs. Three consequences worth stating, because each looks wrong at first glance:
+
+- **Reviews (LOCAL-007/008/009/010) are `visibility`, not `competition`,** even though
+  LOCAL-007's text says "versus local-pack competitors". Competitor data feeds *severity*
+  everywhere; the decision reviews drive is pack presence. `competition` holds rows about
+  whether we can win at all — links, authority, differentiation, aggregator dominance.
+- **Content differentiation is `competition`; content structure is `demand`.** ONPAGE-004
+  (first-hand experience, non-commodity), GEO-004 (fact density, pricing signals) and
+  AUTH-006 (job photos, case studies) are differentiation — "what their content does that
+  ours does not". ONPAGE-009 and GEO-003 (answer-first, self-contained passages) are
+  query-answering structure. GEO-004 is the one a reader may push back on; the tiebreak was
+  that its failure mode is commodity content, not a poorly-shaped answer.
+- **TECH-011 (mobile viewport, tap targets) is `conversion`,** which is the critique's
+  instruction applied literally: conversion is under-built for a phone business and "the
+  category needs depth, taken from the technical category". Mobile rendering failure on an
+  HVAC emergency search is a conversion failure first.
+
+Actual distribution: measurement 7 · visibility 14 · demand 7 · competition 9 ·
+conversion 10 · risk 12 · hygiene 21. After slice 2's ten retirements: measurement 6 ·
+competition 8 · hygiene 13, everything else unchanged, 70 active — which lands measurement
+and hygiene almost exactly on the shape the critique's §15 argues for.
+
+## Carried debt
+
+Recorded when incurred rather than discovered later.
+
+**`lib/audit/questions.ts` is value-imported by a `'use client'` component.** It pulls zod
+and all ~38 KB of `docs/rubric/rubric.json` — every `howToTest` and `notes` prose field —
+into the `/tools/audit` browser chunk in order to read four fields per row. It also throws
+at module load on a malformed rubric, which inside a client component is an unrecoverable
+render error for the whole page rather than the "say so, don't blank the screen" behaviour
+the file itself prefers. Accepted for now because the page is admin-only and the same throw
+already happens server-side in `lib/scoring/rubric.ts` on every run, so a malformed rubric
+breaks the pipeline before it reaches a browser. **The fix is to compute coverage
+server-side and pass it as a prop**, which slice 4 should absorb: it already changes the
+result envelope and adds diagnoses to the same view, so the props contract is open there
+anyway. Do not let it drift past slice 4 — `audit_runs.result` is where a computed coverage
+block belongs, and the longer the view owns the computation the more callers depend on it.
 
 ## The four breaking changes
 
